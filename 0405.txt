@@ -1,0 +1,1443 @@
+웹크롤링 → 파이썬문법 → 데이터전처리 → 머신러닝
+구글링 실력도 실력이다. 수업 듣고 이해만 하고 공부하지 말아라. 문제로 공부하고 모를때만 찾아보면 자동공부^~^
+나중에 구글 "코렙"도 사용해볼것 => 구글드라이브랑 연동돼서 편함
+ : 클라우드 기반 플랫폼 - GPU(머신러닝을 그래픽카드를 이용해 효율적으로 돌릴 수 있게)와 TPU(머신러닝 자체에 최적화된 칩셋 자체를 만듦) 사용가능
+보통은 pycharm을 더 많이 씀, 우린 anaconda사용(패키지관리 프로그램, 이 안에 spider(==pycharm)있음)
+파이썬에도 matlab처럼 행렬 연산, 신호처리 등 수치 연산 도와주는 패키지 있다
+데이터분석은 걍 다 파이썬으로함
+보통 거의 64bit쓰고 우리도 64bit쓰지만, 수업은 쉽게 32bit로 예를 들어 진행할 예정.
+코드 공유 https://replit.com
+드래그 + F9 : 부분 실행
+cowork할 때 변수명, 함수명 이름만 들어도 알 수 있게 하기
+함수는 "함수명에 해당하는 그 기능만!!" 수행하게 해야 나중에 문제 생겼을 때 좋음
+
+딥러닝 : 기계학습을 하는 layer가 여러 층일 때부터
+머신러닝 패키지
+  - 텐서플로우[Tensorflow]
+  - 케라스[Keras]		(텐서플로우가 다루기 어려워서 api식으로 만든 것)
+  - 사이킷런[Scikit-Learn]	(딥러닝 외의 머신러닝을 위함. 多사용. kaggle에서도 多)
+행렬/선형대수/통계 패키지
+  - 넘파이[NumPy]
+  - 사이파이[SciPy]
+데이터 전처리 패키지
+  - 판다스[Pandas]		파이썬의 리스트, 컬렉션, 넘파이 등의 내부 데이터 뿐 아니라 CSV등의 파일을 쉽게 DataFrame으로 변경해서 데이터의 가공/분석을 쉽게 만들어준다
+			판다스의 핵심 객체는 DataFrame
+시각화
+  - 맷플롯립[Matplotlib]
+  - 시본[Seaborn]
+
+실제 ML(Machine Learning) 모델을 생성하고 예측하는 데 있어서 ML알고리즘이 차지하는 비중은 10이고, 그보다 
+데이터를 전처리하고 적절한 피처(Feature)를 가공/추출하는 부분이 훨씬 중요한 90을 차지한다. 
+
+■■■■■■■■■■■■■0405 수업中 새로 알게된것■■■■■■■■■■■■■
+
+32bit vs 64bit란?
+네모난 메모리 공간 코드-데이터-힙-스택 영역은 수많은 이진수 묶음들로 차있다.
+(하나의 작은 마이크로칩(메모리IC)을 확대하면 수많은 작은 트랜지스터들이 엄청 연결되어 있는 걸 볼 수 있다)
+1bit에 이진수 1개 저장되는데(전기적 신호로 1이면 on, 0이면 off) 그 이진수 한 묶음의 폭이 64bit(==8byte)면 32bit(==4byte)보다 더 많은 명령을 내릴 수 있음
+이진수(하드웨어)에 가장 가까운 언어:어셈블리어. ex) 	mov	1	0x8000
+						lrd	0x8000	#32
+						str	..	.......
+어셈블리어의 STOP==0000, LD==0001, ST==0010, MOVAC==0011, MOV==0100, ADD==0101, ...이렇게 약속된 명령어들이 이진수로 나열된 것이다. 
+
+데이터 타입이 다르다 == 메모리에 저장되는 형태와 방식이 다르다
+	cf)파이썬은 변수 하나하나가 객체라서 실제 메모리 상에 c언어처럼 명확하게 저장x, 근데 그딴거 알필요 없어!
+16이라는 십진수는 이진수 10000로 변환하여 한 줄이 32bit인 마이크로칩에 000000000...10000 라고 저장
+"python"이라는 문자열은 문자 그대로 저장할 수 없기 때문에(전기적신호로 변환한 이진수만 트렌지스터에 저장 가능) => 아스키 코드값(최대사이즈가 127(<2^8)이므로 1byte==8bit)으로 => 또 이진수로 바꿔 저장
+12433.45라는 실수는 32bit의 영역을 둘로 나눠서, 앞영역에는 1.243345를 저장하고 뒷영역에는 10^4를 곱해야 하므로 소수점 위치를 뜻하는 4(지수)를 저장
+c언어에서는 문자와 문자열이 다른 데이터 타입이지만, 파이썬은 차이 없음
+
+진수란? 한 자리수를 몇 가지 숫자로 표현하는가
+16진수 : 0 1 2 3 4 5 6 7 8 9  A  B  C   D  E   F  10 11 12 .. =>헷갈리니까 앞에 0x
+10진수 : 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 ..
+16진수 사용 이유?
+1. 엄청 큰 2진수는 두 수가 같은지 비교하는 것도 어려움. 바꿔야 함. 
+2. 10진수로 바꾸는 건 어렵지만, 16진수로 바꾸는 건 쉽다. 
+1101 0001 1000 1011 0011 (2진수 4개씩 끊어 보기 <= 16진수는 한 자리수를 표현하는 데 16가지 숫자가 필요하고, 2진수의 4비트로 나타낼 수 있는 경우의 수는 2^4=16이므로)
+D     1      8      B      3	=> 0xD18B3
+
+문자열 표현 키워드는 "~"와 '~' 둘 다 가능. 문자열 안에 "(큰따옴표) 자체가 있을 때엔 '~'로 묶고, 반대도 마찬가지
+문자열 안의 \n은 문자열이 아니라 특정한 기능을 하는 키워드라고 인터프리터와 약속함(print()함수 안에 그런 코드가 이미 다 적혀 있음)
+
+■■■■■■■■■■■■■0406 수업中 새로 알게된것■■■■■■■■■■■■■
+
+하나의 변수에 여러 줄의 문자열을 넣고 싶을 때 전체를 A='''~''', B="""~""" 처럼 묶어준다
+print() 함수에 마지막에 디폴트값으로 자동으로 개행문자라는 파라미터가 들어간다. print()로 개행 하기 싫다면 end=""로 마지막 파라미터 다시 설정해줌
+
+
+★
+문자열 + → 연결		//a="a""b", b="a"+"b" 둘 다 "ab"로 연결됨
+문자열 * → 곱한 만큼 반복
+문자열 요소는 바꿀 수 X !!! (tuple이라는 데이터타입도 요소 추가는 가능하지만 삭제는 불가능)
+요소 하나를 바꾸려면 문자열 슬라이싱[:]을 통해 새로운 문자열 만들어야 함
+문자열 값 대입 식으로 수정 불가능
+문자열 슬라이싱 가능
+len(문자열) → 인풋값으로 들어온 문자열의 요소(element)의 개수
+문자열.count('문자열a') → 문자열 중 문자열a의 개수 리턴
+문자열.find('문자열a') → 문자열 중 문자열a가 처음 나온 인덱스 리턴	// 없으면 -1 리턴 (코드 안 멈추고 계속 진행)
+문자열.index('문자열a') → 문자열 중 문자열a가 처음 나온 인덱스 리턴	// 없으면 error (코드 멈춤 => 예외처리필요)
+'새문자열'.join(문자열or리스트or튜플) → 문자열or리스트or튜플의 각 요소 사이사이에 새문자열 삽입
+	A='abcd'
+	C=', '.join(A)	____  A='abcd', C='a, b, c, d'
+	A=['a', 'b', 'c', 'd']	   //리스트 요소가 모두 문자열일 때만 가능!!
+	C=', '.join(A)	____  A=['a', 'b', 'c', 'd'], C='a, b, c, d'     //string내장함수니까 결과값 C도 string
+문자열.upper() / 문자열.lower() → 문자열을 대문자로 / 소문자로
+문자열.lstrip() / 문자열.rstrip() / 문자열.strip() → 왼쪽 / 오른쪽 / 양쪽 공백 지우기
+문자열.replace('a', 'b') → 문자열 안의 a를 b로 바꾸기
+문자열.split('문자열a') → 문자열을 문자열a를 기준으로 나눔. 문자열a 안 넣어주면 공백 기준
+★
+
+
+%d, %c, %s, %f, %o(8진수), %x(16진수), %%(%) 등 형식지정자도 \n처럼 문자 그대로가 아니라 파이썬 인터프리터와 약속된 키워드의 역할 함
+%s는 예외적으로 어떤 자료형 값을 넣든 알아서 해줌
+
+___format 1. %사용___
+>>> print("I eat %d apples so I was sick for %s days"%(3, "five"))
+>>> A=[1, 2, 3, 4, 5]
+      for idx, a in enumerate(A):
+      print("I eat %d apples. "%A[idx])
+-------------------------------------------------------
+>>> I eat 3 apples so I was sick for five days
+>>> I eat 1 apples. 
+      I eat 2 apples. 
+      I eat 3 apples. 
+      I eat 4 apples. 
+      I eat 5 apples. 
+
+___format 2. format함수 사용___
+>>> number=10
+      day="three"
+      print("I ate {0} apples so I was sick for {1} days. ".format(number, day))
+>>> print("I ate {number} apples so I was sick for {day} days. ".format(number=10, day="three"))
+-------------------------------------------------------
+>>> I ate 10 apples so I was sick for three days. 
+>>> I ate 10 apples so I was sick for three days. 
+
+{0:<10}, {1:<10}, ... 10칸 확보 후 왼쪽 정렬
+{0:>10}, {1:>10}, ... 10칸 확보 후 오른쪽 정렬
+{0:^10}, {1:^10}, ... 10칸 확보 후 가운데 정렬
+{0:=<10}, {1:=>10}, {2:=^10}... 10칸 확보 후 각각 정렬, 공백 =로 채우기
+{0:!<10}, {1:!>10}, {2:!^10}... 10칸 확보 후 각각 정렬, 공백 !로 채우기
+
+___format 3. f문자열 포매팅 사용 : 쉬움!___
+>>> name='홍길동'
+      age=30
+      print( f"나의 이름은 {name}입니다. 나이는 {age}입니다. ")
+>>> d = {'name'='홍길동', 'age':30}	#딕셔너리 (key,value) 이렇게 사용할수있음
+      print( f"나의 이름은 {d["name"]}입니다. 나이는 {d["age"]}입니다. ")
+----------------------------------------------------------------
+>>> 나의 이름은 홍길동입니다. 나이는 30입니다.
+>>> 나의 이름은 홍길동입니다. 나이는 30입니다.
+
+
+★
+리스트 + → 연결		//대신 둘 다 타입 같아야 함. 타입 캐스팅 필요
+			3+"hi"	   (x)에러
+			str(3)+"hi"   (o)
+리스트 * → 곱한 만큼 반복
+len(리스트) → 인풋값으로 들어온 리스트의 요소(element)의 개수 리턴
+	↓↓↓얘네 대부분은 원본 데이터 자체를 건드림↓↓↓
+리스트 값 대입 식으로 수정 가능
+리스트 슬라이싱 가능
+del(리스트[인덱스]) → 해당 인덱스 요소만 삭제
+리스트.append(요소) → 맨 뒤에 요소 추가
+	a.append()를 인터프리터가 읽었을 때 "a의 데이터 타입에서 지원하는 내장 함수 중에서 append()를 실행하겠다"라고 이해하는데
+	앞에 a=[]가 정의되지 않는다면 애초에 a를 모르기 때문에 에러
+리스트.sort() → 오름차순 정렬
+리스트.reverse() → 현재 리스트를 역순으로 나열
+리스트.index(인덱스) → 리스트의 해당 인덱스의 요소 리턴
+리스트.count(x) → 리스트 중 x의 개수 리턴
+리스트.insert(a, b) → 리스트의 a번째 위치에 b 삽입
+리스트.remove(x) → 리스트에서 처음 나오는 x 삭제
+리스트.pop() → 스택(후입선출) 개념. 맨 마지막 요소 리턴하고 그 요소는 리스트에서 삭제
+리스트.pop(x) → x번째 요소 리턴하고 그 요소는 리스트에서 삭제
+리스트.extend(리스트a) → 리스트+=리스트a 와 같음
+sum(리스트) : 모든 요소의 합 리턴
+★
+
+
+■■■■■■■■■■■■■0407 수업中 새로 알게된것■■■■■■■■■■■■■
+
+
+★
+튜플 + → 연결		//대신 둘의 타입 달라도 됨
+튜플 * → 곱한 만큼 반복
+리스트 a=[1,2,3]에서 수정(a[1]=3→a=[1,3,3]), 삭제, 추가 모두 가능
+튜플   a=(1,2,3)에서는 수정, 삭제 불가능, 추가만 가능
+	//문자열과 동일
+튜플 값 대입 식으로 수정 불가능
+튜플 슬라이싱 가능
+len(튜플) → 인풋값으로 들어온 튜플의 요소(element)의 개수 리턴
+★
+
+
+문자열, 리스트, 튜플은 모두 순차적으로(sequential=인덱스부여되는 자료형이네~) 인덱스를 부여하여 인덱스로 요소에 접근 가능
+딕셔너리 != 순차적. key값을 통해서 원하는 것만 바로 찾는다. 인덱스를 key값이 대신.
+
+딕셔너리 주의사항	→ 1. 딕셔너리의 key값은 단일요소여야 함. 
+			문자열, 튜플, key값 고정된 딕셔너리 (o)	리스트, key값 변하는 딕셔너리 (x)
+		→ 2. key값은 모두 달라야 함. 만약 같으면 마지막만 제외하고 나머지 모두 무시
+
+
+★
+딕셔너리 a={1:'a'}에서
+추가 : a[2]='b' → a={1:'a', 2:'b'}
+삭제 : del a[1] → a={2:'b'}
+딕셔너리.keys() → 딕셔너리의 모든 key값을 담은 (리스트와 호환 가능하도록 정의된) dict_keys 클래스 객체를 리턴 → 리스트로 형변환하거나 for문으로 요소 하나씩 빼냄
+			//보통 모든 건 형변환과 for문을 통해 내가 쉽게 사용할 수 있게 만들어져있음
+딕셔너리.values() → 딕셔너리의 모든 value값을 담은 (리스트와 호환 가능하도록 정의된) dict_values 클래스 객체를 리턴 → 리스트로 형변환하거나 for문으로 요소 하나씩 빼냄
+딕셔너리.items() → 딕셔너리 모든 쌍을 튜플로 묶은 값을 담은 (리스트와 호환 가능하도록 정의된) dict_items 클래스 객체를 리턴 → 리스트로 형변환하거나 for문으로 요소 하나씩 빼냄
+딕셔너리.clear() → 딕셔너리 쌍 모두 삭제
+딕셔너리.get(key값a) → a에 해당하는 value값 리턴
+딕셔너리.pop(key값a) → a에 해당하는 value값 리턴하고 삭제	//딕셔너리는 sequential하지 않으므로 스택 개념이 x
+key값a in 딕셔너리 → a가 딕셔너리 안에 있는지 T/F
+	A='spring'	'sp' in A → True 리턴
+	A={'name':'pey'}	'name' in A → True 리턴
+sum(튜플) : 모든 요소의 합 리턴
+★
+
+
+집합 자료형 set
+1. 중복x   unique한값만 의미있음
+2. 순서x
+
+s1=set([1,2,3,4,5,6]), s2=set([4,5,6,7,8,9])일 때
+s1 & s2 : 교집합 → {4,5,6}
+s1 | s2 : 합집합 → {1,2,3,4,5,6,7,8,9}
+s1 - s2 : 차집합 → {1,2,3}
+
+//가장많이쓰는 방법 : 하나의 row 또는 하나의 column을 리스트로 가져옴 → 집합자료형으로 캐스팅해서 하나씩 걸러냄 → 다시 리스트로 캐스팅
+A=[1,4,2,3,1,2]
+SA = set(A) 	//{1,4,2,3}
+NEWA = list(SA) 	//[1,4,2,3]
+
+자료형의 참과 거짓♣
+문자열	"python"	       T     |     리스트	[1,2,3]	  T
+	""	       F     |		[]	  F
+숫자형	0이아닌숫자    T     |     튜플	(1,2,3)	  T
+	0	       F     |		()	  F
+None		       F     |     딕셔너리	{1:'dic'}	  T
+		             | 		{}	  F
+
+a=[1,2,3]
+b=a		//a is b==True, id(a)==id(b). 완전히 동일한 주소값을 참조
+b=a[:], b=copy(a)	//element만 동일할 뿐 다른 주소. element만 복사됨
+
+■■■■■■■■■■■■■0407~0408 스파이더 코드(gihu.csv데이터 사용)■■■■■■■■■■■■■
+
+import csv                  #csv라는 패키지(csv 파일_:통계데이터 많이 담음_을 처리할 수 있게 해줌) 가져옴
+
+f=open('C:/jeon/gihu.csv') #이 경로의 파일을 열고 불러와 객체로 f에 담기 (더블클릭 따닥-!)
+main_data = csv.reader(f)   #내장함수/패키지에구현된함수/모듈안의함수 모두 .을 통해 불러옴
+                            #f를 육안으로 확인하기 위해 csv.reader()함수의 인수로 넣어 리턴값을 main_data에 넣음
+print(main_data)            #<_csv.reader object at 0x000002CD479F6A00> 출력됨(매번바뀜)
+                            #위의 16자리 16진수 자리의 주소(16==2^4이므로 16진수 1자리==2진수 4자리. 즉 16진수 16자리==2진수 64자리==64bit : 메모리 한줄에 64bit 크기의 데이터를 넣음)에 저장되어 있다는 뜻
+
+#필요한 데이터만 main_pt에 모으기
+temp=[]                     #main_data가 reader타입이기 때문에, temp라는 리스트에 리스트 타입으로 바꿔 담아줄거임 
+for row in main_data:       #순차적인 요소가 있는 main_data에서 한줄씩 row에 불러와서
+    temp.append(row)        #data라는 리스트에 row를 순차적으로 추가
+f.close()                   #파일 닫기
+
+main_pt=temp[8:]           #temp의 핵심 데이터(12번째 row부터 끝 row까지)만 담기
+
+'''
+참고 1. 
+리스트 슬라이싱은 자동으로 복사를 해와서 가져오는 것이기 때문에 main_pt=temp[12:]한다고 해서 a=b에서 아예 동일한 주소를 참조하게 되는 것과는 다름!! main_pt[0] = 1 해보면 main_pt에서만 바뀐다 
+
+참고 2.
+temp=[]
+for row in main_data[12:]: #참고로 얘는 이렇게 슬라이싱이 안 된다. 오류남... 
+    temp.append(row)
+'''
+
+#4번째 index만 비교해서 최고기온의 최댓값과 날짜 구하기
+max=float(main_pt[0][4])
+for idx, row in enumerate(main_pt):
+    try:
+        if row:         #오류 원인 2 해결 ========> row의 타입은 list. list가 True(==요소가 하나라도 있다)인 경우만 거르기 
+            if row[4]:  #오류 원인 1 해결 ========> row[4]의 타입은 string. string이 True(==''이 아니다)인 경우만 거르기
+                if float(row[4])>max:
+                    max=float(row[4])
+                    max_index=idx   #최댓값을 max에 업데이트하는 바로 그 순간의 for loop의 index. 
+    except Exception as e:
+        print(idx, e)   #어디서 오류 발생했는가 => 이 부분 출력해보면 오류 원인 알 수 있음 ↓↓↓
+#print(main_pt[39758])  ========> 39758 could not convert string to float: ''    오류 원인 1 => ['2017-10-12', '108', '11.4', '8.8', '']. 4번째인덱스 비어있구나~
+#print(main_pt[41033])  ========> 41033 list index out of range                  오류 원인 2 => []. 아예 리스트가 비어 있었구나~
+print(main_pt[max_index][0], max)
+
+'''
+내가 했던 방법 1.
+max=float(main_pt[0][4])
+for x in range(1, len(main_pt)):
+    if len(main_pt[x])<4:   #오류처리 인덱스 4까지 없을 때
+        continue
+    if main_pt[x][4]=='':   #오류처리 인덱스 4에 아무 값도 안 들어있을 때
+        continue
+    if float(main_pt[x][4])>max:
+        max=float(main_pt[x][4])
+print(max)
+
+내가 했던 방법 2.
+max=float(main_pt[0][4])
+for row in main_pt:
+    if len(row)<4 or row[4]=='':    #오류처리 인덱스가 4까지 없거나 빈 string일 때
+        continue
+    if float(row[4])>max:
+        max=float(row[4])
+print(max)
+
+참고 1.
+enumerate : for문이 돌면서 loop 횟수에 인덱스를 0, 1, 2, ... 부여해 idx에 넣는다. row에는 원래 for문처럼 temp의 요소 하나씩 가져온다. 
+enumerate는 많이 쓰이니까 그냥 습관적으로 for문에 붙여주면 됨.
+
+참고 2.
+for idx, row in enumerate(temp):
+    try:                    #try-except: try문에 묶인 코드 상에서 만약 에러가 발생했다면, 일단 실행은 stop하지 말고 try문 스킵한 다음에 except문을 대신 실행해줘!!!
+        if row[4]:
+            float(row[4])
+    except Exception as e:  #에러가 발생하지 않는다면 실행되지 않는다 
+        print(idx, e)
+        print(row)
+'''
+
+■■■■■■■■■■■■■0409 수업中 새로 알게된것■■■■■■■■■■■■■
+
+in vs not in
+리스트		1 in [1,2,3] == True		1 not in [1,2,3] == False
+튜플		'a' in ('a','b','c') == True		'a' not in ('a','b','c') == False
+문자열♣		'py' in 'python' == True		'py' not in 'python' == False
+딕셔너리		'name' in {'name':'pey'} == True	'name' not in {'name':'pey'} == False
+
+조건문에 아무 것도 넣고 싶지 않다면 pass 쓰거나 아무거나 프린트라도 해야 함
+
+input()에는 임시 데이터 저장 공간인 버퍼가 있음. 이 버퍼 안에 \n(개행, 즉 enter)가 들어가는 순간 처음부터 \n 앞까지의 모든 입력값을 하나의 문자열로 묶어서 리턴해준다. 
+
+무한루프 중단법 : 정지 버튼 누르거나 Ctrl+C
+
+range(부터, 이전까지, 만큼씩증가)
+
+a=[1, 2, 3, 4]
+result = [num*3  for num in a  if num%2==0]
+           a------  b------------  c--------------
+b→c→a 순서로
+b. a에서 num을 하나씩 가져오는데
+c. 조건문을 만족한 짝수만
+a. 3배를 하여 result에 담는다
+
+■■■■■■■■■■■■■0412 수업中 새로 알게된것■■■■■■■■■■■■■
+
+import csv 
+
+f=open('C:/jeon/gihu.csv')
+main_data = csv.reader(f) 
+print(main_data) 
+
+#필요한 데이터만 main_pt에 모으기
+temp=[]                   
+for row in main_data:   
+    temp.append(row)  
+f.close()      
+
+#temp의 핵심 데이터(12번째 row부터 끝 row까지)만 담기
+main_pt=temp[8:]           
+
+#내 생일 당일의 최고기온 구하기
+for idx, row in enumerate(main_pt):
+    if row and row[0] and row[4]:
+        if row[0]=='2000-09-01':    #'2000-09-01' in row[0]도 여기서는 답이 맞긴 함. 
+            print(row[4])
+
+======================================================================
+
+import csv
+import matplotlib.pyplot as plt 	#matplotlib패키지 안의 pyplot모듈(그래프 그리기 위해서 필요)을 불러와 여기서 plt라 부르겠다 
+
+f=open("C:/jeon/ingu.csv")
+main_data=csv.reader(f)
+temp=[]
+for row in main_data:
+    temp.append(row)
+f.close()
+main_pt=temp[1:]
+
+
+#청담동의 총 인구 수를 int로 출력
+for idx, row in enumerate(main_pt):
+    if '청담' in row[0]:
+        print("청담동 총 인구 수 :", int(row[1].replace(",", '')))
+
+
+#총 인구 수가 가장 많은 동을 찾아서 출력
+maxofdong=int(main_pt[2][1].replace(",", ''))
+maxidx=2
+for idx, row in enumerate(main_pt):
+    #(나오기 직전까지 잘라서 마지막에 공백 있으면 continue, 아닐 때만 생각
+    if row[0][:row[0].index('(')][-1]==" ":
+        continue
+    newrow1 =int(row[1].replace(",", ''))
+    if newrow1>maxofdong:
+        maxofdong=newrow1
+        maxidx=idx
+print("총 인구 수가 가장 많은 동 :", main_pt[maxidx][0], maxofdong, "명")
+
+
+#그래프 그리기 : spider의 Plots 탭에서 확인 가능 
+A=[1,5,8,8,4,3,2]
+plt.plot(A) 		#plot()의 인수로는 수치적으로 판단 가능한 타입만 
+
+
+#신중동에서 0~100세이상 까지의 그래프 그리기
+shinjoong_bothsex =[]   	#슬라이싱 바로 하니까 int형으로 각각 넣을 수가 없어서 이렇게 바꿈
+for x in range(3, 104):
+    shinjoong_bothsex.append(int(main_pt[maxidx][x].replace(",", '')))
+plt.plot(shinjoong_bothsex)
+
+
+#xx동 입력받고 있으면 인덱스 구하기
+dong=input("동 이름을 입력하세요:")         
+for idx, row in enumerate(main_pt):
+    if row and row[0]:
+        if ' '+dong+'(' in row[0]:
+            break
+if idx==3845 and '예래동'!= dong:
+    print("해당하는 동이 없습니다.")
+else:       #xx동에서 0~100세이상 까지의 그래프 그리기
+    dong_bothsex=[]
+    for x in range(3, 104):
+        dong_bothsex.append(int(main_pt[idx][x].replace(',', '')))
+    plt.plot(dong_bothsex)
+    
+    
+#신중동과 가장 유사한 그래프 모양을 가진 동 찾기
+'''
+ex
+           0세      1세      2세      3세
+신중동     100      200      150      180
+청담동      80      150      170      100
+효자동    1000     2000     1500     1800
+
+차이는 청담동이 덜 나지만, 비율로 따져야 함. 효자동이 정답!
+abs(신중동 0세/총인구 - xx동 0세/총인구) + abs(신중동 1세/총인구 - xx동 1세/총인구) + ...
+'''
+ratio_min_different=[main_pt[0][0], 100] #비율차이 가장 적은 동 이름, 그 동과의 비율차이 담을 변수 초기화
+shinjoong_ratio=list(map(lambda x:x/sum(shinjoong_bothsex), shinjoong_bothsex))
+for idx, row in enumerate(main_pt):
+    if row[0][:row[0].index('(')][-1]==" ":
+        continue
+    if row[0]=='경기도 부천시 신중동(4119074200)':
+        continue
+    
+    each_bothsex=[]
+    for x in range(3, 104):
+        each_bothsex.append(int(row[x].replace(",",'')))
+    if row and row[0] and sum(each_bothsex)>0:
+        each_ratio=list(map(lambda x:x/sum(each_bothsex), each_bothsex))
+    
+    sum_all_abs=0
+    for n in range(len(shinjoong_ratio)):
+        sum_all_abs += abs(shinjoong_ratio[n]-each_ratio[n])
+    if sum_all_abs < ratio_min_different[1]:
+        ratio_min_different[0]=row[0]
+        ratio_min_different[1]=sum_all_abs
+print(ratio_min_different)
+
+■■■■■■■■■■■■■0413 수업中 새로 알게된것■■■■■■■■■■■■■
+
+분기문 ===> 어떤 메모리 주소에서 어떤 메모리 주소로 jump하게 하는 것
+-break : 반복문 빠져나간다
+-return : 함수를 빠져나가면서 최종값을 던져준다
+-goto(c언어) code_a : code_a로 돌아간다(도돌이표) 	//가독성 더러워서 회사에서 절대 안씀
+
+함수의 관점에서 output이란 오직 리턴값만 의미. print()로 뭔가 출력했다고 해서 output이 있다는 건 아니다
+output만이 함수가 호출된 곳에서 리턴되어 담길 수 있음. 리턴값 없으면 NoneType의 None 담김		//오류x
+cf. 데이터 다루다 보면 빈 공간이  NA, None 등으로 자동적으로 채워진 것을 볼 수 있음. 
+
+매개변수 지정해서 넘겨주기, 초기값 설정
+def add(b, a, bool=True):	//매개변수 초기값 미리 설정
+    if bool:
+        return a+b
+print(add(a=3, b=7))	//인수랑 매개변수 이름이 같아야 함. 순서 다르지만 b=7, a=3으로 들어감
+
+여러 개의 input값 받는 파라미터 *args
+def add_many(a, *args):
+    result=0
+    print(a)
+    for i in args:		//args == (1, 2, 3, 4, 5), type(args) == 튜플, 요소에 하나씩 접근하려고 for문 사용
+        result+=i
+    return result
+print(add_many("Add", 1, 2, 3, 4, 5))
+
+딕셔너리 쌍을 input으로 받는 키워드 파라미터 **kwargs
+def print_kwargs(**kwargs):
+    print(kwargs)	
+print_kwargs(a=1)		//딕셔너리 쌍 'a' : 1을 인수로 넣어줌
+----------------------------------------
+>>>{'a' : 1}
+
+리턴값 2개 이상이면 무조건 하나로 묶인 (튜플)로 리턴됨♣	    //오류x
+
+함수 안의 변수 vs. 함수 밖의 변수♣
+a=1
+def vartest(a):	//이름은 같지만 함수 밖의 a와 완전히 다른 변수(주소는 다르고 안에 담긴 value값만 같음. )
+    a=a+1	
+vartest(a)		//a의 주소 자체가 아니라, a가 가리키는 주소에 담긴 value값만을 넘겨준 것
+print(a)
+---------------------------------------
+>>>1		//2가 아니라 1이 출력
+함수가 실행되면 '데이터 메모리 공간'(함수 밖)에서 '스택 메모리 공간'(함수 안)으로 넘어감. 
+함수가 끝나자마자 다시 '데이터 메모리 공간'으로 들어오고, 사용된 '스택 메모리 공간'은 사라짐.
+return을 통해 '데이터 메모리 공간'까지 전달해주어서 함수 안에서 벌어진 무의미한 일이 유의미해짐
+
+global 최대한 사용x. 
+함수 내부와 외부의 연결은 매개변수와 리턴값 둘 뿐인 것으로 통일하면 좋다. 
+디버깅할 때는 global 종종 쓰임. 함수 내부 변수는 함수 끝나면 사라지니까 스파이더의 Variable explorer 탭에서 값 확인 불가능해서 global로 정의해서 확인할 수 있으므로
+
+lambda
+함수를 한 줄로 간결히 생성할 때 사용
+add = lambda a, b : a+b	//add라는 함수는 a와 b를 매개변수로 받아 a+b를 리턴한다
+print(add(3, 4))
+--------------------------
+>>>7
+
+■■■■■■■■■■■■■0414 수업中 새로 알게된것■■■■■■■■■■■■■
+
+input() 실제로 쓰면 x !!
+  1. 컴퓨터가 막 돌아가는데, 돌 때 마다 어떤 레지스터(□□□□□... 이렇게 생긴 메모리)를 확인한다. 
+  2. 레지스터의 비트들은 모두 0인데 interrupt가 발생한 순간 특정 비트가 1로 변하는 flag가 발생한다. 
+  3. '주인님이 지금 내가 돌고 있는 것보다 우선순위가 높은 명령을 내렸구나!' 
+  4. 컴퓨터는 인터럽트 테이블을 보고 ex)'마우스가 움직여서 생긴 인터럽트구나!' 확인하고 마우스 제어에 관한 함수로 점프해서 해결하고 돌아온다
+기본 순서가 이런데, input()은 인터럽트를 무시하고 모든 일을 멈춰서 잠시 죽은 상황이 된다. 마우스를 움직이는 것도 처리가 안 됨. 
+그래서 실제 어플에서는 input() 절대 쓰면 안 되고 인터럽트에 해당하는 '통신'으로 대체함. 
+
+파이썬은 회사에서 마라톤 테스트(어플이 언제 죽는지 가혹한 환경에서 계속 실험) 할 때, 통신연결(프로토콜 구현한 패키지가 있어서 메시지 주고받기 편함)할 때 많이 쓰임
+이 때 몇날 몇시 몇분 몇초에 어떤 문제가 생겨서 어떤 부분이 죽었는지 로그 남길 때 f.write 많이 쓰임. 
+얘네가 알아서 계속 해주니까 업무 자동화. 
+
+w  write     쓰기 모드
+r   read      읽기 모드
+a   append  추가 모드
+f.readline()   	#수행될 때마다 맨 위부터 한 줄씩 내려가면서 문자열로 묶어 담아줌
+f.readlines()     	#파일의 모든 줄을 읽어서 각각의 줄을 str 요소로 갖는 리스트로 담아줌
+f.read()          	#파일 전체를 문자열로 묶어 담아줌
+
+f=open('C:/jeon/python_code/test.txt', 'w')     #f : 파일을 담은 객체
+for i in range(1, 11):
+    data="%d번째 줄입니다.\n"%i
+    f.write(data)
+f.close()
+f=open('C:/jeon/python_code/test.txt', 'r')
+while True:
+    line=f.readline()
+    if not line: break  #line : str. if line:에 역을 취한 것이 if not line:
+    print(line)         #"%d번째 줄입니다.\n"의 개행문자에다가 print()에 자동으로 붙어 있는 개행문자가 겹쳐져서 두 번 개행됨
+f.close()
+
+with문 : f.close() 빠뜨리는 실수 안하게. with문 벗어나는 순간 f.close() 자동 처리
+with open("test.txt", "w") as f:
+    f.write("Life is too short, you need python")
+
+■■■■■■■■■■■■■0415 수업中 새로 알게된것■■■■■■■■■■■■■
+
+a = Cookie() 	//a는 객체, a는 클래스 Cookie()의 인스턴스 (걍 유연하게 생각해)
+		//a는 클래스 Cookie() 안에 정의된 모든 메서드를 사용할 수 있게 됨
+a.add()와 'python'.replace('p', 'a')에서의 . 사용은 일맥상통하다. 클래스 str 안에 replace라는 메서드가 정의되어 있는 것
+파이썬의 각각의 변수들은 사실 클래스 객체임	type('hi'):<class 'str'>, type(1):<class 'int'>, type(1.1):<class 'float'>
+클래스는 파이썬의 근간이 되는 개념
+
+Cookie():
+    def setdata(self, first, second):	//파이썬은 꼭 self 써야 함♣
+        self.fitst=first
+        self.second=second
+a=Cookie()
+a.setdata(4, 2)			//a→self, 4→first, 2→second
+
+생성자 __init__()
+인터프리터와 약속된 키워드. 생성자 이름은 __init__으로 정해져있음
+객체가 생성되는 시점에 자동으로 호출
+사실 상속받은 자식클래스에게 필요한 생성자가 부모클래스 생성자와 같다면 오버라이딩 필요 없지만
+초기값 설정 이외에도 쓰이므로 습관적으로 써주자!
+
+클래스 상속
+: class 클래스명A(상속할 기존의 클래스명B)
+어떤 라이브러리는 이미 컴파일이 끝난 binary, 즉 이진수 형태로 제공되어서 알아볼 수도, 수정할 수도 없게 제공된다
+패키지를 만들어서 돈을 버는 회사는 당연히 그대로 보여주지 않는다^^ 이 때 사용됨
+
+메소드 오버라이딩[덮어쓰기]
+: A, B에 같은 이름의 메소드가 있다면 B는 무시하고 새로 업데이트된 A의 메소드로 사용
+ex_ 나눗셈에서 0으로 나눌 때 원래는 오류뜨는데 새롭게 오류 처리된 메소드 정의하고 싶을 때
+
+객체 변수(self.가 붙음)
+생성, 사용 언제나 self. 붙여 써야 함. 각각의 객체에 종속되어 있어서 개별적		//id() 서로 다름
+
+클래스 변수(self.가 붙지 않음)
+해당 클래스를 공유하는 모든 객체들이 같이 쓰고 있어서 하나를 바꾸면 나머지도 바뀜	//id() 찍어보면 주소값도 똑같음. 완전히 same
+
+■■■■■■■■■■■■■0416 수업中 새로 알게된것■■■■■■■■■■■■■
+
+#판다스 맛보기 - kaggle - titanic
+import csv
+import pandas as pd
+
+df_titanic = pd.read_csv("C:/jeon/titanic_train.csv")
+'''
+df-titanic의 타입: DataFrame, 사이즈:(891, 12) 즉 행렬!, column명과 index가 하나로 묶여 있는 데이터
+DataFrame이라는 데이터 타입 안에 Pandas라는 패키지가 있다
+Pandas : DataFrame 타입의 데이터를 굉장히 잘 다룰 수 있게 해줌
+'''
+
+print(df_titanic.info())
+'''
+↓출력
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 891 entries, 0 to 890
+Data columns (total 12 columns):
+ #   Column       Non-Null Count  Dtype     #모델링한다 = 가중치를 찾아 낸다. 거기서 null값은 사용할 수 없으니까 채워 넣으라고 Non-Null Count 보여줌. 
+---  ------       --------------  -----  
+ 0   PassengerId  891 non-null    int64  
+ 1   Survived     891 non-null    int64  
+ 2   Pclass       891 non-null    int64  
+ 3   Name         891 non-null    object 
+ 4   Sex          891 non-null    object 
+ 5   Age          714 non-null    float64
+ 6   SibSp        891 non-null    int64  
+ 7   Parch        891 non-null    int64  
+ 8   Ticket       891 non-null    object 
+ 9   Fare         891 non-null    float64
+ 10  Cabin        204 non-null    object 
+ 11  Embarked     889 non-null    object 
+dtypes: float64(2), int64(5), object(5)
+memory usage: 83.7+ KB
+None
+'''
+
+print(df_titanic.describe())
+'''
+↓출력 (표준편차: 분포 보여줌)
+       PassengerId    Survived      Pclass  ...       SibSp       Parch        Fare
+count   891.000000  891.000000  891.000000  ...  891.000000  891.000000  891.000000
+mean    446.000000    0.383838    2.308642  ...    0.523008    0.381594   32.204208
+std     257.353842    0.486592    0.836071  ...    1.102743    0.806057   49.693429
+min       1.000000    0.000000    1.000000  ...    0.000000    0.000000    0.000000
+25%     223.500000    0.000000    2.000000  ...    0.000000    0.000000    7.910400
+50%     446.000000    0.000000    3.000000  ...    0.000000    0.000000   14.454200
+75%     668.500000    1.000000    3.000000  ...    1.000000    0.000000   31.000000
+max     891.000000    1.000000    3.000000  ...    8.000000    6.000000  512.329200
+'''
+============================================================
+
+가장 많은 오류
+-No such file or directory: '없는파일이름'
+-division by zero
+-list index out of range
+cf. None 넣어주는 건 오류 x!!
+	def add()의 리턴값이 없을 때 c=add()는 오류 x
+
+예외처리 1. try, except문
+try: except:			//모든 예외처리
+try: except Exception as e:		//모든 예외처리 - 모든 예외의 에러 메시지를 출력할 때는 Exception을 사용
+try: except FileNotFoundError as e: 	//No such file or directory만 예외처리. 나머지는 오류남
+try: except ZeroDivisionErrow as e: 	//division by zero만 예외처리. 나머지는 오류남
+try: except IndesErrow as e: 	//list index out of range만 예외처리. 나머지는 오류남
+        cf. 	except문 여러개 쓰면 여러개 예외처리 할 수 있지만, 
+	앞에서 오류가 발생했으면 이미 멈춰서(except문으로 이미 빠져버린다) 
+	다음 코드는 실행되지도 않고 오류도 발생하지 않는다.
+
+예외처리 2. try, finally문
+형태는 똑같지만 try문 수행 도중 예외가 발생했든 아니든(try문 수행하든 except문 수행하든) finally문 항상 수행
+
+raise 키워드로 오류 일부러 발생시키기
+상속해주는 부모 클래스의 특정 메소드가 문제가 있어서 상속받은 자식 클래스에서 무조건 메소드 오버라이딩을 해줬으면 하는 상황에 쓰임
+raise 에러 이름 → 해당 에러 발생
+	ex_ raise NotImplementedError → 꼭 작성해야 하는 부분이 구현되지 않았을 때 발생
+				    → 부모 클래스 메소드에 써둠. 자식 클래스에서 해당 메소드 구현하지 않을 경우 호출
+
+■■■■■■■■■■■■■0419 수업中 새로 알게된것■■■■■■■■■■■■■
+
+★
+____________________________[파이썬 내장함수]____________________________
+abs(x) → x의 절댓값
+pow(x, y) → x^y 
+round(x, y) → x를 소숫점 y째 자리까지 반올림 (y 없어도 됨) 
+sum(s) → s의 모든 요소의 합
+all(x)♣ → x의 모든 '요소'가 참일 때 True, 하나라도 거짓일 때 False
+any(x)♣ → x의 하나의 '요소'라도 참일 때 True, 모두 거짓일 때 False
+chr(아스키코드값), ord(문자) → 아스키코드에 해당하는 문자 리턴, 문자에 해당하는 아스키코드값 리턴
+int(x), hex(x), oct(x) → 정수 x를 10진수, 16진수, 8진수로 변환해서 리턴
+	cf___int('0xea', 16)  #지금 '0xea'는 16진수로 표기되어 있는데, 얘를 10진수로 바꿔주세요!
+id(x) → 객체 x의 주소값
+len(s) → s의 길이, 즉 s 안의 요소의 전체 개수
+list(s) → s를 리스트로 만들어 리턴
+dir(x) → x의 자료형이 사용할 수 있는 모든 내장함수 리턴
+enumerate → for loop 돌린 횟수에 인덱스를 부여. 습관적으로 사용하자!
+filter(함수명a, x)♣ → x의 요소 중 함수a 돌렸을 때 리턴값이 참인 것만 묶어서(걸러내서) 리턴
+		→ x는 iterate(여러개의 요소 가짐)여야 함!
+	>>>def positive(x):
+	          return x>0	//양수면 True, 그게 아니면 False
+	      print( list( filter(positive, [1,-3,2,0,-5,6])))
+	>>>print( filter( lambda x : x>0, [1,-3,2,0,-5,6]))	    //lambda a, b : a+b → input값 a, b, output값 a+b
+						    //이러면 함수a 말하면서 x도 써주니까 lambda만 넣어주면 됨
+	------------------------------------------------------
+	>>> [1, 2, 6]
+	>>> [1, 2, 6]
+map(함수명a, x)♣ → x의 모든 요소에 a효과를 넣어줌
+		→ x는 iterate(여러개의 요소 가짐)여야 함!
+	>>>def two_times(x):
+	          return x*2
+	      print( list( map(two_times, [1,2,3,4]))
+	>>>print( map( lambda a : a*2, [1,2,3,4]))
+            -------------------------------------------------------
+	>>>[2, 4, 6, 8]
+	>>>[2, 4, 6, 8]
+sorted(s) → s의 요소들을 정렬한 뒤 리스트로 리턴	//리스트.sort()는 리턴해주지는 않는다
+zip(동일한 len의 여러 자료)♣ → 같은 인덱스의 데이터끼리 묶어줌
+★
+
+모듈 : 파이썬 파일(.py)
+여러 모듈(import해오는 것들)이 합쳐지면 : 패키지
+여러 패키지가 합쳐지면 : 라이브러리
+
+대화형 인터프리터 : Anaconda prompt 켜서 python 입력하면 >>>형태로 실행됨
+if __name__ == "__main__" 이거 여기서 사용하는 것
+
+__init__.py
+해당 디렉터리가 패키지의 일부임을 알려준다. 
+python3.3버전부터는 굳이 없어도 알아서 "이 디렉터리가 패키지를 위한 것이구나~" 인식해서 오류 x
+그래도 python3.3 이하의 하위 버전에서 도는 애플리케이션까지 호환되면 좋으니까 그냥 __init__.py 쓰자!
+
+A디렉터리의 a.py모듈이 B디렉터리의 b.py모듈을 사용하고 싶다면?
+a.py 모듈 안에서 from B import b.py 해주고 아래에서 b.py모듈 안의 함수를 사용하면 됨
+
+■■■■■■■■■■■■■0420 수업中 새로 알게된것■■■■■■■■■■■■■
+
+import csv
+
+f=open('C:/jeon/jihacheol.csv')
+main_data=csv.reader(f)
+temp=[]
+for row in main_data:
+    temp.append(row)
+main_pt=temp[2:]
+f.close()
+
+
+#출근시간 7~9시에 가장 많은 하차 인원(11idx, 13idx만 확인)이 카운팅되는 역 찾기
+maxgetoff_7to9=int(main_pt[0][11].replace(",", ''))+int(main_pt[0][13].replace(",", ''))
+maxidx_7to9=0
+for idx, row in enumerate(main_pt):
+    if row and row[3] and row[11] and row[13]:
+        newgetoff=int(row[11].replace(",", ''))+int(row[13].replace(",", ''))
+        if newgetoff>maxgetoff_7to9:
+            maxgetoff_7to9=newgetoff
+            maxidx_7to9=idx
+        
+print(main_pt[maxidx_7to9][3], maxgetoff_7to9)
+print("7~8시 :",main_pt[maxidx_7to9][11])
+print("8~9시 :",main_pt[maxidx_7to9][13])
+
+
+#모든 역에 대해 [역이름, 승차총합(모든시간대), 하차총합]을 요소르 담는 리스트 만들기
+def getsum(n):			#함수 쓰면 리스트 다시 안 비워줘도 되니까 better
+    sum_all=0
+    for idx2, column in enumerate(row[4:52]):
+        if n:
+            if not idx2 %2:
+                sum_all+=int(column.replace(',',''))
+        else:
+            if idx2 %2:
+                sum_all+=int(column.replace(',',''))
+    return sum_all
+sum_all_onoff=[]
+for idx, row in enumerate(main_pt):
+    each_all_onoff=[]
+    each_all_onoff.append(row[3])    	#역이름 
+    each_all_onoff.append(getsum(1)) 	#승차총합
+    each_all_onoff.append(getsum(0)) 	#하차총합
+    sum_all_onoff.append(each_all_onoff)
+
+
+#시간대별 가장 많은 승차인원, 가장 많은 하차인원 리스트로 만들기
+#[시간, 역이름, 승차인원, 역이름, 하차인원]
+def get_max(n): #(n인덱스가 최대인 역이름, 그 역의 n인덱스값) 튜플로 리턴
+    max_idx=0
+    max_men=int(main_pt[0][n].replace(",",''))
+    for idx, row in enumerate(main_pt):
+            if int(row[n].replace(",",''))>max_men:
+                max_idx=idx
+                max_men=int(row[n].replace(",",''))
+    return main_pt[max_idx][3], max_men
+def get_time(n): #시간 구하기
+    time=n+4
+    if time>=24:
+        time-=24
+    return str(time)+"시"
+final=[]
+for x in range(24):
+    temp=[]    
+    max_on=get_max(4+2*x)
+    max_off=get_max(5+2*x)
+    temp.append(get_time(x))
+    temp.append(max_on[0])
+    temp.append(max_on[1])
+    temp.append(max_off[0])
+    temp.append(max_off[1])
+    final.append(temp)
+
+
+#다른방법_1
+def get_time(n): #시간 구하기
+    time=n+4
+    if time>=24:
+        time-=24
+    return str(time)+"시"
+pol=[]
+for _ in range(48):
+    pol.append([0,0])
+for idx, row in enumerate(main_pt):
+    for idx2, row2 in enumerate(row[4:-1]):
+        if int(row2.replace(",",''))>pol[idx2][1]:
+            pol[idx2][0]=row[3]
+            pol[idx2][1]=int(row2.replace(",",''))
+final1=[]
+for x in range(24):
+    temp1=[]
+    temp1.append(get_time(x))
+    temp1.append(pol[x*2][0])
+    temp1.append(pol[x*2][1])
+    temp1.append(pol[x*2+1][0])
+    temp1.append(pol[x*2+1][1])
+    final1.append(temp1)
+
+
+#다른방법_2
+MaxMan_counted_list = [0]*48
+print(len(MaxMan_counted_list))
+station_name_list = [0]*48
+temp_list = []
+total_list = []
+
+for idx, row in enumerate(main_pt):
+    for idx2, row1 in enumerate(row[4:52]):
+        if MaxMan_counted_list[idx2] < int(row1.replace(",","")):
+            MaxMan_counted_list[idx2] = int(row1.replace(",",""))
+            station_name_list[idx2] = str(main_pt[idx][3]) + '_' + str(idx+2)  #그냥 역ID도 같이 출력해봄
+
+for idx, row in enumerate(range(24)):
+    temp_list.append(temp[0][idx*2 + 4])
+    temp_list.append(station_name_list[idx*2])
+    temp_list.append(MaxMan_counted_list[idx*2])
+    temp_list.append(station_name_list[idx*2 + 1])
+    temp_list.append(MaxMan_counted_list[idx*2 + 1])
+    total_list.append(temp_list)
+    temp_list = []
+
+■■■■■■■■■■■■■0421 수업中 새로 알게된것■■■■■■■■■■■■■
+
+import csv
+import matplotlib.pyplot as plt 	#matplotlib패키지 안의 pyplot모듈(그래프 그리기 위해서 필요)을 불러와 여기서 plt라 부르겠다 
+
+f=open("C:/jeon/ingu.csv")
+main_data=csv.reader(f)
+temp=[]
+for row in main_data:
+    temp.append(row)
+f.close()
+main_pt=temp[1:]
+
+
+#청담동의 총 인구 수를 int로 출력
+for idx, row in enumerate(main_pt):
+    if '청담' in row[0]:
+        print("청담동 총 인구 수 :", int(row[1].replace(",", '')))
+
+
+#총 인구 수가 가장 많은 동을 찾아서 출력
+maxofdong=int(main_pt[2][1].replace(",", ''))
+maxidx=2
+for idx, row in enumerate(main_pt):
+    #(나오기 직전까지 잘라서 마지막에 공백 있으면 continue, 아닐 때만 생각
+    if row[0][:row[0].index('(')][-1]==" ":
+        continue
+    newrow1 =int(row[1].replace(",", ''))
+    if newrow1>maxofdong:
+        maxofdong=newrow1
+        maxidx=idx
+print("총 인구 수가 가장 많은 동 :", main_pt[maxidx][0], maxofdong, "명")
+
+
+#그래프 그리기 : spider의 Plots 탭에서 확인 가능 
+A=[1,5,8,8,4,3,2]
+plt.plot(A) 		#plot()의 인수로는 수치적으로 판단 가능한 타입만 
+
+
+#신중동에서 0~100세이상 까지의 그래프 그리기
+shinjoong_bothsex =[]   	#슬라이싱 바로 하니까 int형으로 각각 넣을 수가 없어서 이렇게 바꿈
+for x in range(3, 104):
+    shinjoong_bothsex.append(int(main_pt[maxidx][x].replace(",", '')))
+plt.plot(shinjoong_bothsex)
+
+
+#xx동 입력받고 있으면 인덱스 구하기
+dong=input("동 이름을 입력하세요:")         
+for idx, row in enumerate(main_pt):
+    if row and row[0]:
+        if ' '+dong+'(' in row[0]:
+            break
+if idx==3845 and '예래동'!= dong:
+    print("해당하는 동이 없습니다.")
+else:       #xx동에서 0~100세이상 까지의 그래프 그리기
+    dong_bothsex=[]
+    for x in range(3, 104):
+        dong_bothsex.append(int(main_pt[idx][x].replace(',', '')))
+    plt.plot(dong_bothsex)
+    
+    
+#신중동과 가장 유사한 그래프 모양을 가진 동 찾기
+'''
+ex
+           0세      1세      2세      3세
+신중동     100      200      150      180
+청담동      80      150      170      100
+효자동    1000     2000     1500     1800
+
+차이는 청담동이 덜 나지만, 비율로 따져야 함. 효자동이 정답!
+abs(신중동 0세/총인구 - xx동 0세/총인구) + abs(신중동 1세/총인구 - xx동 1세/총인구) + ...
+'''
+ratio_min_different=[main_pt[0][0], 999999] #비율차이 가장 적은 동 이름, 그 동과의 비율차이 담을 변수 초기화
+shinjoong_ratio=list(map(lambda x:x/sum(shinjoong_bothsex), shinjoong_bothsex))
+final_ratio=[]
+for idx, row in enumerate(main_pt):
+    if row[0][:row[0].index('(')][-1]==" ":
+        continue
+    if row[0]=='경기도 부천시 신중동(4119074200)':
+        continue
+    
+    each_bothsex=[]
+    for x in range(3, 104):
+        each_bothsex.append(int(row[x].replace(",",'')))
+    
+    each_ratio=list(map(lambda x:x/sum(each_bothsex) if row and row[0] and sum(each_bothsex)>0 else False, each_bothsex))
+    '''
+    if row and row[0] and sum(each_bothsex)>0:
+        each_ratio=list(map(lambda x:x/sum(each_bothsex), each_bothsex))
+    이것을 줄여서 lambda문 안에 if문을 넣어줄 수 있다. 대신 else문 꼭 써줘야 함! elif는 불가능!
+    '''
+    sum_all_abs=0
+    for n in range(len(shinjoong_ratio)):
+        sum_all_abs += abs(shinjoong_ratio[n]-each_ratio[n])
+    if sum_all_abs < ratio_min_different[1]:
+        ratio_min_different[0]=row[0]
+        ratio_min_different[1]=sum_all_abs
+        final_ratio=each_ratio
+print(ratio_min_different)
+plt.plot(shinjoong_ratio)
+plt.plot(final_ratio)
+
+#다른방법
+shinjoong_ratio2 = []
+for row in temp:
+    if "신중동" in row[0]:
+        for row2 in row[3:104]:
+            shinjoong_ratio2.append(int(row2.replace(",","")) / int(row[2].replace(",","")) ) #lambda를 안 쓰면 이렇게 길어진다
+min = 999999
+for idx0, row in enumerate(main_pt):
+    if row[0]!='경기도 부천시 신중동(4119074200)':
+        if row[0][:row[0].index('(')][-1]!=" ":
+            each_ratio_substract = []
+            try:
+                for idx1 , row2 in enumerate(row[3:104]):
+                    each_ratio_substract.append(abs(shinjoong_ratio2[idx1] - int(row2.replace(",","")) / int(row[2].replace(",","")) ))
+            except:
+                print(idx0)
+                
+            if(sum(each_ratio_substract) != 0 and sum(each_ratio_substract) < min ):
+                min = sum(each_ratio_substract)
+                final_data = each_ratio_substract
+                final_idx = idx0           
+print(main_pt[final_idx][0])
+dong_reslut = main_pt[final_idx][0][-11:-1]
+final_ratio2 = []
+for row in temp:
+    if dong_reslut in row[0]:
+        for row2 in row[3:104]:
+            final_ratio2.append(int(row2.replace(",","")) / int(row[2].replace(",","")) ) 
+plt.plot(shinjoong_ratio2)
+plt.plot(final_ratio2)
+
+■■■■■■■■■■■■■0422 수업中 새로 알게된것■■■■■■■■■■■■■
+
+파이썬에서 '배열의 형태로 만들어라~' == '연산 쉽게 ndarray로 만들어라~'
+ndarray타입으로 바꾸면 계산도 빨라지고 행렬 연산도 쉽다
+type과 shape(==차원, 형태) 중요!
+
+ndarray 배열의 shape변수는 데이터의 크기를 튜플 형태 ex_(행, 열)로 가짐
+array1 = np.array([1,2,3])			array1.shape → 1차원데이터 (series) : (3,)      // , 붙이기
+array2 = np.array([[1,2,3], [2,3,4]])		array2.shape → 2x3 shape를 가진 2차원데이터 : (2, 3)
+array3 = np.array([[1,2,3]])			array3.shape → 1x3 shape를 가진 2차원데이터 : (1, 3)
+
+A=1에서 A와 같이 파이썬에서 모든 변수는 엄밀히 말하면 하나의 객체이다
+type(A)는 <class 'int'>, 즉 int라는 객체. 4byte의 공간에 저장되지만, 그것을 위해 사실 더 많은 공간이 필요함
+array1 = np.array([1,2,3])에서 type(array1)은 int32 (32bit 공간 안에만 존재하는 숫자 하나로 바뀐 것) 크기도 작아지고 심플해짐
+
+[1 2 3]처럼 공백으로 구분
+ndarray명.dtype → 해당 ndarray의 요소의 데이터 타입 리턴
+ndarray는 무조건 동일한 데이터타입 가져야 함.      cf. 리스트 안에는 모든 타입 가능
+	[int, int, str]을 ndarray로 만들면 [str str str]로 타입캐스팅 		[1, 2, 'test'] → ['1' '2' 'test']
+	[int, int, float]을 ndarray로 만들면 [float float float]로 타입캐스팅 	[1, 2, 3.1] → [1. 2. 3.1] 
+		#float형.astype(int형) → 소수점 날라감
+
+np.array()♣
+인자를 넣어주면 ndarray 데이터타입으로 변환
+
+np.arange()♣
+range()와 똑같은데 ndarray 데이터타입으로 만들어질 뿐
+
+ndarray명.reshape()♣
+값은 그대로고 shape만 바꿔줌
+사용tip 1. 보통 행, 열 둘중에 하나만 정해주고 나머지 -1 넣어줌
+	array1 = np.arange(10)
+	array2 = array1.reshape(-1,5)
+사용tip 2. 2차원 데이터를 1차원으로 reshape해준 뒤 데이터연산 함수에 input → output값을 다시 2차원으로 reshape
+	이미지(디스플레이)는 여러 층의 rgb가 겹쳐져있는 개별 픽셀을 모아놓은 데이터임. 영상은 그 이미지가 프레임 단위로 막~~~ 넘어가는 것. 
+	이런 이미지 처리도 shape 막~~ 바꿔가면서 함
+
+tolist()♣
+리스트로 변환
+
+불린 인덱싱♣
+array1d = np.arange(start=1, stop=10)
+array3 = array1d[array1d > 5]	#[ ] 안에 array1d > 5 Boolean indexing을 적용
+	> [F, F, F, F, F, T, T, T, T]
+	> False값은 무시하고 True값에 해당하는 index만 저장 [5, 6, 7, 8]
+	> 저장된 index값으로 데이터 조회 array1d[[5, 6, 7, 8]]=[6 7 8 9]
+		#ndarray, DataFrame은 이렇게 접근 가능
+★
+np.sort(ndarray명)		→ 원본 데이터는 냅두고 결괏값을 리턴
+ndarray명.sort()		→ 리턴값 없고 원본 데이터 자체를 수정
+
+보통은 inplace라는 파라미터 설정을 통해 리턴해줄지 말지 결정
+inplace = False 로 설정 	→ 원본 데이터는 냅두고 결괏값을 리턴 (default설정)
+inplace = True 로 설정  	→ 리턴값 없고 원본 데이터 자체를 수정
+
+[::-1] 			→ 내림차순정렬
+np.sort(ndarray명, axis=0)	→ 로우 방향, 즉 로우가 증가하는 방향으로 정렬, axis=0
+np.sort(ndarray명, axis=1)	→ 컬럼 방향, 즉 컬럼이 증가하는 방향으로 정렬, axis=1
+np.argsort()♣		→ 원본 행렬의 인덱스가 정렬되면 어디에 있는지
+
+np.dot(A, B) 		→ A와 B 행렬 내적 (==행렬 곱)
+np.transpose(A)		→ A행렬의 전치행렬
+cf. 행렬 곱 계산
+| 1 2 3 |     | 7  8  |  
+| 4 5 6 |  x  | 9 10 |   
+               |11 12 |
+    ↓            ↓
+  2 x 3        3 x 2	     //AxB의 크기 = A의 행 x B의 열
+★
+
+Series	   // 컬럼이 1개. 1차원데이터
+DataFrame  // 컬럼이 2개 이상. 2차원데이터
+DataFrame이라는 형태에서 컬럼이 1개인 것과 Series 인 것은 다르다! (컬럼이 1개라고 무조건 Series는 아님)
+
+인덱싱/슬라이싱	위치기반(iloc)
+		명칭기반(loc)
+		불린
+
+sort_values() 정렬 	1. by=['컬럼명', '컬럼명', ..]	해당 컬럼을 기준으로 정렬
+		2. ascending=True		True:오름차순, False:내림차순
+		3. inplace=False		False:원본데이터 안건드림, True:원본데이터 건드림
+agg() 		aggregation함수
+groupby() 
+
+isna() 		결손 데이터 확인
+fillna()		결손 데이터 대체
+A.apply(lambda x:...)	똑같이 A는 iterate해야 함. A의 요소에 x가 들어감.
+
+■■■■■■■■■■■■■0423 수업中 새로 알게된것■■■■■■■■■■■■■
+
+import numpy as np
+import pandas as pd
+
+array1 = np.array([1,2,3])
+print('array1 type:',type(array1))
+print('array1 array 형태:',array1.shape) #1차원데이터 (series)
+array2 = np.array([[1,2,3],
+                  [2,3,4]])
+print('array2 type:',type(array2))
+print('array2 array 형태:',array2.shape) #2x3 shape를 가진 2차원데이터
+array3 = np.array([[1,2,3]])
+print('array3 type:',type(array3))
+print('array3 array 형태:',array3.shape) #1x3 shape를 가진 2차원데이터 
+print('array1: {0}차원, array2: {1}차원, array3: {2}차원'.format(array1.ndim, array2.ndim, array3.ndim))
+
+col_name1=['col1']			# 1개의 컬럼명이 필요함
+list1 = [1, 2, 3]
+array1 = np.array(list1)
+print('array1 shape:', array1.shape )
+df_list1 = pd.DataFrame(list1, columns=col_name1)   	#컬럼네임을 col_name1로 지어줌
+print('1차원 리스트로 만든 DataFrame:\n', df_list1)
+df_array1 = pd.DataFrame(array1, columns=col_name1) 	#컬럼네임을 col_name1로 지어줌
+print('1차원 ndarray로 만든 DataFrame:\n', df_array1)
+
+col_name2=['col1', 'col2', 'col3']	# 3개의 컬럼명이 필요함
+list2 = [[1, 2, 3],			# 2행x3열 형태의 리스트와 ndarray 생성 한 뒤 이를 DataFrame으로 변환. 
+         [11, 12, 13]]
+array2 = np.array(list2)
+print('array2 shape:', array2.shape )
+df_list2 = pd.DataFrame(list2, columns=col_name2)
+print('2차원 리스트로 만든 DataFrame:\n', df_list2)
+df_array2 = pd.DataFrame(array2, columns=col_name2)
+print('2차원 ndarray로 만든 DataFrame:\n', df_array2)
+
+#ndarray는 무조건 동일한 데이터타입 가져야 함.      cf. 리스트 안에는 모든 타입 가능
+list1 = [1,2,3]
+print(type(list1))
+array1 = np.array(list1)
+print(type(array1))
+print(array1, array1.dtype)
+
+list2 = [1, 2, 'test']
+array2 = np.array(list2)
+print(array2, array2.dtype) #[int, int, str]을 ndarray로 만들면 [str str str]로 타입캐스팅 → ['1' '2' 'test']
+                            
+list3 = [1, 2, 3.1]
+array3 = np.array(list3)
+print(array3, array3.dtype) #[int, int, float]을 ndarray로 만들면 [float float float]로 타입캐스팅 → [1. 2. 3.1] 
+
+
+#0과 1로 초기화, dtype 설정해주지 않으면 default로 float로 들어감
+zero_array = np.zeros((3,2),dtype='int32')
+print(zero_array)
+print(zero_array.dtype, zero_array.shape)
+
+one_array = np.ones((3,2))
+print(one_array)
+print(one_array.dtype, one_array.shape)
+
+
+#reshape()
+array1 = np.arange(10)
+print('array1:\n', array1)
+
+array2 = array1.reshape(2,5)
+print('array2:\n',array2)
+
+array3 = array1.reshape(5,2)
+print('array3:\n',array3)
+
+array4 = array1.reshape(-1,5) #뒷자리가 5로 고정되면 앞자리는 무조건 2만 가능 => 알아서 해주세요~
+print('array4 shape:',array4.shape)
+
+array5 = array1.reshape(5,-1) #앞자리가 5로 고정되면 뒷자리는 무조건 2만 가능 => 알아서 해주세요~
+print('array5 shape:',array5.shape)
+
+
+#tolist()
+array1 = np.arange(8)
+array3d = array1.reshape((2,2,2))
+print('array3d:\n',array3d.tolist())
+
+array5 = array3d.reshape(-1,1)
+print('array5:\n',array5.tolist())
+print('array5 shape:',array5.shape)
+
+array6 = array1.reshape(-1,1)
+print('array6:\n',array6.tolist())
+print('array6 shape:',array6.shape)
+#불린인덱싱
+array1d = np.arange(start=1, stop=10)
+# [ ] 안에 array1d > 5 Boolean indexing을 적용 
+array3 = array1d[array1d > 5]
+print('array1d > 5 불린 인덱싱 결과 값 :', array3)
+
+
+#정렬
+org_array = np.array([ 3, 1, 9, 5]) 
+print('원본 행렬:', org_array)
+
+sort_array1 = np.sort(org_array)        #sorting된 데이터를 리턴 - 원본 데이터 그대로 냅둠   
+print ('np.sort( ) 호출 후 반환된 정렬 행렬:', sort_array1) 
+print('np.sort( ) 호출 후 원본 행렬:', org_array)
+
+sort_array2 = org_array.sort()          #원본 데이터 자체를 수정 - 아무것도 리턴 안됨
+print('org_array.sort( ) 호출 후 반환된 행렬:', sort_array2)
+print('org_array.sort( ) 호출 후 원본 행렬:', org_array)
+
+sort_array1_desc = np.sort(org_array)[::-1]     #:: 는 '거꾸로'
+print ('내림차순으로 정렬:', sort_array1_desc) 
+
+array2d = np.array([[8, 12], 
+                   [7, 1 ]])
+sort_array2d_axis0 = np.sort(array2d, axis=0)
+print('로우 방향으로 정렬:\n', sort_array2d_axis0)      #8과 7을 비교, 12와 1을 비교
+sort_array2d_axis1 = np.sort(array2d, axis=1)
+print('컬럼 방향으로 정렬:\n', sort_array2d_axis1)      #8과 12를 비교, 7과 1을 비교
+
+org_array = np.array([ 3, 1, 9, 5]) 
+sort_indices = np.argsort(org_array)
+print(type(sort_indices))
+print('행렬 정렬 시 원본 행렬의 인덱스:', sort_indices)
+
+name_array = np.array(['John', 'Mike', 'Sarah', 'Kate', 'Samuel'])
+score_array= np.array([78, 95, 84, 98, 88])
+
+sort_indices_asc = np.argsort(score_array)
+print('성적 오름차순 정렬 시 score_array의 인덱스:', sort_indices_asc)
+print('성적 오름차순으로 name_array의 이름 출력:', name_array[sort_indices_asc])
+
+#행렬 내적(곱)
+A = np.array([[1, 2, 3],
+              [4, 5, 6]])
+B = np.array([[7, 8],
+              [9, 10],
+              [11, 12]])
+
+dot_product = np.dot(A, B)
+print('행렬 내적 결과:\n', dot_product)
+
+
+
+#DataFrame
+
+col_name1=['col1']			# 1개의 컬럼명이 필요함
+list1 = [1, 2, 3]
+array1 = np.array(list1)
+print('array1 shape:', array1.shape )
+df_list1 = pd.DataFrame(list1, columns=col_name1)   	#컬럼네임을 col_name1로 지어줌
+print('1차원 리스트로 만든 DataFrame:\n', df_list1)
+df_array1 = pd.DataFrame(array1, columns=col_name1) 	#컬럼네임을 col_name1로 지어줌
+print('1차원 ndarray로 만든 DataFrame:\n', df_array1)
+
+col_name2=['col1', 'col2', 'col3']	# 3개의 컬럼명이 필요함
+list2 = [[1, 2, 3],			# 2행x3열 형태의 리스트와 ndarray 생성 한 뒤 이를 DataFrame으로 변환. 
+         [11, 12, 13]]
+array2 = np.array(list2)
+print('array2 shape:', array2.shape )
+df_list2 = pd.DataFrame(list2, columns=col_name2)
+print('2차원 리스트로 만든 DataFrame:\n', df_list2)
+df_array2 = pd.DataFrame(array2, columns=col_name2)
+print('2차원 ndarray로 만든 DataFrame:\n', df_array2)
+
+
+
+# Key는 컬럼명으로 매핑, Value는 리스트 형(또는 ndarray)
+dict = {'col1':[1, 11], 'col2':[2, 22], 'col3':[3, 33]}
+df_dict = pd.DataFrame(dict)
+print('딕셔너리로 만든 DataFrame:\n', df_dict)
+
+# DataFrame을 리스트로 변환
+print(df_dict.values)
+list3 = df_dict.values.tolist()     #df_dict.values => ndarray로 바뀜. .tolist()로 최종적으로 리스트로 바뀜
+                                    #바로 df_dict.tolist() 할 수 없다
+print('df_dict.values.tolist() 타입:', type(list3))
+print(list3)
+
+# DataFrame을 딕셔너리로 변환
+dict3 = df_dict.to_dict('list')
+print('\n df_dict.to_dict() 타입:', type(dict3))
+print(dict3)
+
+##################### titanic 살짝 건드려보기 #############################
+
+titanic_df = pd.read_csv('C:/jeon/titanic_train.csv')
+
+#1. 결측치(비어있는 값), 데이터타입(하나의 컬럼은 하나의 데이터 타입으로 이루어져야 함) 분석
+print(titanic_df.info())
+test=titanic_df.describe()
+'''
+count   non-null인 데이터 개수
+mean    평균
+std     표준편차
+min     최솟값
+25%     25% 위치의 값
+50%     50% 위치의 값
+75%     75% 위치의 값
+max     최댓값
+'''
+value_counts = titanic_df['Age'].value_counts()  #Age에 대한 Series(1개의 컬럼)의 요소 별 그에 해당하는 인원
+
+titanic_df['Age_0']=0    #새로운 컬럼 추가하고 0으로 모두 채우기
+titanic_df.head(3)
+
+
+#2. DataFrame과 리스트, 딕셔너리, 넘파이 ndarray의 상호 변환 - 사용하기 쉽게~
+
+#3. DataFrame의 컬럼 데이터 세트 생성, 수정
+titanic_df['Age_by_10'] = titanic_df['Age']*10    #컬럼의 연산의 결과는 각각의 개별 요소끼리의 연산 결과를 담은 컬럼. 하나의 Series.
+titanic_df['Family_No'] = titanic_df['SibSp']+titanic_df['Parch']+1
+titanic_df.head(3)
+titanic_df['Age_by_10'] = titanic_df['Age']+100
+titanic_df.head(3) #바뀜
+
+#4. DataFrame 데이터 삭제 - axis=0인지 axis=1인지 잘 써줘야 함!!!
+titanic_drop_df = titanic_df.drop('Age_0', axis=1 )     #y축에서 'Age_0' 컬럼 삭제
+titanic_drop_df = titanic_df.drop(8, axis=0 )           #x축에서 8인덱스 로우 삭제 
+titanic_drop_df.head(3)
+drop_result = titanic_df.drop(['Age_0', 'Age_by_10', 'Family_No'], axis=1, inplace=False)   #inplace=False : 리턴하고 원본데이터는 그대로
+print(' inplace=True 로 drop 후 반환된 값:',drop_result)
+titanic_df.head(3) #그대로
+
+
+#5. Index 객체 추출
+indexes = titanic_df.index
+print(indexes)
+
+print('Index 객체 array값:\n',indexes.values) # .values를 통해 Index 객체를 실제 값 ndarray 데이터타입으로 변환 
+indexes_value = indexes.values
+'''
+cf. 한번 만들어진 DataFrame 및 Series의 Index객체는 개별 row를 구분하는 "유니크한 값"(중복X)이기 때문에 수정 불가능
+'''
+print(type(indexes.values))
+print(indexes.values.shape)
+print(indexes[:5].values)
+print(indexes.values[:5])
+print(indexes[6])
+
+series_fair = titanic_df['Fare']   #DataFrame의 컬럼 하나가 Series 타입으로 넘어감
+print('Fair Series max 값:', series_fair.max())
+print('Fair Series sum 값:', series_fair.sum())
+print('sum() Fair Series:', sum(series_fair))
+print('Fair Series + 3:\n',(series_fair + 3).head(3) )  #컬럼의 연산 : 각 개별 요소의 연산~~
+
+titanic_reset_df = titanic_drop_df.reset_index(inplace=False)   #.reset_index()로 새 인덱스 생성, 기존의 인덱스는 새로운 컬럼으로 들어감                 
+value_counts = titanic_df['Pclass'].value_counts()
+print(value_counts)
+print('value_counts 객체 변수 타입:',type(value_counts))
+new_value_counts = value_counts.reset_index(inplace=False)      #titanic_df['Age'].value_counts()는 나이대로 정렬되는 게 아니라 ,
+print(new_value_counts)                                         #유니크한 나이에 해당하는 요소의 개수(해당 나이의 인원은 몇명인가)에 따라 내림차순 정렬됨. 
+print('new_value_counts 객체 변수 타입:',type(new_value_counts))
+
+
+#6. 데이터 셀렉팅 및 슬라이싱 - 위치기반 iloc, 명칭기반 loc
+data = {'Name': ['Chulmin', 'Eunkyung','Jinwoong','Soobeom'],
+        'Year': [2011, 2016, 2015, 2015],
+        'Gender': ['Male', 'Female', 'Male', 'Male']}
+data_df = pd.DataFrame(data, index=['one','two','three','four'])
+data_df
+
+print(data_df.iloc[0, 0])           #iloc select
+print(data_df.loc['one', 'Name'])   #loc select
+print('위치기반 iloc slicing\n', data_df.iloc[0:1, 0])              #iloc slice
+''' one    Chulmin'''  #one 은 index 출력된 것. 인덱스는 위치에 포함 안하니까~~!! 사실상 Chulmin만 출력됨.
+print('명칭기반 loc slicing\n', data_df.loc['one':'two', 'Name'])   #loc slice
+''' one     Chulmin
+    two    Eunkyung''' #loc는 명칭기반이므로 특별하게 슬라이싱에서 [a:b]이면 b까지 포함!!
+
+titanic_boolean = titanic_df[titanic_df['Age'] > 60] #boolean slice
+print(type(titanic_boolean))
+titanic_df[titanic_df['Age'] > 60][['Name','Age']].head(3) #'Name' 단일컬럼만 보려면 'Name'만 []에 넣어주면 되지만,
+                                                            #'Name', 'Age'처럼 여러 컬럼 보려면 그걸 묶은 "리스트"를 넣어줘야 한다! ['Name', 'Age']리스트를 []에 넣어줌
+print(type((titanic_df['Age'] > 60) & (titanic_df['Pclass']==1) & (titanic_df['Sex']=='female')))
+print(titanic_df[ (titanic_df['Age'] > 60) & (titanic_df['Pclass']==1) & (titanic_df['Sex']=='female')])
+'''cond1 = titanic_df['Age'] > 60
+cond2 = titanic_df['Pclass']==1
+cond3 = titanic_df['Sex']=='female'
+titanic_df[ cond1 & cond2 & cond3]    얘를 줄여 쓴 것'''
+
+
+#7. 정렬, Aggregation(집합) 함수-agg()♣, GroupBy 적용-groupby()♣
+titanic_sorted = titanic_df.sort_values(by=['Name'])    #'Name' 컬럼을 기준으로 정렬해주세요~
+titanic_sorted.head(3)
+titanic_sorted = titanic_df.sort_values(by=['Pclass', 'Name'], ascending=[False, True]) #처음으로 들어온 'Pclass'로 정렬한 뒤, 'Pclass'는 건들지 않고, 같은 'Pclass' 안에서 'Name'으로 정리
+titanic_sorted.head(3)                                                                  #'Pclass'는 내림차순, 'Name'은 오름차순으로 정렬
+
+'''앞으로 aggregation함수를 쓸 때 무조건 agg('agg함수명')로 묶어서 ~!!'''
+print(titanic_df.agg('count')) #각 컬럼에서 null값이 아닌(데이터가 애초에 없으니까 자동 제외) value만 count
+print(titanic_df[['Age', 'Fare']].agg('mean')) #'Age', 'Fare'에서 null값이 아닌(데이터가 애초에 없으니까 자동 제외) value들의 평균
+
+titanic_groupby = titanic_df.groupby('Pclass')
+print(type(titanic_groupby))
+print(titanic_groupby) #그냥 객체가 나와버렸다... 얘를 Aggregation함수와 함게 써야 의미가 있다!
+titanic_groupby = titanic_df.groupby('Pclass').agg('count') #'Pclass'의 유니크한 값 1, 2, 3을 이용해 각 칼럼별로 null값이 아닌 value만 count
+print(type(titanic_groupby))
+print(titanic_groupby)  #Cabin이 처음에 titanic_df.info()로 봤을 때 null값이 엄청 많았는데, titanic_groupby로 확인하니까 Pclass가 1인 경우에는 그렇게 많지 않았다..!
+                        #그와중에 Cabin이 2, 3인 경우는 많았다. 즉, 1등급이 아닌 2, 3등급 선실에서 묵은 사람들의 명부는 엄청 많이 누락되어 있구나~!
+titanic_groupby = titanic_df.groupby('Pclass')[['PassengerId', 'Survived']].agg('count') #'Pclass'의 유니크한 값 1, 2, 3으로 카테고리 만들고, 12개의 컬럼 중에서 요 두개만 뽑아서 나타낼게요~
+
+titanic_df.groupby('Pclass')['Age'].agg([max, min]) #'Pclass'의 유니크한 값 1, 2, 3을 카테고리로 하는 'Age'컬럼만을 보는데, 각각의 'Age'의 max, min 구한다                                                  
+agg_format={'Age':'max', 'SibSp':'sum', 'Fare':'mean'} #딕셔너리 - key:컬럼명, value:적용시킬 aggregation 함수
+titanic_df.groupby('Pclass').agg(agg_format) 
+
+
+#8. 결손 데이터 처리 - 1. 해당 row 날려버리기 2. 해당 column 날려버리기 3. 평균값으로 채우기 4. 0으로 채우기
+    #isna() : 결손 데이터 확인
+print(titanic_df.isna()) #titanic_df의 전체 데이터가 각각 null인지 모두 확인
+print(titanic_df.isna().sum())  #titanic_df.isna()의 결과인 DataFrame에서 각 컬럼의 sum값을 출력. 
+                                #titanic_df.isna()의 value는 모두 boolean값(null이면 True==1, 아니면 False==0)이므로 True값, 즉 null의 개수를 세준다. 
+    #fillna() : 결손 데이터 대체
+titanic_df['Cabin'] = titanic_df['Cabin'].fillna('C000') #titanic_df['Cabin']에서 null을 'C000'로 대체
+print(titanic_df['Cabin'].isna().sum())
+titanic_df['Age'] = titanic_df['Age'].fillna(titanic_df['Age'].mean()) #titanic_df['Age']에서 null을 평균으로 대체
+titanic_df['Embarked'] = titanic_df['Embarked'].fillna('S') #titanic_df['Embarked']에서 null을 'S'으로 대체
+print(titanic_df.isna().sum())
+
+
+#9. A.apply(lambda x:...) 식으로 데이터 가공    → A는 iterate, A의 요소가 x에 들어감.
+lambda_square = lambda x : x ** 2    # a**b == a^b
+print('3의 제곱은:',lambda_square(3))
+titanic_df['Name_len']= titanic_df['Name'].apply(lambda x : len(x)) #'Name_len' 컬럼 추가해서 'Name'컬럼의 단일요소(str)의 길이를 넣어줌
+titanic_df['Child_Adult'] = titanic_df['Age'].apply(lambda x : 'Child' if x <=15 else 'Adult') #'Child_Adult' 컬럼 추가해서 'Age'컬럼의 단일요소들이 15 이하면 'Child'를, 아니면 'Adult'를 단일요소로 넣어줌
+titanic_df['Age_cat'] = titanic_df['Age'].apply(lambda x : 'Child' if x<=15 else ('Adult' if x <= 60 else 'Elderly')) #'Age_cat' 컬럼 추가해서 'Child_Adult' 컬럼보다 더 세분화해서 'Elderly'까지 단일요소로 넣어줌
+titanic_df['Age_cat'].value_counts()                                                                                  #lambda x: A if a else(B if b else C) 형태 : a면 A, a가 아닌데 b면 B, 그것도 아니면 C                                                                                                                      
+def get_category(age):  # 나이에 따라 세분화된 분류를 수행하는 함수 생성
+    cat = ''
+    if age <= 5: cat = 'Baby'
+    elif age <= 12: cat = 'Child'
+    elif age <= 18: cat = 'Teenager'
+    elif age <= 25: cat = 'Student'
+    elif age <= 35: cat = 'Young Adult'
+    elif age <= 60: cat = 'Adult'
+    else : cat = 'Elderly'
+    return cat
+titanic_df['Age_cat'] = titanic_df['Age'].apply(lambda x : get_category(x)) #get_category(X)는 입력값으로 ‘Age’ 컬럼 값을 받아서 해당하는 cat 반환
+titanic_df['Age_cat'].value_counts()                                        #lambda에서 if else문 쓰는 것보다 이게 더 나음
+
+■■■■■■■■■■■■■0426 수업中 새로 알게된것■■■■■■■■■■■■■
+
+지도학습 vs. 비지도학습
+레이블 == 정답값 == 결정값 == 타겟값
+지도학습은 레이블이 있는 datasets을 가지고 머신러닝 돌리는 것, 비지도학습은 레이블이 없는 datasets 가지고 머신러닝 돌리는 것
+
+sklearn.datasets 내의 모듈 : 사이킷런에서 자체적으로 제공하는 연습 데이터 세트를 생성하는 모듈 모임
+sklearn.tree 내의 모듈 : 트리 기반 ML 알고리즘을 구현한 클래스 모임	    cf. 트리 기반의 알고리즘, 경사 기반의 알고리즘이 있다
+sklearn.model_selection 내의 모듈 : 학습데이터/검증데이터/예측데이터로 데이터 분리하거나, 최적의 하이퍼 파라미터로 평가하기 위한 다양한 모듈 모임
+
+=================================================================
+
+from sklearn.datasets import load_iris
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
+
+import pandas as pd
+
+'''
+꽃의 길이와 폭, 꽃받침의 길이와 폭 데이터를 가지고 지도학습을 한다. 이것으로 총 3개의 붓꽃 품종 중에서 어떤 종인지 맞춰본다. 
+'''
+# 붓꽃 데이터 세트를 로딩합니다. iris는 객체가 됨
+iris = load_iris()
+
+# iris.data는 Iris 데이터 세트에서 피처(feature)만으로 된 데이터를 numpy로 가지고 있습니다. 
+iris_data = iris.data
+
+# iris.target은 붓꽃 데이터 세트에서 레이블(결정 값) 데이터를 numpy로 가지고 있습니다. 
+iris_label = iris.target
+print('iris target값:', iris_label)
+print('iris target명:', iris.target_names)
+
+# 붓꽃 데이터 세트를 자세히 보기 위해 DataFrame으로 변환합니다. 
+iris_df = pd.DataFrame(data=iris_data, columns=iris.feature_names)
+iris_df['label'] = iris.target
+iris_df.head(3)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
