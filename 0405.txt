@@ -3,11 +3,13 @@
 나중에 구글 "코렙"도 사용해볼것 => 구글드라이브랑 연동돼서 편함
  : 클라우드 기반 플랫폼 - GPU(머신러닝을 그래픽카드를 이용해 효율적으로 돌릴 수 있게)와 TPU(머신러닝 자체에 최적화된 칩셋 자체를 만듦) 사용가능
 보통은 pycharm을 더 많이 씀, 우린 anaconda사용(패키지관리 프로그램, 이 안에 spider(==pycharm)있음)
-파이썬에도 matlab처럼 행렬 연산, 신호처리 등 수치 연산 도와주는 패키지 있다
+파이썬에도 MATLAB(MathWorks회사에서 만듦)처럼 행렬 연산, 신호처리 등 수치 연산 도와주는 패키지 있다
+	-> 학생땐 무료이용가능, 졸업하면 라이선스 비용만 한사람당 1억 넘게 주고 사야됨....ㅜ - 회사에서 불법 소프트웨어 많이 사용^^,, 개인은 불법 다운받아도 안 잡음ㅋ 그래서 회사에서 내맘대로 깔면 큰일남....!!!!!
 데이터분석은 걍 다 파이썬으로함
 보통 거의 64bit쓰고 우리도 64bit쓰지만, 수업은 쉽게 32bit로 예를 들어 진행할 예정.
 코드 공유 https://replit.com
 머신러닝 코드 https://github.com/wikibook/ml-definitive-guide
+완전 복잡한 산식 계산 https://www.wolframalpha.com
 드래그 + F9 : 부분 실행
 cowork할 때 변수명, 함수명 이름만 들어도 알 수 있게 하기
 함수는 "함수명에 해당하는 그 기능만!!" 수행하게 해야 나중에 문제 생겼을 때 좋음
@@ -1557,7 +1559,7 @@ Stratified K폴드 교차 검증♣
 그러면 최종 test데이터가 뭐가 오든 편중된 학습을 하지 않았으니까 좋을 듯~
 
 cross_val_score(estimator, X, y=None, scoring=None, cv=None)♣
-교차 검증을 보다 간편하게 해줌
+Stratified K폴드 교차 검증을 보다 간편하게 해줌
 estimator : 사이킷런의 분류 알고리즘 클래스 Classifier의 객체 or 회귀 알고리즘 클래스 Regressor의 객체
 	ex_	dt_clf = DecisionTreeClassifier(random_state=156)에서 dt_clf
 X : 피처 데이터 세트
@@ -1572,11 +1574,11 @@ cv : K값. 몇 개로 split할 것인가.
 n_jobs : 사용 가능한 cpu의 개수
 
 GridSearchCV♣♣♣
-cf. 하이퍼 파라미너		-자동으로 설정되는 변수
+cf. 하이퍼 파라미너		-estimator(객체) 안에서 자동으로 설정되는 변수
 			-하이퍼 파라미터 튜닝하면 알고리즘 예측 성능 개선할 수 있다. 
 결정 트리 알고리즘을 구현한 DecisionTreeClassifier의 하이퍼파라미터를 max_depth=[1,2,3], min_samples_split=[1,2]로 내가 직접 설정한다. 
 조합 (1, 2), (1, 3), (2, 2), (2, 3), (3, 2), (3, 3) 6가지가 나온다. 각 설정에 의한 교차 검증(cv=3이라 가정) 하면 각 조합마다 3회에 걸쳐 학습/평가하고 성능을 평균 내서 정확도 최고값 구한다.
-이렇게 3x2x3 = 6x3 = 18번의 학습/검증으로 과적합 없이 최적의 결과 내는 파라미터 찾을 수 있다. 
+이렇게 3x2x3 = 6x3 = 18번의 학습(fit)/검증으로 과적합 없이 최적의 결과 내는 파라미터 찾을 수 있다. 
 
 =================================================================
 
@@ -1621,7 +1623,7 @@ random_state    - test데이터도 랜덤하게 뽑아야 한다. 그 때 쓰이
                 즉, random_state 설정해주면 매번 뽑히는 X_train, X_test, y_train, y_test값이 동일할 것!!
 cf. 랜덤값도 사실 규칙(시드값)이 있다. 
     import random
-    random.seed(100)    #100이라는 규칙을 가지고 실행하세요~
+    random.seed(100)    #100이라는 규칙을 가지고 랜덤 실행하세요~
     A = random.random() #A값 계속 동일. random.seed(100) 주석처리하면 A값 계속 달라짐.
 
 '''
@@ -1870,13 +1872,12 @@ parameters = {'max_depth':[1,2,3], 'min_samples_split':[2,3]}
 ### refit=True 가 default 임. True이면 가장 좋은 파라미터 설정으로 재 학습 시킴.  
 grid_dtree = GridSearchCV(dtree, param_grid=parameters, cv=3, refit=True)
 
-# 붓꽃 Train 데이터로 param_grid의 하이퍼 파라미터들을 순차적으로 학습/평가 .
+# 붓꽃 Train 데이터로 param_grid의 하이퍼 파라미터들을 순차적으로 교차검증 학습/평가 .
 grid_dtree.fit(X_train, y_train)
 
 # GridSearchCV 결과 추출하여 DataFrame으로 변환
 scores_df = pd.DataFrame(grid_dtree.cv_results_)
-scores_df[['params', 'mean_test_score', 'rank_test_score', \
-           'split0_test_score', 'split1_test_score', 'split2_test_score']]
+scores_df[['params', 'mean_test_score', 'rank_test_score', 'split0_test_score', 'split1_test_score', 'split2_test_score']]
 
 print('GridSearchCV 최적 파라미터:', grid_dtree.best_params_)
 print('GridSearchCV 최고 정확도: {0:.4f}'.format(grid_dtree.best_score_))
@@ -1895,11 +1896,1929 @@ print('테스트 데이터 세트 정확도: {0:.4f}'.format(accuracy_score(y_te
 -사이킷런의 머신러닝 알고리즘은 문자열 값을 입력값으로 허용하지 않는다
 
 데이터 인코딩 - 1. 레이블 인코딩
-    카테고리 피처를 숫자값으로 변환. 
-    숫자값은 크고 작음의 특성도, 가중치로도 쓰이지 않고 인덱스처럼 오직 데이터 로우를 식별하는 용도로 사용되어야 한다. 
-    트리 기반의 ML 알고리즘 - 사용 가능
-    회귀 기반의 ML 알고리즘 - 사용 불가능(단점). 회귀 기반의 가중치 학습을 할 때 피처에 들어있는 값에 이 숫자값이 들어가게 되면 → 아무 의미 없게 쓰여야 하는 숫자값에 의미가 생겨버린다!!
+    -카테고리 피처를 숫자값으로 변환. 
+    -LabelEncoder를 객체로 생성한 후 , fit( ) 과 transform( ) 으로 label 인코딩 수행한다. 
+    -숫자값은 크고 작음의 특성도, 가중치로도 쓰이지 않고 인덱스처럼 오직 데이터 로우를 식별하는 용도로 사용되어야 한다. 
+    	트리 기반의 ML 알고리즘 - 사용 가능
+    	회귀 기반의 ML 알고리즘 - 사용 불가능(단점). 회귀 기반의 가중치 학습을 할 때 피처에 들어있는 값에 이 숫자값이 들어가게 되면 → 아무 의미 없게 쓰여야 하는 숫자값에 의미가 생겨버린다!!
 데이터 인코딩 - 2. 원-핫 인코딩	//레이블 인코딩이 회귀 기반의 ML 알고리즘에서 쓰이지 못하는 문제 해결
+    -새로운 피처를 추가해 그에 해당하는 컬럼에만 1, 나머지에는 0을 표시.
+    -단일 컬럼일 때보다 컬럼의 개수가 늘어나니까 시간이 조금 더 걸린다. 
+    -OneHotEncoder로 변환하기 전 모든 문자열 값이 LabelEncoder로 숫자값으로 변환되어야 하며, 입력값이 1차원이라면 reshape(-1,1)을 통해 2차원으로 변환해야 한다.
+
+피처 스케일링 - 일정한 기준으로 비교하기 위함 (연봉 10,000,000, 형제 1의 값을 가진다면 회귀 기법 알고리즘에서 가중치 학습할 때 연봉의 영향력이 너무 커짐. 스케일링 해준 값으로 바꿔야 함!!!)
+	1. 표준화
+	2. 정규화
+벡터 정규화 - 선형대수 개념의 정규화
+
+모평균(m)
+모분산(σ^2) = (X-m)^2+(Y-m)^2+(Z-m)^2 / 3 = ∑(편차)^2 / n
+모표준편차(σ) = √모분산
+
+표본평균(¯X)
+표본분산(s^2) = ∑(편차)^2 / n-1   
+표본표준편차(s) = √표본분산	
+
+cf. 표본분산은 n-1로 나눠줘야 하는 이유
+우리가 구해야 하는 것은 모표준편차와 최대한 유사하게 구해야 함. 
+근데 표본을 뽑아서 평균을 구하면 모집단의 평균과 살짝 다를 것이다. 그래서 표본분산 식에 모집단을 넣어 계산하면 분산이 크게 나온다. (편차가 조금만 달라져도 분산 커짐) 
+그 차이를 맞추기 위해 n-1 해줌. 
+
+표준화 = (X-m) / 표준편차		→ 평균이 0이고 분산이 1인 정규 분포를 가진 값
+정규화 = (X-min) / (max-min) 	→ 무조건 0과 1 사이의 값 (최솟값 0, 최댓값 1)
+벡터 정규화 = X / √(X^2+Y^2+Z^2)	→ 무조건 0과 1 사이의 값 (최솟값 0, 최댓값 1)
+
+StandardScaler : 표준화 지원. 개별 피처를 평균 0 분산 1인 값으로 변환. 
+MinMaxScaler : 정규화 지원. 데이터값을 0과 1 사이(음수값 있다면 -1과 1 사이)의 범위 값으로 변환. → 최솟값, 최댓값 무조건 0, 1 (or -1, 1)
+	train [1 3 7 11]→[0. 0.2 0.6 1.] 로 한번 스케일링하면 test [2 4 10 12]→[0. 0.2 0.8 1.](x) 새롭게(x)
+						  		  [0.1 0.3 0.9 1.](o) 그 스케일링 그대로(o)  
+
+==========================================================
+
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import OneHotEncoder
+import numpy as np
+
+items=['TV','냉장고','전자렌지','컴퓨터','선풍기','선풍기','믹서','믹서']
+
+
+'''1. 레이블 인코딩'''
+# LabelEncoder를 객체로 생성한 후 , fit( ) 과 transform( ) 으로 label 인코딩 수행. 
+encoder = LabelEncoder()
+encoder.fit(items) #각각의 유니크한 값에다가 숫자값 부여
+labels = encoder.transform(items) #인코딩 변환 
+print('인코딩 변환값:',labels)
+print('인코딩 클래스:',encoder.classes_) #번호 부여된 유니크한 값들을 0번 값부터 차례대로 출력
+print('디코딩 원본 값:',encoder.inverse_transform([4, 5, 2, 0, 1, 1, 3, 3])) #번호에 해당하는 유니크한 값들을 역으로 출력
+
+
+'''2. 원-핫 인코딩'''
+# 먼저 숫자값으로 변환을 위해 LabelEncoder로 변환합니다. 
+encoder = LabelEncoder()
+encoder.fit(items)
+labels = encoder.transform(items)
+# 2차원 데이터로 변환합니다. 
+labels = labels.reshape(-1,1)
+
+# 원-핫 인코딩을 적용합니다. 
+oh_encoder = OneHotEncoder()
+oh_encoder.fit(labels)
+oh_labels = oh_encoder.transform(labels)
+print('원-핫 인코딩 데이터')
+print(oh_labels.toarray())
+print('원-핫 인코딩 데이터 차원')
+print(oh_labels.shape)
+
+==========================================================
+
+from sklearn.datasets import load_iris
+import pandas as pd
+# 붓꽃 데이터 셋을 로딩하고 DataFrame으로 변환합니다. 
+iris = load_iris()
+iris_data = iris.data
+iris_df = pd.DataFrame(data=iris_data, columns=iris.feature_names)
+
+print('feature 들의 평균 값')
+print(iris_df.mean())
+print('feature 들의 분산 값')
+print(iris_df.var())
+
+
+
+from sklearn.preprocessing import StandardScaler
+
+# StandardScaler객체 생성
+scaler = StandardScaler()
+# StandardScaler 로 데이터 셋 변환. fit( ) 과 transform( ) 호출.  
+scaler.fit(iris_df)
+iris_scaled = scaler.transform(iris_df) #평균 0 분산 1
+
+#transform( )시 scale 변환된 데이터 셋이 numpy ndarry로 반환되어 이를 DataFrame으로 변환
+iris_df_scaled = pd.DataFrame(data=iris_scaled, columns=iris.feature_names)
+print('\nfeature 들의 평균 값')
+print(iris_df_scaled.mean())
+print('feature 들의 분산 값')
+print(iris_df_scaled.var())
+'''
+feature 들의 평균 값
+sepal length (cm)   -1.690315e-15       → 얘네가 0임 ^^    1.69 x 1/10^15는 거의 0에 가까움~
+sepal width (cm)    -1.842970e-15
+petal length (cm)   -1.698641e-15
+petal width (cm)    -1.409243e-15
+dtype: float64
+feature 들의 분산 값
+sepal length (cm)    1.006711           → 얘네가 1임 ^^    1.006711은 거의 1에 가까움~
+sepal width (cm)     1.006711
+petal length (cm)    1.006711
+petal width (cm)     1.006711
+dtype: float64
+'''
+
+
+
+from sklearn.preprocessing import MinMaxScaler
+
+# MinMaxScaler객체 생성
+scaler = MinMaxScaler()
+# MinMaxScaler 로 데이터 셋 변환. fit() 과 transform() 호출.  
+scaler.fit(iris_df)
+iris_scaled = scaler.transform(iris_df)
+
+# transform()시 scale 변환된 데이터 셋이 numpy ndarry로 반환되어 이를 DataFrame으로 변환
+iris_df_scaled = pd.DataFrame(data=iris_scaled, columns=iris.feature_names)
+print('\nfeature들의 최소 값')
+print(iris_df_scaled.min())
+print('feature들의 최대 값')
+print(iris_df_scaled.max())
+
+
+
+
+from sklearn.preprocessing import MinMaxScaler
+import numpy as np
+
+# 학습 데이터는 0 부터 10까지, 테스트 데이터는 0 부터 5까지 값을 가지는 데이터 세트로 생성
+# Scaler클래스의 fit(), transform()은 2차원 이상 데이터만 가능하므로 reshape(-1, 1)로 차원 변경
+train_array = np.arange(0, 11).reshape(-1, 1)
+test_array =  np.arange(0, 6).reshape(-1, 1)
+
+
+
+# 최소값 0, 최대값 1로 변환하는 MinMaxScaler객체 생성
+scaler = MinMaxScaler()
+# fit()하게 되면 train_array 데이터의 최소값이 0, 최대값이 10으로 설정.  
+scaler.fit(train_array)
+# 1/10 scale로 train_array 데이터 변환함. 원본 10-> 1로 변환됨.
+train_scaled = scaler.transform(train_array)
+print('\n원본 train_array 데이터:', np.round(train_array.reshape(-1), 2))
+print('Scale된 train_array 데이터:', np.round(train_scaled.reshape(-1), 2))
+
+# (이렇게 하면 안 됨!) 앞에서 생성한 MinMaxScaler에 test_array를 fit()하게 되면 원본 데이터의 최소값이 0, 최대값이 5으로 설정됨 
+scaler.fit(test_array)
+# 1/5 scale로 test_array 데이터 변환함. 원본 5->1로 변환.  
+test_scaled = scaler.transform(test_array)
+# train_array 변환 출력
+print('원본 test_array 데이터:', np.round(test_array.reshape(-1), 2))
+print('Scale된 test_array 데이터:', np.round(test_scaled.reshape(-1), 2))
+
+
+
+# 재시도(이렇게 해야 됨!) train_array로 fit() → 헷갈리니까 가능하다면 전처리 전에 스케일부터 해놓고 해라!
+'''
+경우 1. 가능하면 전처리 train_test_split() 전에 전체 데이터를 스케일부터 해놓고 시작하기 (나중에 스케일 생각 안 해도 됨)
+경우 2. 불가능하면 (나중에 train값 수정해야 한다거나..) train_array로 fit(), 이후에 이미 fit된 scaler 객체 이용해서 transform() 만으로 변환해야 함.
+'''
+scaler = MinMaxScaler()
+scaler.fit(train_array)
+train_scaled = scaler.transform(train_array)
+print('\n원본 train_array 데이터:', np.round(train_array.reshape(-1), 2))
+print('Scale된 train_array 데이터:', np.round(train_scaled.reshape(-1), 2))
+
+# test_array에 Scale 변환을 할 때는 반드시 fit()을 호출하지 않고 transform() 만으로 변환해야 함. 
+test_scaled = scaler.transform(test_array)
+print('원본 test_array 데이터:', np.round(test_array.reshape(-1), 2))
+print('Scale된 test_array 데이터:', np.round(test_scaled.reshape(-1), 2))
+
+■■■■■■■■■■■■■0430 수업中 새로 알게된것■■■■■■■■■■■■■
+
+##################### titanic 살짝 건드려보기 2 #############################
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+%matplotlib inline
+
+
+titanic_df = pd.read_csv('C:/jeon/titanic_train.csv')
+
+
+print(titanic_df.info())
+test=titanic_df.describe()
+'''
+count   non-null인 데이터 개수
+mean    평균
+std     표준편차
+min     최솟값
+25%     25% 위치의 값
+50%     50% 위치의 값
+75%     75% 위치의 값
+max     최댓값
+'''
+titanic_df['Age'].fillna(titanic_df['Age'].mean(),inplace=True)     #Age null값은 Age 평균으로 채우기
+titanic_df['Cabin'].fillna('N',inplace=True)                        #Cabin null값은 N으로 채우기
+titanic_df['Embarked'].fillna('N',inplace=True)                     #Embarked null값은 N으로 채우기
+print('데이터 세트 Null 값 갯수 ',titanic_df.isnull().sum().sum())
+                #titanic_df.isnull() : boolean으로 채워진 DataFrame
+                #titanic_df.isnull().sum() : 각 컬럼에 해당하는 True값의 갯수를 더해준 Series
+                #titanic_df.isnull().sum().sum() : Series 각각의 요소(int)를 더해준 int64(걍 int라고 생각)
+
+
+print(' Sex 값 분포 :\n',titanic_df['Sex'].value_counts())         #Sex 컬럼에서 유니크한 값 별로 몇개가 있는지
+print('\n Cabin 값 분포 :\n',titanic_df['Cabin'].value_counts())   #Cabin ~
+print('\n Embarked 값 분포 :\n',titanic_df['Embarked'].value_counts()) #Embarked ~
+'''
+Cabin 출력값에서 이상한 점을 발견했다!
+1. N만 너무 크다
+2. C23, C25, C27처럼 여러 Cabin이 한꺼번에 출력됐다
+3. 첫번째 알파벳이 선실 등급을 나타내니까 중요한 듯하다
+'''
+
+titanic_df['Cabin'] = titanic_df['Cabin'].str[:1]   #우선 Cabin은 첫번째 인덱스만 남겨서 재구성하자!
+print(titanic_df['Cabin'].head(3))                  #어쨌든 str값이니까 나중에 인코딩하겠네~~
+
+titanic_df.groupby(['Sex','Survived'])['Survived'].count()  #Sex, Survived의 유니크한 값 기준을로 묶어서 DataFrame 만들고, 그 안에서 non-null인 count 개수 보여줌
+titanic_df.groupby(['Pclass','Sex','Survived'])['Survived'].count()  #Sex, Survived의 유니크한 값 기준을로 묶어서 DataFrame 만들고, 그 안에서 non-null인 count 개수 보여줌
+    # serial data : histogram, 나머지 : barplot
+sns.barplot(x='Sex', y = 'Survived', data=titanic_df)   #Sex의 유니크한 값 별로 Survived의 총 count중에서 1이 차지하는 비율. 즉, titanic_df.groupby(['Sex','Survived'])['Survived'].count()의 비율
+sns.barplot(x='Pclass', y='Survived', hue='Sex', data=titanic_df) #얘도 위의 titanic_df.groupby(['Pclass','Sex','Survived'])['Survived'].count()의 비율
+
+
+# 입력 age에 따라 구분값을 반환하는 함수 설정. DataFrame의 apply lambda식에 사용. 
+def get_category(age):
+    cat = ''
+    if age <= -1: cat = 'Unknown'
+    elif age <= 5: cat = 'Baby'
+    elif age <= 12: cat = 'Child'
+    elif age <= 18: cat = 'Teenager'
+    elif age <= 25: cat = 'Student'
+    elif age <= 35: cat = 'Young Adult'
+    elif age <= 60: cat = 'Adult'
+    else : cat = 'Elderly'
+    return cat
+
+# 막대그래프의 크기 figure를 더 크게 설정 
+plt.figure(figsize=(10,6))
+
+#X축의 값을 순차적으로 표시하기 위한 설정 - 얘네는 value값이 str이라서 이렇게 안 해주면 이 순서가 아니라 titanic_df['Age_cat']에 처음 저장된 순서대로 출력
+group_names = ['Unknown', 'Baby', 'Child', 'Teenager', 'Student', 'Young Adult', 'Adult', 'Elderly']
+
+# lambda 식에 위에서 생성한 get_category( ) 함수를 반환값으로 지정. 
+# get_category(X)는 입력값으로 'Age' 컬럼값을 받아서 해당하는 cat 반환
+titanic_df['Age_cat'] = titanic_df['Age'].apply(lambda x : get_category(x))
+sns.barplot(x='Age_cat', y = 'Survived', hue='Sex', data=titanic_df, order=group_names)
+titanic_df.drop('Age_cat', axis=1, inplace=True)
+
+
+
+'''
+지금까지 분석한 결과, 중요하게 생존을 좌우하는 피처 : Sex, Age, Pclass
+얘네를 인코딩해보자! (문자열 -> 숫자형)
+'''
+from sklearn import preprocessing
+
+def encode_features(dataDF):
+    features = ['Cabin', 'Sex', 'Embarked']
+    for feature in features:
+        le = preprocessing.LabelEncoder()
+        le = le.fit(dataDF[feature]) #인코딩 모델 만들어짐. 
+        dataDF[feature] = le.transform(dataDF[feature]) #인코딩해서 다시 원본데이터에 넣음
+    return dataDF
+
+titanic_df = encode_features(titanic_df)
+titanic_df.head()
+
+=============================================================
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+%matplotlib inline
+from sklearn.preprocessing import LabelEncoder
+
+'''
+앞서 계속 해왔던 데이터 전처리 과정을 함수로 깔끔하게 만들어본다면?
+'''
+
+# Null 처리 함수
+def fillna(df):
+    df['Age'].fillna(df['Age'].mean(),inplace=True)
+    df['Cabin'].fillna('N',inplace=True)
+    df['Embarked'].fillna('N',inplace=True)
+    df['Fare'].fillna(0,inplace=True)
+    return df
+
+# 머신러닝 알고리즘에 불필요한 속성 제거
+def drop_features(df):
+    df.drop(['PassengerId','Name','Ticket'],axis=1,inplace=True)
+    return df
+
+# 레이블 인코딩 수행. 
+def format_features(df):
+    df['Cabin'] = df['Cabin'].str[:1]
+    features = ['Cabin','Sex','Embarked']
+    for feature in features:
+        le = LabelEncoder()
+        le = le.fit(df[feature])
+        df[feature] = le.transform(df[feature])
+    return df
+
+# 앞에서 설정한 Data Preprocessing 함수 호출
+def transform_features(df): #위에 있는 함수들을 수행하기 위한 함수. 그냥 얘 수행하면 전체 함수 수행. (모든 전처리 완료)
+    df = fillna(df)
+    df = drop_features(df)
+    df = format_features(df)
+    return df
+
+
+
+# 원본 데이터를 재로딩 하고, feature데이터 셋과 Label 데이터 셋 추출. 
+titanic_df = pd.read_csv('C:/jeon/titanic_train.csv')
+y_titanic_df = titanic_df['Survived']
+X_titanic_df= titanic_df.drop('Survived',axis=1)
+
+X_titanic_df = transform_features(X_titanic_df) #한번에 전처리 해버렸다!
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test=train_test_split(X_titanic_df, y_titanic_df, test_size=0.2, random_state=11) # 이제 estimator에 넣을 준비 다 되었다!
+'''
+X_train     : train 데이터의 feature데이터
+y_train     : train 데이터의 label데이터(뒤에 붙은 정답값)
+X_test      : test 데이터의 feature데이터
+y_test      : test 데이터의 label데이터(뒤에 붙은 정답값)
+'''
+
+
+
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+# 결정트리, Random Forest, 로지스틱 회귀를 위한 사이킷런 Classifier 클래스 생성 ---> estimator
+dt_clf = DecisionTreeClassifier(random_state=11) #트리 기반(분류 기반) 알고리즘
+rf_clf = RandomForestClassifier(random_state=11)
+lr_clf = LogisticRegression(max_iter=50)    #회귀 기반(좌표평면 경사 기반) 알고리즘  - max_iter 파라미터 있음. 설정 안해주면 오히려 느려짐...
+                                            #                                      - 안에서 돌다가 해당 max_iter를 만나면 그만 돈다. (시간때문에 사용)
+
+# DecisionTreeClassifier 학습/예측/평가
+dt_clf.fit(X_train , y_train)
+dt_pred = dt_clf.predict(X_test)
+print('DecisionTreeClassifier 정확도: {0:.4f}'.format(accuracy_score(y_test, dt_pred)))
+
+# RandomForestClassifier 학습/예측/평가
+rf_clf.fit(X_train , y_train)
+rf_pred = rf_clf.predict(X_test)
+print('RandomForestClassifier 정확도:{0:.4f}'.format(accuracy_score(y_test, rf_pred)))
+
+# LogisticRegression 학습/예측/평가
+lr_clf.fit(X_train , y_train)
+lr_pred = lr_clf.predict(X_test)
+print('LogisticRegression 정확도: {0:.4f}'.format(accuracy_score(y_test, lr_pred)))
+
+
+
+#KFold
+from sklearn.model_selection import KFold
+
+def exec_kfold(clf, folds=5):
+    # 폴드 세트를 5개인 KFold객체를 생성, 폴드 수만큼 예측결과 저장을 위한  리스트 객체 생성.
+    kfold = KFold(n_splits=folds)
+    scores = []
+    
+    # KFold 교차 검증 수행. 
+    for iter_count , (train_index, test_index) in enumerate(kfold.split(X_titanic_df)):
+        # X_titanic_df 데이터에서 교차 검증별로 학습과 검증 데이터를 가리키는 index 생성
+        X_train, X_test = X_titanic_df.values[train_index], X_titanic_df.values[test_index]
+        y_train, y_test = y_titanic_df.values[train_index], y_titanic_df.values[test_index]
+        
+        # Classifier 학습, 예측, 정확도 계산 
+        clf.fit(X_train, y_train) #clf는 DecisionTreeClassifier 객체였었음.
+        predictions = clf.predict(X_test)
+        accuracy = accuracy_score(y_test, predictions)
+        scores.append(accuracy)
+        print("교차 검증 {0} 정확도: {1:.4f}".format(iter_count, accuracy))     
+    
+    # 5개 fold에서의 평균 정확도 계산. 
+    mean_score = np.mean(scores)
+    print("평균 정확도: {0:.4f}".format(mean_score)) 
+# exec_kfold 호출
+exec_kfold(dt_clf , folds=5)
+
+
+
+#cross_val_score (Stratified KFold 사용, 위의 KFold와 값이 다름)
+from sklearn.model_selection import cross_val_score
+
+scores = cross_val_score(dt_clf, X_titanic_df , y_titanic_df , cv=5)
+for iter_count,accuracy in enumerate(scores):
+    print("교차 검증 {0} 정확도: {1:.4f}".format(iter_count, accuracy))
+
+print("평균 정확도: {0:.4f}".format(np.mean(scores)))
+
+
+
+from sklearn.model_selection import GridSearchCV
+
+parameters = {'max_depth':[2,3,5,10], 'min_samples_split':[2,3,5], 'min_samples_leaf':[1,5,8]} #36개의 경우의 수
+
+grid_dclf = GridSearchCV(dt_clf , param_grid=parameters , scoring='accuracy' , cv=5) #train/test 알고리즘 수행은 총 36x5 = 180번 돈다.
+grid_dclf.fit(X_train , y_train)
+
+scores_df = pd.DataFrame(grid_dclf.cv_results_)
+scores_df[['params', 'mean_test_score', 'rank_test_score', 'split0_test_score', 'split1_test_score', 'split2_test_score', 'split3_test_score', 'split4_test_score']]
+print('GridSearchCV 최적 하이퍼 파라미터 :',grid_dclf.best_params_)
+print('GridSearchCV 최고 정확도: {0:.4f}'.format(grid_dclf.best_score_))
+best_dclf = grid_dclf.best_estimator_ #fit를 통해 최적의 하이퍼 파라미터로 학습시킨 estimator를 best_dclf에 담았다. 
+
+# GridSearchCV의 최적 하이퍼 파라미터로 학습된 Estimator로 예측 및 평가 수행. 
+dpredictions = best_dclf.predict(X_test) #X_test(test데이터의 feature)로 예측하여 예상 y_test(test데이터의 label)을 dpredictions에 담았다. 
+accuracy = accuracy_score(y_test , dpredictions)
+print('테스트 세트에서의 DecisionTreeClassifier 정확도 : {0:.4f}'.format(accuracy))
+'''
+GridSearchCV를 통해 지금까지 최고의 정확도를 획득했습니다!
+'''
+
+■■■■■■■■■■■■■0503 수업中 새로 알게된것■■■■■■■■■■■■■
+
+머신러닝 : 데이터 가공/변환 → 모델 학습/예측 → 평가
+회귀의 예측 성능 평가 지표
+분류의 예측 성능 평가 지표	1. 정확도
+			2. 오차행렬
+			3. 정밀도
+			4. 재현율
+			5. F1 스코어
+			6. ROC AUC
+
+오차행렬 confusion_matrix()♣
+- TN, FP, FN, TP 사분면부터 그리고 시작해라
+	     예측 	N	P
+	실제	
+	   N	TN	FP  | 정밀도
+	   P	FN	TP  |
+		ㅡㅡㅡㅡㅡㅡ
+		재현율
+- 예측 N, P에서 중점적으로 찾아야 하는 매우 적은 수의 결괏값에 Positive, 나머지에 Negative 주자
+- 정밀도와 재현율은 trade-off관계(하나가 높아지면 하나는 낮아짐). 그래서 케이스별로 둘 중에 잘 선택해야 함
+
+- 정확도(accuracy)♣	= (TN + TP) / (TN + FP + FN + TP)
+	FP+FN 낮춰야 함
+- 정밀도(precision_score)♣ 	= TP / (FP + TP)
+	실제 N데이터를 P으로 잘못 판단하면 치명적인 경우 ex_스팸메일 판단모델
+	FP 낮춰야 함
+- 재현율(recall_score)♣ 	= TP / (FN + TP)   (TPR, True Positive Rate, 민감도)
+	실제 P데이터를 N으로 잘못 판단하면 치명적인 경우 ex_암 판단모델, 금융사기 적발모델
+	FN 낮춰야 함
+	cf. 민감도 TPR vs. 특이성 TNR
+		TPR = TP / (FN + TP), 질별이 있는 사람은 질병이 있는 것으로 양성 판정, 클수록 Good!
+		TNR = TN / (TN + FP), 질병이 없는 사람은 질병이 없는 것으로 음성 판정, 클수록 Good!
+- F1스코어(score)♣	= (2*precision*recall) / (precision+recall)   (조화평균)
+	정밀도와 재현율을 결합한 지표
+	precision과 recall이 0 에 가까울수록 F1 score도 동일하게 낮은 값을 갖도록 하기 위함
+	분류 클래스 간 데이터가 심각한 불균형을 이루는 경우 사용
+- ROC곡선(Receiver Operation Characteristic Curve)과 AUC♣
+	FPR = 1 - TNR = 1 - 특이성
+	ROC곡선 → x축은 FPR (작을수록 Good!), y축은 TPR(작을수록 Good!)
+	AUC      → ROC곡선의 면적 : 1(최댓값, TPR과 FPR은 각각 100% 넘을순 없으니까)에 가까울수록 Good!
+
+   test┐
+fit ----------> predict ----> 예측값 ex_타이타닉이면 생존, 사망 (1, 0)
+        ↓
+    predict_proba() ; 사실 예측 확률을 반환하는 이 과정이 숨겨져 있었음.
+       0    1
+  > (0.4  0.6)	=	1   →예측값 : 0.5보다 큰 확률을 가지는 것으로 정해짐. 여기서는 0.5가 임계값(threshold)
+  > (0.9  0.1)	=	0
+  > (0.1  0.9)	=	1
+     ...			...
+
+threshold를 변화시키며 정밀도, 재현율을 높이고 낮출 수 있다. 
+	threshold 증가 - 재현율 감소, 정밀도 증가
+	threshold 감소 - 재현율 증가, 정밀도 감소
+
+■■■■■■■■■■■■■0504 수업中 새로 알게된것■■■■■■■■■■■■■
+
+# 이진분류에서 accuracy만 따지면 생기는 문제 
+
+import numpy as np
+from sklearn.base import BaseEstimator
+
+class MyDummyClassifier(BaseEstimator): #BaseEstimator클래스 상속 - 우리가 나름대로 최적의 estimator 커스터마이징하기 위함
+    '''
+    원래는 
+    mydummy_estimator = MyDummyClassifier()
+    mydummy_estimator.fit(X_train, y_train)
+    mydummy_estimator.predict(X_test)
+    '''
+    
+    # fit( ) 메소드는 아무것도 학습하지 않음. 
+    def fit(self , X , y=None):
+            pass
+    
+    # predict( ) 메소드는 단순히 Sex feature가 1 이면 0 , 그렇지 않으면 1 로 예측함. 
+    def predict(self, X): #X = X_test들어옴. test의 feature데이터. 
+        pred = np.zeros( ( X.shape[0] , 1)) #titanic_df.shape는 (891, 12), (X.shape[0], 1)은 (test의 feature데이터의 행 크기, 1). 얘를 0으로 꽉 채워줌
+        for i in range (X.shape[0]) :
+            if X['Sex'].iloc[i] == 1: #남자냐? - 죽었습니다
+                pred[i] = 0
+            else :                    #여자냐? - 살았습니다
+                pred[i] = 1
+        return pred         #이렇게 이진 분류로 해버리고 accuracy를 측정해보자~ (분명히 정확도 높게 나올 것. 이러면 안됨!)
+    
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder
+
+# Null 처리 함수
+def fillna(df):
+    df['Age'].fillna(df['Age'].mean(),inplace=True)
+    df['Cabin'].fillna('N',inplace=True)
+    df['Embarked'].fillna('N',inplace=True)
+    df['Fare'].fillna(0,inplace=True)
+    return df
+
+# 머신러닝 알고리즘에 불필요한 속성 제거
+def drop_features(df):
+    df.drop(['PassengerId','Name','Ticket'],axis=1,inplace=True)
+    return df
+
+# 레이블 인코딩 수행. 
+def format_features(df):
+    df['Cabin'] = df['Cabin'].str[:1]
+    features = ['Cabin','Sex','Embarked']
+    for feature in features:
+        le = LabelEncoder()
+        le = le.fit(df[feature])
+        df[feature] = le.transform(df[feature])
+    return df
+
+# 앞에서 설정한 Data Preprocessing 함수 호출
+def transform_features(df):
+    df = fillna(df)
+    df = drop_features(df)
+    df = format_features(df)
+    return df
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+# 원본 데이터를 재로딩, 데이터 가공, 학습데이터/테스트 데이터 분할. 
+titanic_df = pd.read_csv('C:/jeon/titanic_train.csv')
+y_titanic_df = titanic_df['Survived']
+X_titanic_df= titanic_df.drop('Survived', axis=1)
+X_titanic_df = transform_features(X_titanic_df)
+X_train, X_test, y_train, y_test=train_test_split(X_titanic_df, y_titanic_df, \
+                                                  test_size=0.2, random_state=0)
+
+# 위에서 생성한 Dummy Classifier를 이용하여 학습/예측/평가 수행. 
+myclf = MyDummyClassifier()
+myclf.fit(X_train, y_train)
+
+mypredictions = myclf.predict(X_test)
+print('Dummy Classifier의 정확도는: {0:.4f}'.format(accuracy_score(y_test , mypredictions)))
+
+■■■■■■■■■■■■■0505 수업中 새로 알게된것■■■■■■■■■■■■■
+
+from sklearn.datasets import load_digits
+from sklearn.model_selection import train_test_split
+from sklearn.base import BaseEstimator
+from sklearn.metrics import accuracy_score
+import numpy as np
+import pandas as pd
+
+class MyFakeClassifier(BaseEstimator):
+    def fit(self,X,y):
+        pass
+    
+    # 입력값으로 들어오는 X 데이터 셋의 크기만큼 모두 0값으로 만들어서 반환
+    def predict(self,X):
+        return np.zeros( (len(X), 1) , dtype=bool)  #len((행, 열)) : 행의 크기!, 모두 0으로 채우고 그 값을 boolean으로 바꿔라 => 전부 False로 바뀜
+
+# 사이킷런의 내장 데이터 셋인 load_digits( )를 이용하여 MNIST 데이터 로딩
+digits = load_digits()
+
+print(digits.data)
+print("### digits.data.shape:", digits.data.shape)
+print(digits.target)
+print("### digits.target.shape:", digits.target.shape)
+
+# digits번호가 7번이면 True이고 이를 astype(int)로 1로 변환, 7번이 아니면 False이고 0으로 변환. 
+#y = digits.target                      #label값 받아옴
+#y = (digits.target == 7)               #digits.target가 7일 때만 True, 나머지 False
+y = (digits.target == 7).astype(int)    #True면 1, False면 0으로 type casting
+X_train, X_test, y_train, y_test = train_test_split( digits.data, y, random_state=11)
+test = X_train[0].reshape(8, 8) #X_train의 크기는 (1347, 64). 8x8의 1347개의 데이터가 있을텐데 8x8을 쫙 펴서 하나의 row안에 담음. 
+                            #X_train의의 row 한 줄을 8x8형태로 바꿔서 test에 담음(원래대로 돌아옴)
+                            #0을 제외하고 숫자인 것만 이어보면 2의 형태와 비슷. 
+
+# 불균형한 레이블 데이터 분포도 확인. 
+print('레이블 테스트 세트 크기 :', y_test.shape)
+print('테스트 세트 레이블 0 과 1의 분포도')
+print(pd.Series(y_test).value_counts())
+
+# Dummy Classifier로 학습/예측/정확도 평가
+fakeclf = MyFakeClassifier()
+fakeclf.fit(X_train , y_train)
+fakepred = fakeclf.predict(X_test)
+print('모든 예측을 0으로 하여도 정확도는:{:.3f}'.format(accuracy_score(y_test , fakepred))) #90%가 나옴 => 모든 레이블 0~9까지가 동일한 비율로 있었구나~
+
+from sklearn.metrics import confusion_matrix
+
+# 앞절의 예측 결과인 fakepred와 실제 결과인 y_test의 Confusion Matrix출력
+confusion_matrix(y_test , fakepred)
+
+from sklearn.metrics import accuracy_score, precision_score , recall_score
+
+print("정밀도:", precision_score(y_test, fakepred))
+print("재현율:", recall_score(y_test, fakepred))
+
+
+
+from sklearn.metrics import accuracy_score, precision_score , recall_score , confusion_matrix
+
+def get_clf_eval(y_test , pred): #한번에 구하는 함수
+    confusion = confusion_matrix( y_test, pred)
+    accuracy = accuracy_score(y_test , pred)
+    precision = precision_score(y_test , pred)
+    recall = recall_score(y_test , pred)
+    print('오차 행렬')
+    print(confusion)
+    print('정확도: {0:.4f}, 정밀도: {1:.4f}, 재현율: {2:.4f}'.format(accuracy , precision ,recall))
+
+
+import numpy as np
+import pandas as pd
+
+from sklearn.model_selection import train_test_split 
+from sklearn.linear_model import LogisticRegression
+
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder
+
+# Null 처리 함수
+def fillna(df):
+    df['Age'].fillna(df['Age'].mean(),inplace=True)
+    df['Cabin'].fillna('N',inplace=True)
+    df['Embarked'].fillna('N',inplace=True)
+    df['Fare'].fillna(0,inplace=True)
+    return df
+
+# 머신러닝 알고리즘에 불필요한 속성 제거
+def drop_features(df):
+    df.drop(['PassengerId','Name','Ticket'],axis=1,inplace=True)
+    return df
+
+# 레이블 인코딩 수행. 
+def format_features(df):
+    df['Cabin'] = df['Cabin'].str[:1]
+    features = ['Cabin','Sex','Embarked']
+    for feature in features:
+        le = LabelEncoder()
+        le = le.fit(df[feature])
+        df[feature] = le.transform(df[feature])
+    return df
+
+# 앞에서 설정한 Data Preprocessing 함수 호출
+def transform_features(df):
+    df = fillna(df)
+    df = drop_features(df)
+    df = format_features(df)
+    return df
+    
+    # 원본 데이터를 재로딩, 데이터 가공, 학습데이터/테스트 데이터 분할. 
+titanic_df = pd.read_csv('C:/jeon/titanic_train.csv')
+y_titanic_df = titanic_df['Survived']
+X_titanic_df= titanic_df.drop('Survived', axis=1)
+X_titanic_df = transform_features(X_titanic_df)
+
+X_train, X_test, y_train, y_test = train_test_split(X_titanic_df, y_titanic_df, \
+                                                    test_size=0.20, random_state=11)
+
+lr_clf = LogisticRegression()
+
+lr_clf.fit(X_train , y_train)
+pred = lr_clf.predict(X_test)
+get_clf_eval(y_test , pred)
+
+pred_proba = lr_clf.predict_proba(X_test) #pred_proba에는 개별 데이터별 예측 확률이 담김
+pred  = lr_clf.predict(X_test) #pred에는 예측값이 담김
+print('pred_proba()결과 Shape : {0}'.format(pred_proba.shape))
+print('pred_proba array에서 앞 3개만 샘플로 추출 \n:', pred_proba[:3])
+
+# 예측 확률 array 와 예측 결과값 array 를 concatenate 하여 예측 확률과 결과값을 한눈에 확인
+pred_proba_result = np.concatenate([pred_proba , pred.reshape(-1,1)],axis=1) #column방향으로 옆으로 쫙 이어 붙임
+#reshape(-1,1) 안해주면 오류남. pred : (179,) 1차원, pred_proba : (179, 2) 2차원. pred.reshape(-1,1)로 2차원으로 바꿔줘서 concatenate 할 수 있게 됨
+print('두개의 class 중에서 더 큰 확률을 클래스 값으로 예측 \n',pred_proba_result[:3])
+
+
+
+
+from sklearn.preprocessing import Binarizer #threshold 바꾸기 위함
+
+X = [[ 1, -1,  2],
+     [ 2,  0,  0],
+     [ 0,  1.1, 1.2]]
+
+# threshold 기준값보다 같거나 작으면 0을, 크면 1을 반환
+binarizer = Binarizer(threshold=1.1)                     
+print(binarizer.fit_transform(X))
+
+
+
+from sklearn.preprocessing import Binarizer
+
+#Binarizer의 threshold 설정값. 분류 결정 임곗값임.  
+custom_threshold = 0.5
+
+# predict_proba( ) 반환값의 두번째 컬럼 , 즉 Positive 클래스 컬럼 하나만 추출하여 Binarizer를 적용
+pred_proba_1 = pred_proba[:,1].reshape(-1,1) #pred_proba[:,1] : threshold 기준값보다 커서 1이 나올 확률들만 셀렉트
+
+binarizer = Binarizer(threshold=custom_threshold).fit(pred_proba_1) 
+custom_predict = binarizer.transform(pred_proba_1)
+
+get_clf_eval(y_test, custom_predict) #한번에 구하는 함수
+'''정확도: 0.8492, 정밀도: 0.7742, 재현율: 0.7869    => 위에서 Binarizer, predict_proba() 없이 구한 값과 똑같아야 함'''
+
+# Binarizer의 threshold 설정값을 0.4로 설정. 즉 분류 결정 임곗값을 0.5에서 0.4로 낮춤  
+custom_threshold = 0.4 #positive를 늘리겠다 == negative를 줄이겠다 == FN을 줄이겠다
+pred_proba_1 = pred_proba[:,1].reshape(-1,1) #1이 될 확률만 따로 넣어줌
+binarizer = Binarizer(threshold=custom_threshold).fit(pred_proba_1) #여기부터 뭔가 바뀜
+custom_predict = binarizer.transform(pred_proba_1)
+
+get_clf_eval(y_test , custom_predict) #한번에 구하는 함수
+'''정확도: 0.8380, 정밀도: 0.7286, 재현율: 0.8361    => 정확도, 정밀도는 떨어지고 재현율은 올라갔다'''
+
+
+
+# 테스트를 수행할 모든 임곗값을 리스트 객체로 저장. 
+thresholds = [0.4, 0.45, 0.50, 0.55, 0.60] #정확도, 정밀도, 재현율 즉 오차행렬의 변화가 어떤 경향을 띠는지 파악하자!
+
+def get_eval_by_threshold(y_test , pred_proba_c1, thresholds):
+    # thresholds list객체내의 값을 차례로 iteration하면서 Evaluation 수행.
+    for custom_threshold in thresholds:
+        binarizer = Binarizer(threshold=custom_threshold).fit(pred_proba_c1) 
+        custom_predict = binarizer.transform(pred_proba_c1)
+        print('임곗값:',custom_threshold)
+        get_clf_eval(y_test , custom_predict)
+get_eval_by_threshold(y_test ,pred_proba[:,1].reshape(-1,1), thresholds )
+'''threshold값이 커질수록 재현율은 줄어들고 정밀도는 늘어난다. 여기서는 정확도도 늘어남'''
+
+
+
+# ** precision_recall_curve( ) 를 이용하여 임곗값에 따른 정밀도-재현율 값 추출 **
+from sklearn.metrics import precision_recall_curve
+
+# 레이블 값이 1일때의 예측 확률을 추출 
+pred_proba_class1 = lr_clf.predict_proba(X_test)[:, 1] 
+
+# 실제값 데이터 셋과 레이블 값이 1일 때의 예측 확률을 precision_recall_curve 인자로 입력 
+precisions, recalls, thresholds = precision_recall_curve(y_test, pred_proba_class1 )
+print('반환된 분류 결정 임곗값 배열의 Shape:', thresholds.shape)   #x축이 threshold일 때
+print('반환된 precisions 배열의 Shape:', precisions.shape)        #정밀도(precisions)는 상승그래프
+print('반환된 recalls 배열의 Shape:', recalls.shape)              #재현율(recalls)은 하강그래프
+
+print("thresholds 5 sample:", thresholds[:5])
+print("precisions 5 sample:", precisions[:5])
+print("recalls 5 sample:", recalls[:5])
+
+#반환된 임계값 배열 로우가 147건이므로 샘플로 10건만 추출하되, 임곗값을 15 Step으로 추출. 
+thr_index = np.arange(0, thresholds.shape[0], 15) #np.arange(0, 143, 15) → [0 15 30 ... ] ndarray형으로
+print('샘플 추출을 위한 임계값 배열의 index 10개:', thr_index)
+print('샘플용 10개의 임곗값: ', np.round(thresholds[thr_index], 2))
+
+# 15 step 단위로 추출된 임계값에 따른 정밀도와 재현율 값 
+print('샘플 임계값별 정밀도: ', np.round(precisions[thr_index], 3))
+print('샘플 임계값별 재현율: ', np.round(recalls[thr_index], 3))
+
+
+
+# ** 임곗값의 변경에 따른 정밀도-재현율 변화 곡선을 그림 **
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+%matplotlib inline
+
+def precision_recall_curve_plot(y_test , pred_proba_c1):
+    # threshold ndarray와 이 threshold에 따른 정밀도, 재현율 ndarray 추출. 
+    precisions, recalls, thresholds = precision_recall_curve( y_test, pred_proba_c1)
+    
+    print(precisions.shape) #144
+    print(recalls.shape)    #144
+    print(thresholds.shape) #143
+    
+    # X축을 threshold값으로, Y축은 정밀도, 재현율 값으로 각각 Plot 수행. 정밀도는 점선으로 표시
+    plt.figure(figsize=(8,6))
+    threshold_boundary = thresholds.shape[0] #x축으로 들어갈 thresholds의 크기를 저장 
+    plt.plot(thresholds, precisions[0:threshold_boundary], linestyle='--', label='precision') #plt.plot(x축, y축)
+    plt.plot(thresholds, recalls[0:threshold_boundary],label='recall') #x축 값이 143, y축 값이 144로 다름. x크기만큼 y크기 정해줘야 오류안남
+    
+    # threshold 값 X 축의 Scale을 0.1 단위로 변경
+    start, end = plt.xlim()
+    print(thresholds[0], thresholds[-1])    #element의 최소/최댓값
+    print(start , end)                      #x축의 최소/최댓값 : 얘가 조금 더 범위가 넓어서 그래프가 꽉 차지 않은 것
+    plt.xticks(np.round(np.arange(start, end, 0.1),2))
+    
+    # x축, y축 label과 legend, 그리고 grid 설정
+    plt.xlabel('Threshold value'); plt.ylabel('Precision and Recall value')
+    plt.legend()
+    plt.grid() #격자무늬
+    plt.show()
+    
+precision_recall_curve_plot( y_test, lr_clf.predict_proba(X_test)[:, 1] )
+
+
+
+# ### 3.4 F1 Score
+from sklearn.metrics import f1_score 
+f1 = f1_score(y_test , pred)
+print('F1 스코어: {0:.4f}'.format(f1))
+
+def get_clf_eval(y_test , pred):
+    confusion = confusion_matrix( y_test, pred)
+    accuracy = accuracy_score(y_test , pred)
+    precision = precision_score(y_test , pred)
+    recall = recall_score(y_test , pred)
+    # F1 스코어 추가
+    f1 = f1_score(y_test,pred)
+    print('오차 행렬')
+    print(confusion)
+    # f1 score print 추가
+    print('정확도: {0:.4f}, 정밀도: {1:.4f}, 재현율: {2:.4f}, F1:{3:.4f}'.format(accuracy, precision, recall, f1))
+    '''
+    마지막 두 케이스를 보자. 
+    threshold=0.55일 때 정확도: 0.8659, 정밀도: 0.8364, 재현율: 0.7541, F1:0.7931
+    threshold=0.6일 때 정확도: 0.8771, 정밀도: 0.8824, 재현율: 0.7377, F1:0.8036
+    정밀도와 재현율의 차이가 더 심해졌지만, 재현율이 안좋아진 것 보다 정밀도가 훨씬 크게 좋아졌기 때문에 F1도 조금 커짐. 
+    
+    그렇다고 F1이 좋다고 무조건 좋은 건 아님. 극단적인 경우를 거르기 위해서 사용하자. 
+    '''
+
+thresholds = [0.4 , 0.45 , 0.50 , 0.55 , 0.60]
+pred_proba = lr_clf.predict_proba(X_test)
+get_eval_by_threshold(y_test, pred_proba[:,1].reshape(-1,1), thresholds)
+
+
+
+# ## 3-5 ROC Curve와 AUC
+from sklearn.metrics import roc_curve
+
+# 레이블 값이 1일때의 예측 확률을 추출 
+pred_proba_class1 = lr_clf.predict_proba(X_test)[:, 1] 
+
+fprs , tprs , thresholds = roc_curve(y_test, pred_proba_class1)
+# 반환된 임곗값 배열에서 샘플로 데이터를 추출하되, 임곗값을 5 Step으로 추출. 
+# thresholds[0]은 max(예측확률)+1로 임의 설정됨. 이를 제외하기 위해 np.arange는 1부터 시작
+thr_index = np.arange(1, thresholds.shape[0], 5)
+print('샘플 추출을 위한 임곗값 배열의 index:', thr_index)
+print('샘플 index로 추출한 임곗값: ', np.round(thresholds[thr_index], 2))
+
+# 5 step 단위로 추출된 임계값에 따른 FPR, TPR 값
+print('샘플 임곗값별 FPR: ', np.round(fprs[thr_index], 3))
+print('샘플 임곗값별 TPR: ', np.round(tprs[thr_index], 3))
+
+
+def roc_curve_plot(y_test , pred_proba_c1):
+    # 임곗값에 따른 FPR, TPR 값을 반환 받음. 
+    fprs , tprs , thresholds = roc_curve(y_test ,pred_proba_c1)
+
+    # ROC Curve를 plot 곡선으로 그림. 
+    plt.plot(fprs , tprs, label='ROC')
+    # 가운데 대각선 직선을 그림. 
+    plt.plot([0, 1], [0, 1], 'k--', label='Random')
+    
+    # FPR X 축의 Scale을 0.1 단위로 변경, X,Y 축명 설정등   
+    start, end = plt.xlim()
+    plt.xticks(np.round(np.arange(start, end, 0.1),2))
+    plt.xlim(0,1); plt.ylim(0,1)
+    plt.xlabel('FPR( 1 - Sensitivity )'); plt.ylabel('TPR( Recall )')
+    plt.legend()
+    plt.show()
+    
+roc_curve_plot(y_test, lr_clf.predict_proba(X_test)[:, 1] )
+
+
+from sklearn.metrics import roc_auc_score
+
+### 아래는 roc_auc_score()의 인자를 잘못 입력한 것으로, 책에서 수정이 필요한 부분입니다. 
+### 책에서는 roc_auc_score(y_test, pred)로 예측 타겟값을 입력하였으나 
+### roc_auc_score(y_test, y_score)로 y_score는 predict_proba()로 호출된 예측 확률 ndarray중
+###                                                Positive 열에 해당하는 ndarray입니다. 
+
+#pred = lr_clf.predict(X_test)
+#roc_score = roc_auc_score(y_test, pred)
+
+pred_proba = lr_clf.predict_proba(X_test)[:, 1]
+roc_score = roc_auc_score(y_test, pred_proba)
+print('ROC AUC 값: {0:.4f}'.format(roc_score))
+
+■■■■■■■■■■■■■0506 수업中 새로 알게된것■■■■■■■■■■■■■
+
+###################피마 인디언 당뇨병 예측##################
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score
+from sklearn.metrics import f1_score, confusion_matrix, precision_recall_curve, roc_curve
+from sklearn.preprocessing import StandardScaler, Binarizer
+from sklearn.linear_model import LogisticRegression
+
+diabetes_df = pd.read_csv('C:/jeon/diabetes.csv')
+print(diabetes_df['Outcome'].value_counts())
+diabetes_df.info( )
+
+
+
+each_mean=[]
+cng_threshold=False
+#정확도, 정밀도, 재현율, F1, AUC 구하기 
+def get_clf_eval(y_test, pred=None, pred_proba=None):
+    confusion = confusion_matrix( y_test, pred)
+    accuracy = accuracy_score(y_test , pred)
+    precision = precision_score(y_test , pred)
+    recall = recall_score(y_test , pred)
+    f1 = f1_score(y_test,pred)
+    # ROC-AUC 추가 
+    roc_auc = roc_auc_score(y_test, pred_proba)
+    print('오차 행렬')
+    print(confusion)
+    # ROC-AUC print 추가
+    print('정확도: {0:.4f}, 정밀도: {1:.4f}, 재현율: {2:.4f}, F1: {3:.4f}, AUC:{4:.4f}'.format(accuracy, precision, recall, f1, roc_auc))
+    if cng_threshold:
+        mean = (accuracy + precision + recall + f1 + roc_auc)/5
+        each_mean.append(mean)
+
+X = diabetes_df.iloc[:, :-1]
+y = diabetes_df.iloc[:, -1]
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 156)
+
+# 로지스틱 회귀로 학습,예측 및 평가 수행. 
+lr_clf = LogisticRegression()
+lr_clf.fit(X_train , y_train)
+pred = lr_clf.predict(X_test)
+# roc_auc_score 수정에 따른 추가
+pred_proba = lr_clf.predict_proba(X_test)[:, 1]
+get_clf_eval(y_test , pred, pred_proba)
+
+
+
+#precisions, recalls 그래프그리기
+precisions, recalls, thresholds = precision_recall_curve(y_test, pred_proba) # 이 세 개의 size가 다름. 가장 작은 thresholds값까지만 그려야 함
+plt.plot(thresholds, precisions[0:thresholds.shape[0]]) #plt.plot(x축, y축)
+plt.plot(thresholds, recalls[0:thresholds.shape[0]]) #x축 값이 143, y축 값이 144로 다름. x크기만큼 y크기 정해줘야 오류안남
+plt.xlabel('Threshold value'); plt.ylabel('Precision, Recall')
+
+
+
+#['Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI']각 컬럼에서 0값이 차지하는 비율 소수점 둘째자리까지
+check_columns = ['Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI']
+for x in check_columns:
+    new_column = X[x].astype(bool)
+    cnt=0
+    for idx, i in enumerate(new_column):
+        if i==False:
+            cnt+=1
+            X[x][idx] = X[x].agg('mean')
+    print(x, '에서 0이 차지하는 비율: ', round((cnt / new_column.shape[0])*100 , 2))
+
+
+
+#StandardScaler - 평균 0 분산 1 표준화 지원
+X = diabetes_df.iloc[:, :-1]
+y = diabetes_df.iloc[:, -1]
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size = 0.2, random_state = 156, stratify=y)
+    #y(레이블값)의 분포 비율과 같게 split해줘~!
+
+
+
+#logisticRegression 이용 학습 및 예측
+lr_clf = LogisticRegression()
+lr_clf.fit(X_train , y_train)
+pred = lr_clf.predict(X_test) # 1 0 1 0 .. 예측값
+pred_proba = lr_clf.predict_proba(X_test)[:, 1] #확률값
+
+
+def get_eval_by_threshold(y_test , pred_proba_c1, thresholds):
+    # thresholds list객체내의 값을 차례로 iteration하면서 Evaluation 수행.
+    for custom_threshold in thresholds:
+        binarizer = Binarizer(threshold=custom_threshold).fit(pred_proba_c1) 
+        custom_predict = binarizer.transform(pred_proba_c1)
+        get_clf_eval(y_test, custom_predict, pred_proba_c1) #AUC는 x축이 FPR로, 이미 threshold의 변화를 통해 설정되는 값이므로 threshold가 아무리 변해도 AUC는 같다. 
+    
+
+cng_threshold=True
+thresholds = [0.3, 0.33, 0.36, 0.39, 0.42, 0.45, 0.48, 0.50]
+get_eval_by_threshold(y_test ,pred_proba.reshape(-1,1), thresholds) #reshape안해주면 오류뜸. 걍 해주기
+print(round(max(each_mean), 4))
+cng_threshold=False
+
+
+
+#[선생님 풀이] - 나랑 값 다름...ㅜ
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score
+from sklearn.metrics import f1_score, confusion_matrix, precision_recall_curve, roc_curve
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+
+diabetes_df = pd.read_csv('C:/jeon/diabetes.csv')
+print(diabetes_df['Outcome'].value_counts())
+
+X = diabetes_df.drop('Outcome', axis = 1 )
+y = diabetes_df['Outcome']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2,\
+                                                    random_state = 156, stratify=y)
+
+lr_clf = LogisticRegression()
+lr_clf.fit(X_train , y_train)
+pred = lr_clf.predict(X_test)
+
+#accuracy = accuracy_score(y_test , pred)
+#precision = precision_score(y_test , pred)
+#recall = recall_score(y_test , pred)
+
+pred_proba_c1 = lr_clf.predict_proba(X_test)[:, 1]
+
+precisions, recalls, thresholds = precision_recall_curve( y_test, pred_proba_c1)
+
+print(len(thresholds))
+
+plt.plot(thresholds , precisions[ 0:len(thresholds)] )
+plt.plot(thresholds , recalls[ 0:len(thresholds)] )
+
+zero_features = ['Glucose', 'BloodPressure','SkinThickness','Insulin','BMI']
+
+for row in zero_features:
+    temp = X[X[row]==0][row]
+    print(round((temp.shape[0]/X.shape[0]) * 100 , 2))
+    X[row] = X[row].replace(0, X[row].mean())
+    
+for row in zero_features:
+    temp = X[X[row]==0][row]
+    print(round((temp.shape[0]/X.shape[0]) * 100 , 2))
+    
+    
+scaler = StandardScaler( )
+X_scaled = scaler.fit_transform(X)
+
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size = 0.2,\
+                                                    random_state = 156, stratify=y)
+
+lr_clf = LogisticRegression()
+lr_clf.fit(X_train , y_train)
+pred = lr_clf.predict(X_test)
+pred_proba_c1 = lr_clf.predict_proba(X_test)[:,1]
+pred_proba_c1 = pred_proba_c1.reshape(-1,1)
+thresholds = [0.3 , 0.33 ,0.36,0.39, 0.42 , 0.45 ,0.48, 0.50]
+
+from sklearn.preprocessing import Binarizer
+
+for row in thresholds:
+    binarizer = Binarizer(threshold=row).fit(pred_proba_c1) 
+    custom_predict = binarizer.transform(pred_proba_c1)
+    print('임곗값:',row)
+    confusion = confusion_matrix( y_test, custom_predict)
+    accuracy = accuracy_score(y_test , custom_predict)
+    precision = precision_score(y_test , custom_predict)
+    recall = recall_score(y_test , custom_predict)
+    f1 = f1_score(y_test,custom_predict)
+    roc_auc = roc_auc_score(y_test, pred_proba_c1)
+    temp = (accuracy + precision + recall + f1 + roc_auc) / 5
+    print('정확도: {0:.4f}, 정밀도: {1:.4f}, 재현율: {2:.4f},\
+    F1: {3:.4f}, AUC:{4:.4f}, 5개평균:{5:.4f}'.format(accuracy,\
+        precision, recall, f1, roc_auc, temp))
+    
+■■■■■■■■■■■■■0507 수업中 새로 알게된것■■■■■■■■■■■■■
+
+결정트리
+- 한 쪽으로 label값이 완전히 몰려서( ;균일도가 높다 ) 다른 한 쪽이 0이 되는 순간(label값이 하나만 남는 순간)까지 끝까지 트리 타고 내려감 => 무조건 Overfitting
+- Overfitting을 막기 위해 전에 배웠던 min_samples_split, max_depth 등의 제약을 미리 정해줘서 어느 이상 파고들지 못하게!!
+- 성능 : 어떤 기준으로 규칙을 만들어야 가장 효율적인 분류가 될 것인가
+	-최대한 많은 label값을 한쪽으로 몰 수 있는 규칙 노드(Decision Node) == 높은 균일도
+	-깊지 않은 트리의 깊이(depth)
+- 균일도 측정
+	1. 정보 이득이 높아야 한다. (정보 이득) = 1 - (엔트로피)
+		엔트로피 = - ∑ p(i|t) x log₂p(i|t) 	//p(i|t) : 특정 노드(t)에서 i가 차지하는 비율
+	2. 지니 계수가 낮아야 한다(?). 0_평등-------------불평등_1
+		지니 계수 = ∑ p(i|t) x (1-p(i|t))  => i에 대한 이차함수 (2진분류이든, 3진분류이든)
+- 결정트리라는 estimator 안에 최대한 균일도를 높일 수 있는 결정 노드가 되어 줄 column, 그에 해당하는 조건(ex_ '< 0.1')을 구해주는 함수가 자동적으로 구현되어 있다. 
+- 균일도만 신경 쓰면 돼서 보통 피처 스케일링/정규화 전처리 필요 없음
+
+========================================================
+
+#불순도 지표로 3가지 각조건을 사용하였을때의 결과
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+#지금 여기에서는 gini, entropy가 2진분류라고 가정하고 있다.
+def gini(p):
+    return p * (1 - p) + (1 - p) * (1 - (1 - p)) 
+
+
+def entropy(p):
+    return - p * np.log2(p) - (1 - p) * np.log2((1 - p))
+
+
+def error(p):
+    return 1 - np.max([p, 1 - p])
+
+x = np.arange(0.0, 1.0, 0.01)
+
+ent = [entropy(p) if p != 0 else None for p in x]
+
+sc_ent = [e * 0.5 if e else None for e in ent]
+
+err = [error(i) for i in x]
+
+fig = plt.figure()
+
+ax = plt.subplot(111)
+
+for i, lab, ls, c, in zip([ent, sc_ent, gini(x), err], 
+                          ['Entropy', 'Entropy (scaled)', 
+                           'Gini Impurity', 'Misclassification Error'],
+                          ['-', '-', '--', '-.'],
+                          ['black', 'lightgray', 'red', 'green', 'cyan']):
+    line = ax.plot(x, i, label=lab, linestyle=ls, lw=2, color=c)
+
+
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15),
+          ncol=5, fancybox=True, shadow=False)
+
+ax.axhline(y=0.5, linewidth=1, color='k', linestyle='--')
+ax.axhline(y=1.0, linewidth=1, color='k', linestyle='--')
+
+plt.ylim([0, 1.1])
+plt.xlabel('p(i=1)')
+plt.ylabel('Impurity Index')
+plt.show()
+
+==========================================================
+
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+import warnings
+warnings.filterwarnings('ignore')
+
+# DecisionTree Classifier 생성
+dt_clf = DecisionTreeClassifier(random_state=156)
+
+# 붓꽃 데이터를 로딩하고, 학습과 테스트 데이터 셋으로 분리
+iris_data = load_iris()
+X_train , X_test , y_train , y_test = train_test_split(iris_data.data, iris_data.target,
+                                                       test_size=0.2,  random_state=11)
+
+# DecisionTreeClassifer 학습. 
+dt_clf.fit(X_train , y_train)
+
+
+from sklearn.tree import export_graphviz
+
+# export_graphviz()의 호출 결과로 out_file로 지정된 tree.dot 파일을 생성함. 
+export_graphviz(dt_clf, out_file="C:/jeon/tree.dot", class_names=iris_data.target_names , \
+                feature_names = iris_data.feature_names, impurity=True, filled=True)
+    #"C:/jeon/tree.dot"경로에 dt_clf estimator 만들어주세요~!
+    #class_names, feature_names 지정 안해주면 svg파일 만들어질 때 클래스명 안 나오고 피처 컬럼네임 X[1], X[2], ...이런 식으로 나옴
+
+'''
+digraph Tree {
+node [shape=box, style="filled", color="black"] ;
+0 [label="petal length (cm) <= 2.45\ngini = 0.667\nsamples = 120\nvalue = [41, 40, 39]\nclass = setosa", fillcolor="#fffdfd"] ;
+1 [label="gini = 0.0\nsamples = 41\nvalue = [41, 0, 0]\nclass = setosa", fillcolor="#e58139"] ;
+0 -> 1 [labeldistance=2.5, labelangle=45, headlabel="True"] ;
+2 [label="petal width (cm) <= 1.55\ngini = 0.5\nsamples = 79\nvalue = [0, 40, 39]\nclass = versicolor", fillcolor="#fafefc"] ;
+0 -> 2 [labeldistance=2.5, labelangle=-45, headlabel="False"] ;
+3 [label="petal length (cm) <= 5.25\ngini = 0.051\nsamples = 38\nvalue = [0, 37, 1]\nclass = versicolor", fillcolor="#3ee684"] ;
+2 -> 3 ;
+4 [label="gini = 0.0\nsamples = 37\nvalue = [0, 37, 0]\nclass = versicolor", fillcolor="#39e581"] ;
+3 -> 4 ;
+...
+이런 식으로 word파일에 저장됨
+'''
+
+import graphviz
+
+# 위에서 생성된 tree.dot 파일을 Graphviz 읽어서 Jupyter Notebook상에서 시각화 
+with open("C:/jeon/tree.dot") as f:
+    dot_graph = f.read()
+g = graphviz.Source(dot_graph)
+g.format = 'svg'
+g.filename = 'test_tree'
+g.directory = 'C:/jeon'
+g.render()
+
+■■■■■■■■■■■■■0510 수업中 새로 알게된것■■■■■■■■■■■■■
+
+일부 이상치(outlier) 데이터까지 분류해서 과적합되지 않도록 파라미터 설정 필요!
+
+min_samples_split : sample의 개수가 최소 min_samples_split는 되어야 leaf 만들어짐
+min_samples_leaf : default=1, 만들어진 마지막 leaf노드에서 sample의 개수가 min_samples_leaf 이상이어야 함
+		한쪽으로 sample 몰려있으면 무조건 leaf, 그렇지 않더라도 min_samples_leaf에 따라 leaf가 될 수 있음 
+	ex_ min_samples_split = 4, min_samples_leaf = 2
+	(1,2,2) --- sample의 개수가 4 이상이라 자식 노드 만들 수 있지만, 동시에 나뉜 sample 중에서 2보다 작은 1이 있으므로, 얘는 leaf노드가 될 수 없다. 여기서 멈추고 이전 단계를 leaf노드로 정한다. 
+
+y = 2x : 양의 상관관계가 있다
+y = -x : 음의 상관관계가 있다
+y = 3 : 상관계수가 있다
+
+xx, yy = make_classification(조건) : 사이킷런에서 분류를 위한 테스트용 데이터를 내 마음대로 쉽게 만들 수 있도록 하는 함수
+
+==========================================================
+
+# ### 결정 트리(Decision TREE) 과적합(Overfitting)
+
+# In[ ]:
+
+
+from sklearn.datasets import make_classification
+import matplotlib.pyplot as plt
+get_ipython().run_line_magic('matplotlib', 'inline')
+
+plt.title("3 Class values with 2 Features Sample data creation")
+
+# 2차원 시각화를 위해서 feature는 2개, 결정값 클래스는 3가지 유형의 classification 샘플 데이터 생성. 
+X_features, y_labels = make_classification(n_features=2, n_redundant=0, n_informative=2,    #(row size - default 100, column size - n_features 2), n_features 2개 중에 y_labels과 상관관계가 있는 피처는 n_informative 2개.
+                             n_classes=3, n_clusters_per_class=1,random_state=0)            #label값 n_classes 3개, n_clusters_per_class=1 : y_labels는 '하나의 label데이터 -- 하나의 군집을 이루었다'
+    #make_classification(기준) : 기준에 맞는 데이터 리턴
+
+# plot 형태(scatter:점찍는 그래프)로 2개의 feature로 2차원 좌표 시각화, 각 클래스값은 다른 색깔로 표시됨. 
+plt.scatter(X_features[:, 0], X_features[:, 1], marker='o', c=y_labels, s=25, cmap='rainbow', edgecolor='k')
+            # x축             y축               동그라미로표기   y_label로 클래스 나눔     다른 색깔로 구분
+
+
+# In[ ]:
+
+
+import numpy as np
+
+test=[]
+test1=[]
+test2=[]
+test3=[]
+test4=[]
+test5=[]
+test6=[]
+test7=[]
+test8=[]
+
+# Classifier의 Decision Boundary를 시각화 하는 함수
+def visualize_boundary(model, X, y):
+    '''
+    model : 점 찍은 그래프. 아까 그걸로 decisiontree estimator dt_clf로 학습을 시켜서(ex_너 x 3보다 크니?...계속 트리 타고 내려감) 이 모델 만듦
+    X : 피처값 2개(x,y) ----------3개까지만 3차원 그래프로 표현 가능하고, 대부분 더 많은 피처값 가져서 시각화 불가능!
+    y : 레이블값 3개(0,1,2)-색깔
+    '''
+    global test
+    global test1
+    global test2
+    global test3
+    global test4
+    global test5
+    global test6
+    global test7
+    global test8
+    
+    fig,ax = plt.subplots()
+    
+    # 학습 데이타 scatter plot(점찍기)으로 나타내기 - 여기까지만 하면 위에서 그려줬던 그냥 점만 찍힌 것과 똑같음
+    ax.scatter(X[:, 0], X[:, 1], c=y, s=25, cmap='rainbow', edgecolor='k',
+               clim=(y.min(), y.max()), zorder=3)
+    ax.axis('tight')
+    ax.axis('off')
+    xlim_start , xlim_end = ax.get_xlim() #최솟값, 최댓값
+    ylim_start , ylim_end = ax.get_ylim()
+    test = ax.get_xlim()
+    test1 = ax.get_ylim()
+    
+    # 호출 파라미터로 들어온 training 데이타로 model 학습 . 
+    model.fit(X, y)
+    # meshgrid 형태인 모든 좌표값으로 예측 수행. 
+    test2 = np.linspace(xlim_start,xlim_end, num=200) #xlim_start,ylim_start부터 xlim_end,ylim_end까지 똑같은 step으로 200개 만들어줘라
+    test3 = np.linspace(ylim_start,ylim_end, num=200)
+    test4, test5 = np.meshgrid(np.linspace(xlim_start,xlim_end, num=200),np.linspace(ylim_start,ylim_end, num=200))
+    
+    xx, yy = np.meshgrid(np.linspace(xlim_start,xlim_end, num=200),np.linspace(ylim_start,ylim_end, num=200)) 
+    '''
+    meshgrid(x, y)의 결과
+    xx : x 한 row로 두고 그걸 y 크기만큼 아래로 쫙 복사 -> shape : (y크기, x크기)
+    yy : y 한 column으로 두고 그걸 x 크기만큼 오른쪽으로 쫙 복사 -> shape : (y크기, x크기)
+    '''
+    test6 = xx.ravel() #xx를 쫙 한 줄로 이어 붙임 : 0~199인덱스가 반복
+    test7 = yy.ravel() #yy를 쫙 한 줄로 이어 붙임 : 0~199인덱스 동일-첫번째y값, 200~399인덱스 동일-두번째y값, ...
+    test8 = np.c_[xx.ravel(), yy.ravel()] #xx.ravel();40000크기(1차원데이터) , yy.ravel();40000크기(1차원데이터) 두 개를 묶어서 (40000,2) 만들어짐
+                                          #대응되는 좌표(인덱스)의 x,y끼리 예측해서 그 예측값을 reshape
+    Z = model.predict(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape) #애초에 model이 앞에서 make_classification에서 100개의 scatter 데이터 그래프로 학습시킨 것. 
+                                                                       #그러면 이제는 모~든 좌표! 40000개의 각각의 좌표를 피쳐로 삼아서 학습시킴. - 예측값의 유니크한 값 : 0,1,2
+    
+    # 자! 이제 모든 좌표에 대해 등고선 그래프 그려보자~
+    # contourf() 를 이용하여 class boundary 를 visualization 수행.  //contour:컨투어, 윤곽, 등고선
+    n_classes = len(np.unique(y))
+    contours = ax.contourf(xx, yy, Z, alpha=0.3,
+                           levels=np.arange(n_classes + 1) - 0.5,
+                           cmap='rainbow', clim=(y.min(), y.max()),
+                           zorder=1)
+
+
+# In[ ]:
+
+#과적합 해결 전 - min_samples_leaf = 1(default)
+
+from sklearn.tree import DecisionTreeClassifier
+
+# 특정한 트리 생성 제약없는 결정 트리의 Decsion Boundary 시각화.
+dt_clf = DecisionTreeClassifier().fit(X_features, y_labels)#dt_clf estimator 만들고 그걸로 X_features, y_labels fit까지 다 시켜줌
+visualize_boundary(dt_clf, X_features, y_labels)
+
+
+# In[ ]:
+
+#과적합 해결 - min_samples_leaf = 6으로 설정!!!  //영역 구분이 명확해졌다
+
+# min_samples_leaf=6 으로 트리 생성 조건을 제약한 Decision Boundary 시각화
+dt_clf = DecisionTreeClassifier( min_samples_leaf=6).fit(X_features, y_labels)
+visualize_boundary(dt_clf, X_features, y_labels)
+
+■■■■■■■■■■■■■0511 수업中 새로 알게된것■■■■■■■■■■■■■
+
+############## UCI HAR Dataset.zip 건드려보기 _ 1 #################
+
+
+# ### 결정 트리 실습 - Human Activity Recognition
+
+# In[7]:
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+get_ipython().run_line_magic('matplotlib', 'inline')
+
+# features.txt 파일에는 피처 이름 index와 피처명이 공백으로 분리되어 있음. 이를 DataFrame으로 로드.
+feature_name_df = pd.read_csv('C:/jeon/human_activity/features.txt',sep='\s+',      # \s+ : 정규식, 공백 1개 이상 (\x의 의미 : 공백. +의 의미 : 바로앞의 것이 반복되는 것도 해당)
+                        header=None,names=['column_index','column_name'])
+
+print(len(feature_name_df)) #컬럼의 개수만 561개나 된다..!
+
+# 피처명 index를 제거하고, 피처명만 리스트 객체로 생성한 뒤 샘플로 10개만 추출
+feature_name = feature_name_df.iloc[:, 1].values.tolist()
+print('전체 피처명에서 10개만 추출:', feature_name[:10])
+feature_name_df.head(20)
+
+'''
+X_train_test = pd.read_csv('C:/jeon/human_activity/features.txt',sep='\s+',
+                        header=None,names=feature_name)
+ 
+→ ValueError: Duplicate names are not allowed. 안에 중복된 컬럼명(피처명)이 있다는 뜻! 
+→ names=feature_name 지정 안해주면 잠깐은 ㄱㅊ 
+→ 해결 : 중복처리 !!!
+'''
+
+# 우선 중복된 피처명이 얼마나 있는지 알아보기
+feature_dup_df = feature_name_df.groupby('column_name').count() #만약 column_name 중에서 중복이 있으면 그것끼리 묶일 것. feature_dup_df의 column_index 피쳐는 중복 개수를 나타낸다. (1 넘으면 중복 있는것)
+print(feature_dup_df[feature_dup_df['column_index']>1].count()) #불린인덱싱. feature_dup_df['column_index']>1이 True인 로우만 모아 그 개수 출력  //42개구나~!
+feature_dup_df[feature_dup_df['column_index']>1].head()
+
+# ### 수정 버전 01: 날짜 2019.10.27일
+# 
+# **원본 데이터에 중복된 Feature 명으로 인하여 신규 버전의 Pandas에서 Duplicate name 에러를 발생.**  
+# **중복 feature명에 대해서 원본 feature 명에 '_1(또는2)'를 추가로 부여하는 함수인 get_new_feature_name_df() 생성**
+
+# In[5]:
+
+test10 = []
+test11 = []
+test12 = []
+test13 = []
+
+def get_new_feature_name_df(old_feature_name_df):
+    global test10
+    global test11
+    global test12
+    global test13
+    
+    feature_dup_df = pd.DataFrame(data=old_feature_name_df.groupby('column_name').cumcount(), columns=['dup_cnt'])
+    test10 = feature_dup_df  #원본데이터랑 크기 same.
+    ''' Age     count   cumcount
+    0   10      3       0(번째 10)
+    1   15      2       0
+    2   10              1(번째 10)
+    3   10              2(번째 10)
+    4   16      1       0
+    5   15              1
+    '''
+    
+    feature_dup_df = feature_dup_df.reset_index()
+    test11 = feature_dup_df
+    
+    new_feature_name_df = pd.merge(old_feature_name_df.reset_index(), feature_dup_df, how='outer')
+    test12 = old_feature_name_df.reset_index()
+    test13 = new_feature_name_df
+    ''' merge
+            - 특정 key값기준으로 붙이기(how = inner:교집합, outer:합집합) - index 정보(key값)을 기준으로
+            - index 삭제 등으로 차이가 있을 때
+                inner : 교집합, merge 결과물에서 그 index는 빠짐
+                outer : 합집합, merge 결과물에서 그 index에 해당하는 값을 채워서 넣음
+        concatenate
+            - axis를 줘서 물리적으로 어떻게 붙일 것인지(row방향 or column방향으로 갖다붙이기)
+    '''
+    
+    new_feature_name_df['column_name'] = new_feature_name_df[['column_name', 'dup_cnt']].apply(lambda x : x[0]+'_'+str(x[1]) if x[1] >0 else x[0] ,  axis=1) #중복된 피처명은 뒤에 _1, _2를 붙여서 수정해준다
+    #x : new_feature_name_df(test13로 확인 가능) 안에서 'column_name', 'dup_cnt' 두 컬럼만을 모은 DataFrame이 있고, 그 안에서 row 하나 하나씩 담아옴.
+    new_feature_name_df = new_feature_name_df.drop(['index'], axis=1)
+    return new_feature_name_df
+#test_set = get_new_feature_name_df(feature_name_df)
+
+# In[11]:
+
+
+pd.options.display.max_rows = 999
+new_feature_name_df = get_new_feature_name_df(feature_name_df)
+new_feature_name_df[new_feature_name_df['dup_cnt'] > 0]
+
+
+# **아래 get_human_dataset() 함수는 중복된 feature명을 새롭게 수정하는 get_new_feature_name_df() 함수를 반영하여 수정**
+
+# In[12]:
+
+
+import pandas as pd
+
+def get_human_dataset( ):
+    
+    # 각 데이터 파일들은 공백으로 분리되어 있으므로 read_csv에서 공백 문자를 sep으로 할당.
+    feature_name_df = pd.read_csv('C:/jeon/human_activity/features.txt',sep='\s+',
+                        header=None,names=['column_index','column_name'])
+    
+    # 중복된 feature명을 새롭게 수정하는 get_new_feature_name_df()를 이용하여 새로운 feature명 DataFrame생성. 
+    new_feature_name_df = get_new_feature_name_df(feature_name_df)
+    
+    # DataFrame에 피처명을 컬럼으로 부여하기 위해 리스트 객체로 다시 변환
+    feature_name = new_feature_name_df.iloc[:, 1].values.tolist()
+    
+    # 학습 피처 데이터 셋과 테스트 피처 데이터을 DataFrame으로 로딩. 컬럼명은 feature_name 적용
+    X_train = pd.read_csv('C:/jeon/human_activity/train/X_train.txt',sep='\s+', names=feature_name )
+    X_test = pd.read_csv('C:/jeon/human_activity/test/X_test.txt',sep='\s+', names=feature_name)
+    
+    # 학습 레이블과 테스트 레이블 데이터을 DataFrame으로 로딩하고 컬럼명은 action으로 부여
+    y_train = pd.read_csv('C:/jeon/human_activity/train/y_train.txt',sep='\s+',header=None,names=['action'])
+    y_test = pd.read_csv('C:/jeon/human_activity/test/y_test.txt',sep='\s+',header=None,names=['action'])
+    
+    # 로드된 학습/테스트용 DataFrame을 모두 반환 
+    return X_train, X_test, y_train, y_test
+
+
+X_train, X_test, y_train, y_test = get_human_dataset()
+
+
+# In[13]:
+
+
+print('## 학습 피처 데이터셋 info()')
+print(X_train.info())
+
+
+# In[14]:
+
+
+print(y_train['action'].value_counts())
+
+
+# In[15]:
+
+
+print(X_train.isna().sum().sum())
+#------------- null값이면 True, 아니면 False 담은 DataFrame
+#------------------- 컬럼별 True(null값)의 개수
+#------------------------- 총 True(null값)의 개수
+
+
+# In[16]:
+
+
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
+
+# 예제 반복 시 마다 동일한 예측 결과 도출을 위해 random_state 설정
+dt_clf = DecisionTreeClassifier(random_state=156)
+dt_clf.fit(X_train , y_train)
+pred = dt_clf.predict(X_test)
+accuracy = accuracy_score(y_test , pred)
+print('결정 트리 예측 정확도: {0:.4f}'.format(accuracy))
+
+# DecisionTreeClassifier의 하이퍼 파라미터 - 그냥 파라미터 default 설정이 뭔지 확인하기 위함
+print('DecisionTreeClassifier 기본 하이퍼 파라미터:\n', dt_clf.get_params())
+'''
+ {'ccp_alpha': 0.0, 'class_weight': None, 'criterion': 'gini', 'max_depth': None,       // 'criterion': 'gini' - 결정트리에서 트리를 뻗어나가는 근간이 되는 불평등지수가 'gini'로 default되어 있구나. 'entropy'넣어도 되겠다~.
+  'max_features': None, 'max_leaf_nodes': None, 'min_impurity_decrease': 0.0, 
+  'min_impurity_split': None, 'min_samples_leaf': 1, 'min_samples_split': 2, 
+  'min_weight_fraction_leaf': 0.0, 'presort': 'deprecated', 'random_state': 156, 'splitter': 'best'}
+'''
+
+# In[17]:
+
+
+from sklearn.model_selection import GridSearchCV #파라미터 설정하기 위함
+
+'''
+어떤 파라미터 설정이 최고로 우수한지 알아내기
+ - GridSearchCV : 내가 바꾸고 싶은 모든 파라미터 설정값들을 params에 담아주면, 알아서 "k폴드 교차 검증" (test데이터에 Overfitting 되는거 막으려고) 기반으로 최고의 조합을 찾아줌
+ - 그렇지만 파라미터 설정 max_depth만 해줌.(사용 x)
+'''
+params = {
+    'max_depth' : [ 6, 8 ,10, 12, 16 ,20, 24]
+}
+
+grid_cv = GridSearchCV(dt_clf, param_grid=params, scoring='accuracy', cv=5, verbose=1 ) #교차검증 fold수 = 5   →   561개 데이터를 파라미터 7번 바꿔가면서 5폴드 교차검증 = 561 x 7 x 5   →   오래 걸림!
+grid_cv.fit(X_train , y_train)
+print('GridSearchCV 최고 평균 정확도 수치:{0:.4f}'.format(grid_cv.best_score_))
+print('GridSearchCV 최적 하이퍼 파라미터:', grid_cv.best_params_)
+
+
+# ### 수정 버전 01: 날짜 2019.10.27일  
+# 
+# **사이킷런 버전이 업그레이드 되면서 아래의 GridSearchCV 객체의 cv_results_에서 mean_train_score는 더이상 제공되지 않습니다.**  
+# **기존 코드에서 오류가 발생하시면 아래와 같이 'mean_train_score'를 제거해 주십시요**
+# 
+
+# In[19]:
+
+
+# GridSearchCV객체의 cv_results_ 속성을 DataFrame으로 생성. 
+cv_results_df = pd.DataFrame(grid_cv.cv_results_)
+
+# max_depth 파라미터 값과 그때의 테스트(Evaluation)셋, 학습 데이터 셋의 정확도 수치 추출
+# 사이킷런 버전이 업그레이드 되면서 아래의 GridSearchCV 객체의 cv_results_에서 mean_train_score는 더이상 제공되지 않습니다
+# cv_results_df[['param_max_depth', 'mean_test_score', 'mean_train_score']]
+
+# max_depth 파라미터 값과 그때의 테스트(Evaluation)셋, 학습 데이터 셋의 정확도 수치 추출
+cv_results_df[['param_max_depth', 'mean_test_score']]
+
+
+# In[20]:
+
+'''
+어떤 파라미터 설정이 최고로 우수한지 알아내기
+ - 얘는 GridSearchCV 안쓰고 노가다 할 뿐 아니라, 교차검증도 하지 않음.(사용 x) -> 교차검증 안했기 때문에 결과 다름
+'''
+max_depths = [ 6, 8 ,10, 12, 16 ,20, 24]
+# max_depth 값을 변화 시키면서 그때마다 학습과 테스트 셋에서의 예측 성능 측정
+for depth in max_depths:
+    dt_clf = DecisionTreeClassifier(max_depth=depth, random_state=156)
+    dt_clf.fit(X_train , y_train)
+    pred = dt_clf.predict(X_test)
+    accuracy = accuracy_score(y_test , pred)
+    print('max_depth = {0} 정확도: {1:.4f}'.format(depth , accuracy))  #max_depth = 8인 경우가 최적의 파라미터
+
+
+# In[21]:
+
+'''
+BEST 1. 깊이 줄여서 정확도 성능 올리기
+'''
+params = {
+    'max_depth' : [ 8 , 12, 16 ,20], 
+    'min_samples_split' : [16,24],
+}
+
+grid_cv = GridSearchCV(dt_clf, param_grid=params, scoring='accuracy', cv=5, verbose=1 )
+grid_cv.fit(X_train , y_train)
+print('GridSearchCV 최고 평균 정확도 수치: {0:.4f}'.format(grid_cv.best_score_))
+print('GridSearchCV 최적 하이퍼 파라미터:', grid_cv.best_params_)
+
+
+# In[22]:
+
+'''
+BEST 2. BEST 1에서 구한 최적의 파라미터로 학습 완료된 estimator 객체로 test데이터 예측 수행
+'''
+best_df_clf = grid_cv.best_estimator_
+
+pred1 = best_df_clf.predict(X_test)
+accuracy = accuracy_score(y_test , pred1)
+print('결정 트리 예측 정확도:{0:.4f}'.format(accuracy))
+
+
+# In[23]:
+
+
+import seaborn as sns
+
+ftr_importances_values = best_df_clf.feature_importances_
+
+# Top 중요도로 정렬을 쉽게 하고, 시본(Seaborn)의 막대그래프로 쉽게 표현하기 위해 Series변환
+ftr_importances = pd.Series(ftr_importances_values, index=X_train.columns  )
+
+# 중요도값 순으로 Series를 정렬   --- 상위에 있는 feature : 트리 내릴 때 위쪽에 있는 조건일 확률 높음
+ftr_top20 = ftr_importances.sort_values(ascending=False)[:20]
+plt.figure(figsize=(8,6))
+plt.title('Feature importances Top 20')
+sns.barplot(x=ftr_top20 , y = ftr_top20.index)
+plt.show()
+'''
+4차원 넘는 애들을 그래프 그리기 위해서 차원 줄일 때 feature(컬럼)을 무작정 삭제하는 게 아니다. 
+feature가 1, label이 1개 있을 때 연관관계가 1이라면, 두 개의 scale은 당연히 다를 수 있지만
+feature     label       ←이런 식으로 완벽히 똑같이 바뀐다는 뜻. 
+1           10
+10          100
+이런 애들을 합치는 방향으로 생각하는 것이다. 
+'''
+
+■■■■■■■■■■■■■0512 수업中 새로 알게된것■■■■■■■■■■■■■
+
+딥러닝 - 비정형 데이터 (이미지, 영상, 음성)
+앙상블 - 정형 데이터
+
+앙상블 학습
+- 여러 개의 분류기(Classifier에서 나온 estimator) - 그 예측들을 결합 (집단지성)
+- 보팅 (Voting)	: 서로 다른 알고리즘 estimator로 같은 Data
+		- 하드 보팅	다수의 classifier 간 다수결로 최종 class값 결정 (estimator(분류기) 후지더라도, 개수가 많으면 걔네의 정답 비율이 50넘을 확률 커진다. 정답값에 수렴하게 됨) 
+		- 소프트 보팅 多	다수의 classifier들의 class확률을 레이블값별로 낸 평균이 최고인 레이블값으로 최종 class값 결정
+		이항분포 확률질량함수, 누적 이항분포 확률질량함수 > 1. 분류기가 많을 때는 더 나은 퍼포먼스를 낼 수 있음을 알기
+							    > 2. 그걸 실제 코드로 확인하기
+- 배깅 (Bagging)	: 같은 유형 알고리즘 estimator로 다른 Data
+		ex_랜덤 포레스트 알고리즘
+- 부스팅 (Boosting)	: 매번 다음 분류기에게 가중치 부여해서 앞에서 학습한 분류기가 예측 틀린 데이터에 대해 다음부터 올바르게 학습하도록
+		ex_그래디언트 부스팅 알고리즘, XGBoost, LightGBM
+- 스태킹 (Stacking)	: 여러 다른 모델의 예측 결괏값을 다시 학습데이터로 만들어서 다른 모델(메타모델)로 재학습
+
+이항분포 확률질량함수	= nCk * p^k * (1-p)^(n-k)	    (n번 시행했을 때 k번 성공할 확률)		cf. 에러율도 똑같이 구함
+누적 이항분포 확률질량함수	= ∑ nCk * p^k * (1-p)^(n-k)     (k에대한 시그마 → n번 시행했을 때 k번 이상 성공할 확률)
+
+============================================================
+
+from scipy.special import comb
+import math
+
+   #ensemble : 앙상블
+def ensemble_error(n_classifier, error): #에러발생에 관한 누적 이항분포 확률질량함수 계산
+    k_start = int(math.ceil(n_classifier / 2.)) #ceil() : 소수점 올림, n_classifier=11이므로 k_start=6  →  과반수 이상이 error일 확률
+    probs = [comb(n_classifier, k) * error**k * (1-error)**(n_classifier - k) for k in range(k_start, n_classifier + 1)]
+    # comb(n, k) : combination, nCk
+    return sum(probs)
+
+ensemble_error(n_classifier=11, error=0.25)
+
+import numpy as np
+
+error_range = np.arange(0.0, 1.01, 0.01) #에러발생확률 p  //0.0부터 1.01까지 0.01step으로 ndarray 만들어줌
+ens_errors = [ensemble_error(n_classifier=11, error=error) for error in error_range]
+             # error값이 변화함에 따라, 전체 11번의 시행 중에서 과반수 이상이 error일 확률
+
+import matplotlib.pyplot as plt
+
+plt.plot(error_range, #x축
+         ens_errors,  #y축         - error발생확률이 0.5보다 작으면 누적 이항분포 확률질량함수(과반수 이상이 error일 확률)가 작고, 아니면 0.5보다 높아진다. 
+         label='Ensemble error', # - error와 performance(성공)확률은 반대. performance에 대한 누적 이항분포 확률질량함수는 훨씬 높아진다. (p = 1-p)
+         linewidth=2)
+
+plt.plot(error_range, 
+         error_range, #y=x그래프
+         linestyle='--',
+         label='Base error',
+         linewidth=2)
+
+plt.xlabel('Base error')
+plt.ylabel('Base/Ensemble error')
+plt.legend(loc='upper left')
+plt.grid(alpha=0.5)
+plt.show()
+
+==========================================================
+
+import numpy as np
+import pandas as pd
+import scipy as sp
+from scipy import stats  #scipy 패키지 : 통계, 분석 관련 多多 쓰임
+from matplotlib import pyplot as plt
+import seaborn as sns
+sns.set()
+# cf. MathWorks : MATLABdp 
+
+print(sp.stats.binom.pmf(k=1, n=2, p=0.5)) #pmf : 이항분포 확률질량함수 구하는 함수 : 전체 시행횟수가 n이고 성공 확률이 p인 이항분포 게임을 k번 성공할 확률
+
+np.random.seed(1) #시드값 : random 사용할 때 사실은 무작위로 뱉어주기 위한 규칙값이 있다. 그 규칙값 설정해주는 게 seed()
+print(sp.stats.binom.rvs(n = 10, p =0.2, size=5)) #얘만 실행하면 값 실행마다 바뀜. 위의 seed코드까지 같이 실행해야 계속 일정
+                    #rvs(n, p, size) : 전체 시행횟수가 n이고 성공 확률이 p인 이항분포 게임을 총 size만큼 수행한 성공횟수들을 뱉어줌
+
+
+# ↓ sp.stats.binom.rvs(n = 10, p = 0.2, size=10) 를 풀어보면
+binomial = sp.stats.binom(n=10, p=0.2) #전체 시행횟수가 n이고 성공 확률이 p인 이항분포 게임 객체 binomial을 만듦
+np.random.seed(1)
+rvs_binomial = binomial.rvs(size=10000) #size가 10, 100, 1000, 10000번 커질수록 pmf_binomial 그래프와 비슷해진다 (pmf값에 점점 수렴한다) → 확률통계의 막강한 힘 (이론과 실제 현실은 다르지만, 시행횟수를 늘리면 결국 같아진다)
+print(rvs_binomial)
+print(rvs_binomial.mean())
+
+
+m = np.arange(0,10,1)
+pmf_binomial = binomial.pmf(k = m) #성공 확률이 0.2인 게임을 10번 했을 때 0번~9번 성공할 확률
+
+#Distribute "히스토그램" distplot() : 값의 개수를 막대그래프로 나타내줌
+sns.distplot(rvs_binomial, bins = m , kde = False, norm_hist = True, color = 'gray') #bins : x축을 어떻게 정할 건지. 
+                                                                                     #y축 : rvs_biomial에서 x축(0~9)에 해당하는 값이 각각 몇 개 있는가 Count => 정규화해서 스케일링 1/10 해줌
+                                                                                     #kde = True로 하면 히스토그램의 추세 곡선 그려줌
+plt.plot(m, pmf_binomial, color = 'black') #얜 우리가 계속 보던 그냥 그래프. x축-m, y축-pmf_binomial(각각의 m의 element만큼 성공할 확률)
+
+print(1 - sp.stats.binom.cdf(n = 10000, p =0.51, k=4999)) #cdf : 누적 이항분포 확률질량함수 구하는 함수 : 0 ~ k번 성공할 확률 다 더한 것
+                                                #0 ~ 4999번의 성공 확률을 다 더함!
+'''
+성공 확률이 51%인 이항분포 게임을 10000번 시행했을 때, 0~4999번(5000 case) 성공 확률 각각을 더한 것. 
+이 때 0~4999번 성공했다는 것은 성공보다 실패를 더 많이 했다는 것으로, '다수결'로 보면 그냥 실패한 것이다. 
+즉, 과반수 이하의 성공 확률을 더한 것. 이 실패 확률을 cdf(누적)으로 다 더한 '에러율'이다. 
+그것을 1에서 소거하면 결국 "과반수 이상의 성공 확률을 더한 것"이다.
+    => Hard Voting !!!
+
+성공 확률이 51%밖에 되지 않는 분류기지만, 내가 만약 걔네를 10000개 가지고 Hard Voting 앙상블로 판단한다면 성공 확률이 97%나 된다는 것!!!
+'''
+
+■■■■■■■■■■■■■0513 수업中 새로 알게된것■■■■■■■■■■■■■
+
+import numpy as np
+
+np.argmax(np.bincount([0, 0, 1], weights=[0.2, 0.2, 0.6])) # argmax: 가장 큰 포지션에 있는 아이의 idx 리턴, bincount: 유니크한 원소 개수, weights: 가중치
+'''1'''
+print(np.bincount([0, 0, 1, 3, 3, 3])) # 0→2, 1→1, 2→0, 3→3  -> [2 1 0 3]
+print(np.bincount([0, 0, 1])) # 0→2, 1→1  -> [2 1]
+print(np.bincount([0, 0, 1], weights=[0.2, 0.2, 0.6])) #각 포지션의 weight을 부여하면 0→0.4, 1→0.6  -> [0.4 0.6]
+print(np.bincount([0, 0, 1, 3, 3], weights=[0.2, 0.3, 0.6, 0.1, 0.1])) # -> [0.5 0.6 0.  0.2]
+
+
+ex = np.array([[0.9, 0.1],
+               [0.8, 0.2],
+               [0.4, 0.6]])
+
+p = np.average(ex, axis=0, weights=[0.2, 0.2, 0.6]) #axis=0 : 보통 row방향(아래방향) => 그냥 평균 내면 [0.7 0.3]
+print(p)    #가중치를 냈으니까 가중평균 -> 0.9*0.2, 0.8*0.2, 0.4*0.6 더해주면 끝(가중치 자체가 확률이니까) => [0.58 0.42]
+p = np.average(ex, axis=0)
+print(p)
+
+
+from sklearn.base import BaseEstimator
+from sklearn.base import ClassifierMixin
+from sklearn.preprocessing import LabelEncoder
+import six
+from sklearn.base import clone
+from sklearn.pipeline import _name_estimators #__init__에서 사용. estimator 넣어주면 상세 정보 list(zip(names, estimators))를 리턴
+import numpy as np
+import operator
+
+
+class MajorityVoteClassifier(BaseEstimator, ClassifierMixin): #BaseEstimator 상속 -> MajorityVoteClassifier 클래스를 커스터마이징한 estimator처럼 사용 가능 (fit, predict, predict_proba 메소드 보면 알수있듯)
+    def __init__(self, classifiers, vote='classlabel', weights=None):
+
+        self.classifiers = classifiers
+        self.named_classifiers = {key: value for key, value in _name_estimators(classifiers)} #딕셔너리
+        self.vote = vote
+        self.weights = weights
+
+    def fit(self, X, y):
+        if self.vote not in ('probability', 'classlabel'):
+            raise ValueError("vote는 'probability' 또는 'classlabel'이어야 합니다."
+                             "; (vote=%r)이 입력되었습니다."
+                             % self.vote)
+
+        if self.weights and len(self.weights) != len(self.classifiers):
+            raise ValueError('분류기 개수와 가중치 개수는 동일해야 합니다.'
+                             '; %d개의 가중치와, %d개의 분류기가 입력되었습니다.'
+                             % (len(self.weights), len(self.classifiers)))
+
+        # self.predict 메서드에서 np.argmax를 호출할 때 
+        # 클래스 레이블이 0부터 시작되어야 하므로 LabelEncoder를 사용합니다. ->레이블인코딩 : LabelEncoder를 객체로 생성한 후 , fit( ) 과 transform( ) 으로 label 인코딩 수행. 
+        self.lablenc_ = LabelEncoder() #밖에서 우리가 labelencoding 해줬기 때문에 사실 필요 없는데 그냥 해줌
+        self.lablenc_.fit(y) #y: 아래에서 붖꽃데이터 test데이터 레이블인코딩 끝내고 더 아래에서 train_test_split해줘서 나온 y_train 데이터. 50개이고 비율은 0:1=1:1 
+        self.classes_ = self.lablenc_.classes_ #레이블 인코딩 된 아이의 유니크한 값이 들어감. 여기선 0, 1 두개가 들어감
+        self.classifiers_ = []
+        for clf in self.classifiers: #클래스 객체 만들 때 받아온 estimator 3개 담긴 리스트. dtype:list, 각각의 요소 dtype:estimator
+            fitted_clf = clone(clf).fit(X, self.lablenc_.transform(y)) #clone():원본말고 복사, X:feature데이터, 이제 fitted_clf : 학습된 estimator가 담겨 있음!!!
+                                    #fit(X_train, y_train)해준것 => 결과물 : 학습된 estimator
+            self.classifiers_.append(fitted_clf) #그 estimator가 들어감. 즉, for문 끝나면 classifiers_ = [pipe1으로 학습된 estimator, clf2로 학습된 estimator, pipe3로 학습된 estimator]
+        return self
+
+    def predict(self, X):
+        if self.vote == 'probability':
+            maj_vote = np.argmax(self.predict_proba(X), axis=1)
+        else:  # 'classlabel' 투표
+
+            #  clf.predict 메서드를 사용해 결과를 모읍니다.
+            predictions = np.asarray([clf.predict(X)
+                                      for clf in self.classifiers_]).T
+
+            maj_vote = np.apply_along_axis(
+                                      lambda x:
+                                      np.argmax(np.bincount(x,
+                                                weights=self.weights)),
+                                      axis=1,
+                                      arr=predictions)
+        maj_vote = self.lablenc_.inverse_transform(maj_vote)
+        return maj_vote
+
+    def predict_proba(self, X):
+        probas = np.asarray([clf.predict_proba(X)
+                             for clf in self.classifiers_])
+        avg_proba = np.average(probas, axis=0, weights=self.weights)
+        return avg_proba
+
+    def get_params(self, deep=True):
+        """GridSearch를 위해서 분류기의 매개변수 이름을 반환합니다"""
+        if not deep:
+            return super(MajorityVoteClassifier, self).get_params(deep=False)
+        else:
+            out = self.named_classifiers.copy()
+            for name, step in six.iteritems(self.named_classifiers):
+                for key, value in six.iteritems(step.get_params(deep=True)):
+                    out['%s__%s' % (name, key)] = value
+            return out
+
+from sklearn import datasets
+from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+
+iris = datasets.load_iris()
+X, y = iris.data[50:, [1, 2]], iris.target[50:] #여기까지 했을 때 y에는 1,1,1,1,1,..2,2,2,2,2...만 들어가있고 0은 안들어감.
+le = LabelEncoder()     #y 안의 값은 모두 숫자인데 레이블인코딩 해주는 이유 : 나중에 bin_count할 때 1부터 시작하면 애매하기 때문에 그냥 바꿔줌
+y = le.fit_transform(y) #레이블인코딩 끝난 후 y에는 0,0,0,0,0,.1,1,1,1,1...로 바뀌어 들어가있음
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=1, stratify=y)
+#test_size=0.5, stratify=y로 보면 train, test 데이터는 X row의 반이니까 50의 크기일 것이고, 그 비율은 둘 다 y의 비율을 따라 1:1일 것이다. 
+
+import numpy as np
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier 
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import cross_val_score
+
+# estimator 객체 3개 만듦
+clf1 = LogisticRegression(solver='liblinear',
+                          penalty='l2', 
+                          C=0.001,
+                          random_state=1)
+
+clf2 = DecisionTreeClassifier(max_depth=1,  #지금 일부러 max_depth를 1로 줘서 너무 얕게 만듦 -> 일부러 약한 분류기를 만들었구나~!
+                              criterion='entropy', #get_param()으로 까보면 criterion default값 : gini    //gini, entropy, 불순물지수 전부 비슷한 목적이다. 같다고 생각.
+                              random_state=0)
+
+clf3 = KNeighborsClassifier(n_neighbors=1,
+                            p=2,
+                            metric='minkowski')
+
+pipe1 = Pipeline([['sc', StandardScaler()],
+                  ['clf', clf1]])
+pipe3 = Pipeline([['sc', StandardScaler()],
+                  ['clf', clf3]])
+'''
+cf. 파이프라인
+pipe1, pipe3 얘네는 나중에 estimator처럼 사용할 것이다. (fit, predict)
+estimator는 fit(X_train, y_train)해줘야 하는데, Pipiline은 일단 스케일링 해주고 clf1으로 학습해준다. 
+'''
+
+clf_labels = ['Logistic regression', 'Decision tree', 'KNN']
+
+print('10-겹 교차 검증:\n')
+for clf, label in zip([pipe1, clf2, pipe3], clf_labels): #1st - pipe1,'Logistic regression', 2nd - clf2,'Decision tree', 
+    scores = cross_val_score(estimator=clf, X=X_train, y=y_train, cv=10, scoring='roc_auc') # cross_val_score() : 자동적으로 Stratified K폴드 교차 검증
+                    #for문 돌면서 clf에 순차적으로 3개 estimator 전부 들어감    #scoring : 판단 기준
+                                                                        
+    print("ROC AUC: %0.2f (+/- %0.2f) [%s]"
+          % (scores.mean(), scores.std(), label))
+
+
+
+
+# 다수결 투표 (클래스 레이블 카운트)
+
+mv_clf = MajorityVoteClassifier(classifiers=[pipe1, clf2, pipe3])
+
+#__init()__에서 뭐 담겨있는지 그냥 확인
+print(mv_clf.named_classifiers)
+print(mv_clf.vote)
+print(mv_clf.weights)
+
+
+clf_labels += ['Majority voting'] #뒤에 새로 이름 하나 추가
+all_clf = [pipe1, clf2, pipe3, mv_clf] #마지막 요소 : 방금 MajorityVoteClassifier로 만든 estimator 객체
+
+for clf, label in zip(all_clf, clf_labels):
+    scores = cross_val_score(estimator=clf, X=X_train, y=y_train, cv=10, scoring='roc_auc')
+    #지금 voting방식을 사용하는 estimator를 train데이터 pipe1, clf2, pipe3, mv_clf로 교차 검증을 수행하고 있는 중!
+    
+    print("ROC AUC: %0.2f (+/- %0.2f) [%s]" % (scores.mean(), scores.std(), label))
+    '''
+    ROC AUC: 0.92 (+/- 0.15) [Logistic regression]
+    ROC AUC: 0.87 (+/- 0.18) [Decision tree]
+    ROC AUC: 0.85 (+/- 0.13) [KNN]
+    ROC AUC: 0.98 (+/- 0.05) [Majority voting]     - 마지막 mv_clf가 가장 좋긴 함. 근데 여기서 중요한 건 그게 아님.
+    
+    1. 우선 train_test_split
+    2. fit()메소드에서 cv=10이므로 10개로 나눠서 1개씩 빼놓고 교차검증
+    '''
+
+
+
+
+
 
 
 
