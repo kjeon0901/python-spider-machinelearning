@@ -19,7 +19,7 @@ from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
-cancer = load_breast_cancer()
+cancer = load_breast_cancer() #sklearn에서 제공해주는 데이터 하나 가져옴 - 위스콘신 유방암 데이터 세트
 
 data_df = pd.DataFrame(cancer.data, columns=cancer.feature_names)
 data_df.head(3)
@@ -35,7 +35,7 @@ lr_clf = LogisticRegression()
 knn_clf = KNeighborsClassifier(n_neighbors=8)
 
 # 개별 모델을 소프트 보팅 기반의 앙상블 모델로 구현한 분류기 
-vo_clf = VotingClassifier( estimators=[('LR',lr_clf),('KNN',knn_clf)] , voting='soft' )
+vo_clf = VotingClassifier( estimators=[('LR',lr_clf),('KNN',knn_clf)] , voting='soft' ) #아까 만든 두 estimator로 soft voting 할게~
 
 X_train, X_test, y_train, y_test = train_test_split(cancer.data, cancer.target, 
                                                     test_size=0.2 , random_state= 156)
@@ -43,7 +43,7 @@ X_train, X_test, y_train, y_test = train_test_split(cancer.data, cancer.target,
 # VotingClassifier 학습/예측/평가. 
 vo_clf.fit(X_train , y_train)
 pred = vo_clf.predict(X_test)
-print('Voting 분류기 정확도: {0:.4f}'.format(accuracy_score(y_test , pred)))
+print('Voting 분류기 정확도: {0:.4f}'.format(accuracy_score(y_test , pred))) #voting의 퍼포먼스가 이 케이스에서 조금 더 괜찮구나~
 
 # 개별 모델의 학습/예측/평가.
 classifiers = [lr_clf, knn_clf]
@@ -86,7 +86,7 @@ import pandas as pd
 def get_human_dataset( ):
     
     # 각 데이터 파일들은 공백으로 분리되어 있으므로 read_csv에서 공백 문자를 sep으로 할당.
-    feature_name_df = pd.read_csv('./human_activity/features.txt',sep='\s+',
+    feature_name_df = pd.read_csv('C:/jeon/human_activity/features.txt',sep='\s+',
                         header=None,names=['column_index','column_name'])
     
     # 중복된 feature명을 새롭게 수정하는 get_new_feature_name_df()를 이용하여 새로운 feature명 DataFrame생성. 
@@ -96,12 +96,12 @@ def get_human_dataset( ):
     feature_name = new_feature_name_df.iloc[:, 1].values.tolist()
     
     # 학습 피처 데이터 셋과 테스트 피처 데이터을 DataFrame으로 로딩. 컬럼명은 feature_name 적용
-    X_train = pd.read_csv('./human_activity/train/X_train.txt',sep='\s+', names=feature_name )
-    X_test = pd.read_csv('./human_activity/test/X_test.txt',sep='\s+', names=feature_name)
+    X_train = pd.read_csv('C:/jeon/human_activity/train/X_train.txt',sep='\s+', names=feature_name )
+    X_test = pd.read_csv('C:/jeon/human_activity/test/X_test.txt',sep='\s+', names=feature_name)
     
     # 학습 레이블과 테스트 레이블 데이터을 DataFrame으로 로딩하고 컬럼명은 action으로 부여
-    y_train = pd.read_csv('./human_activity/train/y_train.txt',sep='\s+',header=None,names=['action'])
-    y_test = pd.read_csv('./human_activity/test/y_test.txt',sep='\s+',header=None,names=['action'])
+    y_train = pd.read_csv('C:/jeon/human_activity/train/y_train.txt',sep='\s+',header=None,names=['action'])
+    y_test = pd.read_csv('C:/jeon/human_activity/test/y_test.txt',sep='\s+',header=None,names=['action'])
     
     # 로드된 학습/테스트용 DataFrame을 모두 반환 
     return X_train, X_test, y_train, y_test
@@ -139,7 +139,7 @@ print('랜덤 포레스트 정확도: {0:.4f}'.format(accuracy))
 
 from sklearn.model_selection import GridSearchCV
 
-params = {
+params = { # 1x4x3x3 = 36
     'n_estimators':[100],
     'max_depth' : [6, 8, 10, 12], 
     'min_samples_leaf' : [8, 12, 18 ],
@@ -147,7 +147,7 @@ params = {
 }
 # RandomForestClassifier 객체 생성 후 GridSearchCV 수행
 rf_clf = RandomForestClassifier(random_state=0, n_jobs=-1)
-grid_cv = GridSearchCV(rf_clf , param_grid=params , cv=2, n_jobs=-1 )
+grid_cv = GridSearchCV(rf_clf , param_grid=params , cv=2, n_jobs=-1 ) #GridSearchCV cv=2
 grid_cv.fit(X_train , y_train)
 
 print('최적 하이퍼 파라미터:\n', grid_cv.best_params_)
@@ -159,7 +159,7 @@ print('최고 예측 정확도: {0:.4f}'.format(grid_cv.best_score_))
 # In[7]:
 
 
-rf_clf1 = RandomForestClassifier(n_estimators=300, max_depth=10, min_samples_leaf=8,                                  min_samples_split=8, random_state=0)
+rf_clf1 = RandomForestClassifier(n_estimators=300, max_depth=10, min_samples_leaf=8, min_samples_split=8, random_state=0)
 rf_clf1.fit(X_train , y_train)
 pred = rf_clf1.predict(X_test)
 print('예측 정확도: {0:.4f}'.format(accuracy_score(y_test , pred)))

@@ -1949,7 +1949,7 @@ encoder.fit(items) #각각의 유니크한 값에다가 숫자값 부여
 labels = encoder.transform(items) #인코딩 변환 
 print('인코딩 변환값:',labels)
 print('인코딩 클래스:',encoder.classes_) #번호 부여된 유니크한 값들을 0번 값부터 차례대로 출력
-print('디코딩 원본 값:',encoder.inverse_transform([4, 5, 2, 0, 1, 1, 3, 3])) #번호에 해당하는 유니크한 값들을 역으로 출력
+print('디코딩 원본 값:',encoder.([4, 5, 2, 0, 1, 1, 3, 3])) #번호에 해당하는 유니크한 값들을 역으로 출력
 
 
 '''2. 원-핫 인코딩'''
@@ -3534,17 +3534,30 @@ feature     label       ←이런 식으로 완벽히 똑같이 바뀐다는 뜻
 - 여러 개의 분류기(Classifier에서 나온 estimator) - 그 예측들을 결합 (집단지성)
 - 보팅 (Voting)	: 서로 다른 알고리즘 estimator로 같은 Data
 		- 하드 보팅	다수의 classifier 간 다수결로 최종 class값 결정 (estimator(분류기) 후지더라도, 개수가 많으면 걔네의 정답 비율이 50넘을 확률 커진다. 정답값에 수렴하게 됨) 
-		- 소프트 보팅 多	다수의 classifier들의 class확률을 레이블값별로 낸 평균이 최고인 레이블값으로 최종 class값 결정
+		- 소프트 보팅 多	다수의 classifier들의 class확률(predict_proba)을 레이블값별로 낸 평균이 최고인 레이블값으로 최종 class값 결정
 		이항분포 확률질량함수, 누적 이항분포 확률질량함수 > 1. 분류기가 많을 때는 더 나은 퍼포먼스를 낼 수 있음을 알기
 							    > 2. 그걸 실제 코드로 확인하기
 - 배깅 (Bagging)	: 같은 유형 알고리즘 estimator로 다른 Data
-		ex_랜덤 포레스트 알고리즘
+		ex_랜덤 포레스트 알고리즘	하나의 데이터세트에서 중복 가능하게 데이터샘플링하여 학습
+					n_estimators : 결정트리 개수. 10개가 default. 너무 많아도 느려저서 안좋음
+					max_features : feature 개수 줄이는 파라미터. feature가 너무 많으면 시간/공간복잡도 커짐. 시간복잡도가 지수함수 형태로 올라갈 수도 있음. → 그래서 상관관계가 있는 애들끼리 합쳐서 차원 축소 하는 것 .
+					max_depth
+					min_samples_leaf
 - 부스팅 (Boosting)	: 매번 다음 분류기에게 가중치 부여해서 앞에서 학습한 분류기가 예측 틀린 데이터에 대해 다음부터 올바르게 학습하도록
+		ex_AdaBoost	영역 분류(조건식을 준다=영역 구분한다) 기준을 분류기로 두고, 잘못 분류된 오류 데이터에 가중치를 부여하면서 부스팅 수행. 그럼 다음번 수행에서는 가중치가 붙은 곳을 조금 더 신경 써서 구분할 테니까!
 		ex_그래디언트 부스팅 알고리즘, XGBoost, LightGBM
+		
 - 스태킹 (Stacking)	: 여러 다른 모델의 예측 결괏값을 다시 학습데이터로 만들어서 다른 모델(메타모델)로 재학습
 
 이항분포 확률질량함수	= nCk * p^k * (1-p)^(n-k)	    (n번 시행했을 때 k번 성공할 확률)		cf. 에러율도 똑같이 구함
 누적 이항분포 확률질량함수	= ∑ nCk * p^k * (1-p)^(n-k)     (k에대한 시그마 → n번 시행했을 때 k번 이상 성공할 확률)
+
+pmf(k, n, p) : 이항분포 확률질량함수
+cdf(n, p, k) : 누적 이항분포 확률질량함수 (0~k까지)
+rvs(n, p, size) : 성공확률이 p인 게임을 n번 시행하는 행위를 size만큼 했을 때 모든 성공 횟수
+
+히스토그램 == 도수분포표
+Distribute히스토그램 - distplot() : 값의 개수를 막대그래프로 나타내줌
 
 ============================================================
 
@@ -3606,13 +3619,17 @@ print(sp.stats.binom.rvs(n = 10, p =0.2, size=5)) #얘만 실행하면 값 실�
 # ↓ sp.stats.binom.rvs(n = 10, p = 0.2, size=10) 를 풀어보면
 binomial = sp.stats.binom(n=10, p=0.2) #전체 시행횟수가 n이고 성공 확률이 p인 이항분포 게임 객체 binomial을 만듦
 np.random.seed(1)
-rvs_binomial = binomial.rvs(size=10000) #size가 10, 100, 1000, 10000번 커질수록 pmf_binomial 그래프와 비슷해진다 (pmf값에 점점 수렴한다) → 확률통계의 막강한 힘 (이론과 실제 현실은 다르지만, 시행횟수를 늘리면 결국 같아진다)
+rvs_binomial = binomial.rvs(size=10000) #size가 10, 100, 1000, 10000번 커질수록 pmf_binomial 그래프와 비슷해진다 (pmf값에 점점 수렴한다) → 확률통계의 막강한 힘 (이론과 실제 현실은 다르지만, 시행횟수를 늘리면 결국 같아진다 (이제는 시드값 바꿔도 별 차이 안남))
 print(rvs_binomial)
 print(rvs_binomial.mean())
 
-
 m = np.arange(0,10,1)
 pmf_binomial = binomial.pmf(k = m) #성공 확률이 0.2인 게임을 10번 했을 때 0번~9번 성공할 확률
+
+
+
+
+
 
 #Distribute "히스토그램" distplot() : 값의 개수를 막대그래프로 나타내줌
 sns.distplot(rvs_binomial, bins = m , kde = False, norm_hist = True, color = 'gray') #bins : x축을 어떻게 정할 건지. 
@@ -3626,6 +3643,7 @@ print(1 - sp.stats.binom.cdf(n = 10000, p =0.51, k=4999)) #cdf : 누적 이항�
 성공 확률이 51%인 이항분포 게임을 10000번 시행했을 때, 0~4999번(5000 case) 성공 확률 각각을 더한 것. 
 이 때 0~4999번 성공했다는 것은 성공보다 실패를 더 많이 했다는 것으로, '다수결'로 보면 그냥 실패한 것이다. 
 즉, 과반수 이하의 성공 확률을 더한 것. 이 실패 확률을 cdf(누적)으로 다 더한 '에러율'이다. 
+만약 p=0.61이면 k=5999라고 해야 모든 실패율을 더한 것!
 그것을 1에서 소거하면 결국 "과반수 이상의 성공 확률을 더한 것"이다.
     => Hard Voting !!!
 
@@ -3663,8 +3681,15 @@ from sklearn.pipeline import _name_estimators #__init__에서 사용. estimator 
 import numpy as np
 import operator
 
+test=[]
+test1=[]
+test2=[]
 
 class MajorityVoteClassifier(BaseEstimator, ClassifierMixin): #BaseEstimator 상속 -> MajorityVoteClassifier 클래스를 커스터마이징한 estimator처럼 사용 가능 (fit, predict, predict_proba 메소드 보면 알수있듯)
+    global test
+    global test1
+    global test2
+    
     def __init__(self, classifiers, vote='classlabel', weights=None):
 
         self.classifiers = classifiers
@@ -3685,6 +3710,7 @@ class MajorityVoteClassifier(BaseEstimator, ClassifierMixin): #BaseEstimator 상
 
         # self.predict 메서드에서 np.argmax를 호출할 때 
         # 클래스 레이블이 0부터 시작되어야 하므로 LabelEncoder를 사용합니다. ->레이블인코딩 : LabelEncoder를 객체로 생성한 후 , fit( ) 과 transform( ) 으로 label 인코딩 수행. 
+        # 레이블 인코딩에서 fit(A) - A 안의 유니크한 레이블값에 숫자 부여한 테이블 하나 만듦, B=transform(A) - fit로 만든 레이블 테이블을 가져와서 A에 적용시킨 0 1 0 1 2 1... 값을 B에 담음. fit_transform() 로 한번에 해도 됨
         self.lablenc_ = LabelEncoder() #밖에서 우리가 labelencoding 해줬기 때문에 사실 필요 없는데 그냥 해줌
         self.lablenc_.fit(y) #y: 아래에서 붖꽃데이터 test데이터 레이블인코딩 끝내고 더 아래에서 train_test_split해줘서 나온 y_train 데이터. 50개이고 비율은 0:1=1:1 
         self.classes_ = self.lablenc_.classes_ #레이블 인코딩 된 아이의 유니크한 값이 들어감. 여기선 0, 1 두개가 들어감
@@ -3692,31 +3718,45 @@ class MajorityVoteClassifier(BaseEstimator, ClassifierMixin): #BaseEstimator 상
         for clf in self.classifiers: #클래스 객체 만들 때 받아온 estimator 3개 담긴 리스트. dtype:list, 각각의 요소 dtype:estimator
             fitted_clf = clone(clf).fit(X, self.lablenc_.transform(y)) #clone():원본말고 복사, X:feature데이터, 이제 fitted_clf : 학습된 estimator가 담겨 있음!!!
                                     #fit(X_train, y_train)해준것 => 결과물 : 학습된 estimator
+                                    #근데 교차검증이기 때문에 45개의 데이터만 요기서 함. 이제 나머지 5개의 test데이터로 predict 해봐야 함.
+                                    #근데 처음에 교차검증 scoring='roc_auc'(x축이 FPR로, threshold값의 변화에 따라 그래프 그려짐)를 해주었기 때문에, 확률값이 필요하다. predict가 아니라, predict_proba를 해줘야 함. 그래서 자동으로 그렇게 실행되므로 22222222222222222222222가 출력된다. 
+                                    #roc_auc - threshold값 변화 - predict_proba에서 레이블값 나누는 비율 변화
             self.classifiers_.append(fitted_clf) #그 estimator가 들어감. 즉, for문 끝나면 classifiers_ = [pipe1으로 학습된 estimator, clf2로 학습된 estimator, pipe3로 학습된 estimator]
         return self
 
-    def predict(self, X):
+    def predict(self, X): #교차검증이기 때문에 X는 5개의 데이터(shape:5x2, cv=10이었기 때문에)
+        print('111111111111111111111111111111')
         if self.vote == 'probability':
             maj_vote = np.argmax(self.predict_proba(X), axis=1)
-        else:  # 'classlabel' 투표
+        else:  # 'classlabel' 투표 - default가 여기임. 
 
             #  clf.predict 메서드를 사용해 결과를 모읍니다.
-            predictions = np.asarray([clf.predict(X)
-                                      for clf in self.classifiers_]).T
-
-            maj_vote = np.apply_along_axis(
-                                      lambda x:
-                                      np.argmax(np.bincount(x,
-                                                weights=self.weights)),
-                                      axis=1,
-                                      arr=predictions)
-        maj_vote = self.lablenc_.inverse_transform(maj_vote)
+            predictions = np.asarray([clf.predict(X) for clf in self.classifiers_]).T #.T 붙이면 전치행렬! 행렬 뒤집기. 우리가 원하는 건 하나의 estimator예측이 하나의 column에 들어가길 원한다. 
+            test1.append(predictions.T) #이미 한번 전치행렬 해둬서 AT 됐으니까 (AT)T 해서 다시 A 볼 수 있음. 
+            test2.append(predictions) #3개의 estimator가 5개의 데이터를 예측한 예측값을 5x3형태로 담음
+            
+            maj_vote = np.apply_along_axis(lambda x: np.argmax(np.bincount(x, weights=self.weights)), axis=1, arr=predictions)
+            #보통 df.apply(lambda x: ~~) 하면 df에서 row 하나씩 x에 들어가는데, 여기서는 특정짓지 않고 np라고 해주었다. 대신 뒤에 arr = predictions라고 해줘서 predictions에 적용하는 것을 알 수 있다. 
+            '''
+            이게 Hard Voting과 연결되는 이유!!! ★★★
+            3개의 estimator가 각각의 데이터에 예측한 값에서 다수결로 최종 결정한다. 
+            '''
+        maj_vote = self.lablenc_.inverse_transform(maj_vote) 
+        #레이블 인코딩해서 조금 달라진 값을 다시 원래대로 0, 1 -> 1, 2. 근데 지금 보면 이미 밖에서 레이블 인코딩 끝난 뒤에 train_test_split해주었다. 그리고 이 위에서 혹시 빠진 경우가 있을까봐 한번 더 레이블인코딩 해주었다. (여기선 별로 의미 없었지만)
+        #그래서 지금 inverse_transform해봤자, 위에 두 번째로 수행한 레이블 인코딩만 다시 원래대로 돌려놓게 된다. 그래봤자 돌려놓은 상태도 그대로 0, 1 -> 0, 1인 걸!!!
+        #여기선 별 의미 없지만, 다른 케이스들을 생각해보면 (레이블인코딩 한 번만 수행했고, 그게 split 이후라면) 이 코드는 유의미해진다!
         return maj_vote
 
-    def predict_proba(self, X):
-        probas = np.asarray([clf.predict_proba(X)
-                             for clf in self.classifiers_])
-        avg_proba = np.average(probas, axis=0, weights=self.weights)
+    def predict_proba(self, X): #교차검증이기 때문에 X는 5개의 test 데이터(shape:5x2, cv=10이었기 때문에)
+        print('222222222222222222222222222222')
+        probas = np.asarray([clf.predict_proba(X) for clf in self.classifiers_]) #probas : 3x5x2 3차원 데이터, 각 estimator별로 predict_proba한 결과 확률값 5x2데이터가 3번 담기니까. 
+        test=probas #3차원 데이터인 것 확인~
+        avg_proba = np.average(probas, axis=0, weights=self.weights) #3차원이기 때문에 axis=0,1,2까지 가능. axis=0이면 3x5x2에서 3에 해당. 3개에서 같은 위치에 있는 애들끼리 평균 내고, 결괏값은 5x2 shape.
+        '''
+        이게 Soft Voting과 연결되는 이유!!! ★★★
+        3개의 classifier들의 각각의 피쳐 데이터에 해당하는 확률을 레이블값별로 낸 평균을 구함. 
+        여기서 최고인 레이블값으로 최종 class값 결정하기만 하면 Soft Voting!
+        '''
         return avg_proba
 
     def get_params(self, deep=True):
@@ -3737,7 +3777,8 @@ from sklearn.model_selection import train_test_split
 
 iris = datasets.load_iris()
 X, y = iris.data[50:, [1, 2]], iris.target[50:] #여기까지 했을 때 y에는 1,1,1,1,1,..2,2,2,2,2...만 들어가있고 0은 안들어감.
-le = LabelEncoder()     #y 안의 값은 모두 숫자인데 레이블인코딩 해주는 이유 : 나중에 bin_count할 때 1부터 시작하면 애매하기 때문에 그냥 바꿔줌
+le = LabelEncoder()     #y 안의 값은 모두 숫자인데 레이블인코딩 해주는 이유 : 나중에 bincount할 때 1부터 시작하면 애매하기 때문에 그냥 바꿔줌
+                        #bincount([0,0,1,3,3,3]):[2 1 0 3], argmax(bincount([0,0,1,3,3,3])):3(최곳값 있는 인덱스)
 y = le.fit_transform(y) #레이블인코딩 끝난 후 y에는 0,0,0,0,0,.1,1,1,1,1...로 바뀌어 들어가있음
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=1, stratify=y)
@@ -3764,9 +3805,9 @@ clf3 = KNeighborsClassifier(n_neighbors=1,
                             p=2,
                             metric='minkowski')
 
-pipe1 = Pipeline([['sc', StandardScaler()],
+pipe1 = Pipeline([['sc', StandardScaler()], #그냥 clf1 이름이 pipe1로 바꼈구나~라고 생각
                   ['clf', clf1]])
-pipe3 = Pipeline([['sc', StandardScaler()],
+pipe3 = Pipeline([['sc', StandardScaler()], #그냥 clf3 이름이 pipe3으로 바꼈구나~라고 생각
                   ['clf', clf3]])
 '''
 cf. 파이프라인
@@ -3789,7 +3830,7 @@ for clf, label in zip([pipe1, clf2, pipe3], clf_labels): #1st - pipe1,'Logistic 
 
 # 다수결 투표 (클래스 레이블 카운트)
 
-mv_clf = MajorityVoteClassifier(classifiers=[pipe1, clf2, pipe3])
+mv_clf = MajorityVoteClassifier(classifiers=[pipe1, clf2, pipe3]) #리스트 안에 estimator도 요소로 넣을 수 있다. classifiers라는 파라미터 설정으로 이것 넣어줌
 
 #__init()__에서 뭐 담겨있는지 그냥 확인
 print(mv_clf.named_classifiers)
@@ -3801,8 +3842,9 @@ clf_labels += ['Majority voting'] #뒤에 새로 이름 하나 추가
 all_clf = [pipe1, clf2, pipe3, mv_clf] #마지막 요소 : 방금 MajorityVoteClassifier로 만든 estimator 객체
 
 for clf, label in zip(all_clf, clf_labels):
-    scores = cross_val_score(estimator=clf, X=X_train, y=y_train, cv=10, scoring='roc_auc')
-    #지금 voting방식을 사용하는 estimator를 train데이터 pipe1, clf2, pipe3, mv_clf로 교차 검증을 수행하고 있는 중!
+    scores = cross_val_score(estimator=clf, X=X_train, y=y_train, cv=10, scoring='accuracy') #얘가 accuracy로 바뀌면 predict_proba 말고 predict가 실행되어 11111111111111111111이 출력된다. 
+    #지금 voting방식을 사용하는 estimator pipe1, clf2, pipe3, mv_clf를 train데이터로 교차 검증을 수행하고 있는 중!
+    #50개의 데이터가 10조각으로 fold되어 45개, 5개로 나누어 교차검증
     
     print("ROC AUC: %0.2f (+/- %0.2f) [%s]" % (scores.mean(), scores.std(), label))
     '''
@@ -3815,13 +3857,192 @@ for clf, label in zip(all_clf, clf_labels):
     2. fit()메소드에서 cv=10이므로 10개로 나눠서 1개씩 빼놓고 교차검증
     '''
 
+■■■■■■■■■■■■■0514 수업中 새로 알게된것■■■■■■■■■■■■■
+
+# ## 4.3 앙상블 학습 개요
+
+# ### Voting Classifier
+
+# **위스콘신 유방암 데이터 로드** : 종양의 데이터를 학습시켜서 이 종양이 악성인지 아닌지 판단하는 모델링
+
+# In[1]:
 
 
+import pandas as pd
+
+from sklearn.ensemble import VotingClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+cancer = load_breast_cancer() #sklearn에서 제공해주는 데이터 하나 가져옴 - 위스콘신 유방암 데이터 세트
+
+data_df = pd.DataFrame(cancer.data, columns=cancer.feature_names)
+data_df.head(3)
 
 
+# **VotingClassifier로 개별모델은 로지스틱 회귀와 KNN을 보팅방식으로 결합하고 성능 비교**
+
+# In[ ]:
 
 
+# 개별 모델은 로지스틱 회귀와 KNN 임. 
+lr_clf = LogisticRegression()
+knn_clf = KNeighborsClassifier(n_neighbors=8)
 
+# 개별 모델을 소프트 보팅 기반의 앙상블 모델로 구현한 분류기 
+vo_clf = VotingClassifier( estimators=[('LR',lr_clf),('KNN',knn_clf)] , voting='soft' ) #아까 만든 두 estimator로 soft voting 할게~
+
+X_train, X_test, y_train, y_test = train_test_split(cancer.data, cancer.target, 
+                                                    test_size=0.2 , random_state= 156)
+
+# VotingClassifier 학습/예측/평가. 
+vo_clf.fit(X_train , y_train)
+pred = vo_clf.predict(X_test)
+print('Voting 분류기 정확도: {0:.4f}'.format(accuracy_score(y_test , pred))) #voting의 퍼포먼스가 이 케이스에서 조금 더 괜찮구나~
+
+# 개별 모델의 학습/예측/평가.
+classifiers = [lr_clf, knn_clf]
+for classifier in classifiers:
+    classifier.fit(X_train , y_train)
+    pred = classifier.predict(X_test)
+    class_name= classifier.__class__.__name__
+    print('{0} 정확도: {1:.4f}'.format(class_name, accuracy_score(y_test , pred)))
+
+=============================================================
+
+# ## 4.4 Random Forest
+
+# **결정 트리에서 사용한 사용자 행동 인지 데이터 세트 로딩**
+
+# ### 수정 버전 01: 날짜 2019.10.27일
+# 
+# **원본 데이터에 중복된 Feature 명으로 인하여 신규 버전의 Pandas에서 Duplicate name 에러를 발생.**  
+# **중복 feature명에 대해서 원본 feature 명에 '_1(또는2)'를 추가로 부여하는 함수인 get_new_feature_name_df() 생성**
+
+# In[2]:
+
+
+import pandas as pd
+
+def get_new_feature_name_df(old_feature_name_df):
+    feature_dup_df = pd.DataFrame(data=old_feature_name_df.groupby('column_name').cumcount(), columns=['dup_cnt'])
+    feature_dup_df = feature_dup_df.reset_index()
+    new_feature_name_df = pd.merge(old_feature_name_df.reset_index(), feature_dup_df, how='outer')
+    new_feature_name_df['column_name'] = new_feature_name_df[['column_name', 'dup_cnt']].apply(lambda x : x[0]+'_'+str(x[1]) 
+                                                                                           if x[1] >0 else x[0] ,  axis=1)
+    new_feature_name_df = new_feature_name_df.drop(['index'], axis=1)
+    return new_feature_name_df
+
+
+# In[3]:
+
+
+import pandas as pd
+
+def get_human_dataset( ):
+    
+    # 각 데이터 파일들은 공백으로 분리되어 있으므로 read_csv에서 공백 문자를 sep으로 할당.
+    feature_name_df = pd.read_csv('C:/jeon/human_activity/features.txt',sep='\s+',
+                        header=None,names=['column_index','column_name'])
+    
+    # 중복된 feature명을 새롭게 수정하는 get_new_feature_name_df()를 이용하여 새로운 feature명 DataFrame생성. 
+    new_feature_name_df = get_new_feature_name_df(feature_name_df)
+    
+    # DataFrame에 피처명을 컬럼으로 부여하기 위해 리스트 객체로 다시 변환
+    feature_name = new_feature_name_df.iloc[:, 1].values.tolist()
+    
+    # 학습 피처 데이터 셋과 테스트 피처 데이터을 DataFrame으로 로딩. 컬럼명은 feature_name 적용
+    X_train = pd.read_csv('C:/jeon/human_activity/train/X_train.txt',sep='\s+', names=feature_name )
+    X_test = pd.read_csv('C:/jeon/human_activity/test/X_test.txt',sep='\s+', names=feature_name)
+    
+    # 학습 레이블과 테스트 레이블 데이터을 DataFrame으로 로딩하고 컬럼명은 action으로 부여
+    y_train = pd.read_csv('C:/jeon/human_activity/train/y_train.txt',sep='\s+',header=None,names=['action'])
+    y_test = pd.read_csv('C:/jeon/human_activity/test/y_test.txt',sep='\s+',header=None,names=['action'])
+    
+    # 로드된 학습/테스트용 DataFrame을 모두 반환 
+    return X_train, X_test, y_train, y_test
+
+
+X_train, X_test, y_train, y_test = get_human_dataset()
+
+
+# **학습/테스트 데이터로 분리하고 랜덤 포레스트로 학습/예측/평가**
+
+# In[4]:
+
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+import pandas as pd
+import warnings
+warnings.filterwarnings('ignore')
+
+# 결정 트리에서 사용한 get_human_dataset( )을 이용해 학습/테스트용 DataFrame 반환
+X_train, X_test, y_train, y_test = get_human_dataset()
+
+# 랜덤 포레스트 학습 및 별도의 테스트 셋으로 예측 성능 평가
+rf_clf = RandomForestClassifier(random_state=0)
+rf_clf.fit(X_train , y_train)
+pred = rf_clf.predict(X_test)
+accuracy = accuracy_score(y_test , pred)
+print('랜덤 포레스트 정확도: {0:.4f}'.format(accuracy))
+
+
+# **GridSearchCV 로 교차검증 및 하이퍼 파라미터 튜닝**
+
+# In[5]:
+
+
+from sklearn.model_selection import GridSearchCV
+
+params = { # 1x4x3x3 = 36
+    'n_estimators':[100],
+    'max_depth' : [6, 8, 10, 12], 
+    'min_samples_leaf' : [8, 12, 18 ],
+    'min_samples_split' : [8, 16, 20]
+}
+# RandomForestClassifier 객체 생성 후 GridSearchCV 수행
+rf_clf = RandomForestClassifier(random_state=0, n_jobs=-1)
+grid_cv = GridSearchCV(rf_clf , param_grid=params , cv=2, n_jobs=-1 ) #GridSearchCV cv=2
+grid_cv.fit(X_train , y_train)
+
+print('최적 하이퍼 파라미터:\n', grid_cv.best_params_)
+print('최고 예측 정확도: {0:.4f}'.format(grid_cv.best_score_))
+
+
+# **튜닝된 하이퍼 파라미터로 재 학습 및 예측/평가**
+
+# In[7]:
+
+
+rf_clf1 = RandomForestClassifier(n_estimators=300, max_depth=10, min_samples_leaf=8, min_samples_split=8, random_state=0)
+rf_clf1.fit(X_train , y_train)
+pred = rf_clf1.predict(X_test)
+print('예측 정확도: {0:.4f}'.format(accuracy_score(y_test , pred)))
+
+
+# **개별 feature들의 중요도 시각화**
+
+# In[8]:
+
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+get_ipython().run_line_magic('matplotlib', 'inline')
+
+ftr_importances_values = rf_clf1.feature_importances_
+ftr_importances = pd.Series(ftr_importances_values,index=X_train.columns  )
+ftr_top20 = ftr_importances.sort_values(ascending=False)[:20]
+
+plt.figure(figsize=(8,6))
+plt.title('Feature importances Top 20')
+sns.barplot(x=ftr_top20 , y = ftr_top20.index)
+plt.show()
+
+■■■■■■■■■■■■■0517 수업中 새로 알게된것■■■■■■■■■■■■■
 
 
 
