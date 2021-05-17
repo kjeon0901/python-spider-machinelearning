@@ -3543,7 +3543,8 @@ feature     label       ←이런 식으로 완벽히 똑같이 바뀐다는 뜻
 					max_features : feature 개수 줄이는 파라미터. feature가 너무 많으면 시간/공간복잡도 커짐. 시간복잡도가 지수함수 형태로 올라갈 수도 있음. → 그래서 상관관계가 있는 애들끼리 합쳐서 차원 축소 하는 것 .
 					max_depth
 					min_samples_leaf
-- 부스팅 (Boosting)	: 매번 다음 분류기에게 가중치 부여해서 앞에서 학습한 분류기가 예측 틀린 데이터에 대해 다음부터 올바르게 학습하도록
+- 부스팅 (Boosting)	: 매번 다음 분류기에게 가중치 부여해서 앞에서 학습한 분류기가 예측 틀린 데이터에 대해 다음부터 올바르게 학습하도록. 
+		보팅, 배깅(병렬적인 동시 수행 가능)과 다르게 순차적으로 돌아가기 때문에 시간 느림. LightGBM 예외. 
 		ex_AdaBoost	영역 분류(조건식을 준다=영역 구분한다) 기준을 분류기로 두고, 잘못 분류된 오류 데이터에 가중치를 부여하면서 부스팅 수행. 그럼 다음번 수행에서는 가중치가 붙은 곳을 조금 더 신경 써서 구분할 테니까!
 		ex_그래디언트 부스팅 알고리즘, XGBoost, LightGBM
 		
@@ -4044,7 +4045,35 @@ plt.show()
 
 ■■■■■■■■■■■■■0517 수업中 새로 알게된것■■■■■■■■■■■■■
 
+AdaBoost 순서 - 프린트물 나눠주심
+	1. 
+	2. 
+		a. 
+		b. 
+		c. 
+		d. 
+		e. 
+		f. 
+	3. 
 
+GBM : 경사하강법 + Boosting
+	경사하강법♣♣♣	- Deep Learning의 핵심!
+			- 2차함수인 비용함수(에러율이라 생각) 그래프에서 미분값(접선의 기울기)이 0이 되도록, 즉 에러율이 최솟값이 되도록...
+	비용함수	- 얼마만큼의 오차가 났느냐! 어떻게 오차를 줄일 것인가!
+	하이퍼 파라미터	- loss : 비용함수 뭐 사용할건지
+			- learning_rate : step. 너무 좁으면 오래걸리고, 너무 넓으면 발산해버려서 왔다갔다 이상하게 움직임
+			- n_estimators : estimator 개수. 너무 많으면 오래걸림
+			- subsample : 전체 데이터 中 몇퍼센트만 샘플링 할건지 (Overfitting 예방)
 
+파이썬 래퍼 XGBoost
+	import xgboost as xgb : sklearn기반이 아님. (최근에 나온 거라 안 들어있음)
+	단점	1. fit() → predict() / predict_proba() 이 플로우를 따르지 않음. 사용 못함. 
+		2. cross_val_score(), GridSearchCV, Pipeline 사용 못함. 
+		3. 판다스의 dtype으로 바로 넘겨주지 못하는 경우 있음.
+		4. variable explorer로 까보지 못하는 경우 있음. 
+	=> 사이킷런 래퍼 XGBoost 개발 (래퍼 클래스 XGBClassifier, XGBRegressor)
 
+사이킷런 래퍼 XGBoost
+	sklearn과 호환 가능한 estimator 만듦, 파이썬 래퍼 XGBoost 단점 모두 해결
+	
 

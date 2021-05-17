@@ -214,7 +214,7 @@ print("GBM 수행 시간: {0:.1f} 초 ".format(time.time() - start_time))
 from sklearn.model_selection import GridSearchCV
 
 params = {
-    'n_estimators':[100, 500],
+    'n_estimators':[100, 500], #엄청 많아서 엄청 오래 돈다. 30분~1시간 정도?.. 걍 넘어가자 ㅎㅎ
     'learning_rate' : [ 0.05, 0.1]
 }
 grid_cv = GridSearchCV(gb_clf , param_grid=params , cv=2 ,verbose=1)
