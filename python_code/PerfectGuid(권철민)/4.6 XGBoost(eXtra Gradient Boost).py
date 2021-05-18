@@ -57,9 +57,9 @@ print(X_train.shape , X_test.shape)
 
 # In[5]:
 
-
-dtrain = xgb.DMatrix(data=X_train , label=y_train)
-dtest = xgb.DMatrix(data=X_test , label=y_test)
+#여기부터 이제 생소해짐!
+dtrain = xgb.DMatrix(data=X_train , label=y_train) #xgboost의 DMatrix() → variable explorer에서 dtrain, dtest 못까본다. 우선 type은 core.DMatrix이다. 
+dtest = xgb.DMatrix(data=X_test , label=y_test) #X_test(피처값), y_test(레이블값(정답))이 합쳐졌기 때문에 검증데이터로 사용 가능하다. 
 
 
 # ** 하이퍼 파라미터 설정 **
@@ -70,10 +70,10 @@ dtest = xgb.DMatrix(data=X_test , label=y_test)
 params = { 'max_depth':3,
            'eta': 0.1,
            'objective':'binary:logistic',
-           'eval_metric':'logloss',
+           'eval_metric':'logloss', #검증에 사용되는 함수를 logloss로 줌. 매 step마다 logloss가 얼마나 발생했는지 리턴할 것
            'early_stoppings':100
         }
-num_rounds = 400
+num_rounds = 400 #부스팅 반복횟수(estimator) 400개..!
 
 
 # ** 주어진 하이퍼 파라미터와 early stopping 파라미터를 train( ) 함수의 파라미터로 전달하고 학습 **
@@ -82,9 +82,19 @@ num_rounds = 400
 
 
 # train 데이터 셋은 ‘train’ , evaluation(test) 데이터 셋은 ‘eval’ 로 명기합니다. 
-wlist = [(dtrain,'train'),(dtest,'eval') ]
+wlist = [(dtrain,'train'),(dtest,'eval') ] #검증데이터 1개, 2개, 3개, ... 개수는 상관 없음. 
+
 # 하이퍼 파라미터와 early stopping 파라미터를 train( ) 함수의 파라미터로 전달
-xgb_model = xgb.train(params = params , dtrain=dtrain , num_boost_round=num_rounds , evals=wlist )
+xgb_model = xgb.train(params = params , dtrain=dtrain , num_boost_round=num_rounds , evals=wlist ) #sklearn의 fit()처럼 학습시켜서 모델 던져줌
+#원래는 검증데이터, 테스트데이터, 트레인데이터 따로따로 나눠 하는 게 맞는데, 여기선 그냥 검증데이터와 테스트데이터를 같은 느낌으로 넣어주었다고 한다. 
+#요기선 early_stopping_rounds = early_stoppings 안해줬넹~
+
+'''
+evals : 검증데이터. dtrain, dtest 2개를 넣어주었다. 
+사실 이렇게 하면 안됨. train할 때 학습 데이터로 dtrain을 넣어주었는데, 검증을 똑같이 dtrain으로 해줘버리면 안 됨. 
+지금 출력된 결과도 train-logloss는 급격히 줄어들어 좋은 결과가 나오지만, eval-logloss는 그것보다는 좋지 않은 결과가 나옴. 
+두 결과 중 dtest(eval-logloss)만을 봐야 함. 
+'''
 
 
 # ** predict()를 통해 예측 확률값을 반환하고 예측 값으로 변환 **
@@ -140,7 +150,8 @@ import matplotlib.pyplot as plt
 get_ipython().run_line_magic('matplotlib', 'inline')
 
 fig, ax = plt.subplots(figsize=(10, 12))
-plot_importance(xgb_model, ax=ax)
+plot_importance(xgb_model, ax=ax) #plot_importance : 얘도 당연히 sklearn이 아니라 xgboost에서 가져옴. 트리 만들 때 가장 많이 기여한 순서
+                #모델정보, 그래프정보
 
 
 # ### 사이킷런 Wrapper XGBoost 개요 및 적용 
@@ -155,8 +166,11 @@ from xgboost import XGBClassifier
 
 evals = [(X_test, y_test)]
 
-xgb_wrapper = XGBClassifier(n_estimators=400, learning_rate=0.1, max_depth=3)
+xgb_wrapper = XGBClassifier(n_estimators=400, learning_rate=0.1, max_depth=3) #learning_rate : step
 xgb_wrapper.fit(X_train , y_train,  early_stopping_rounds=400,eval_set=evals, eval_metric="logloss",  verbose=True)
+                #X_train , y_train은 당연히 pandas DataFrame이군! 여기선 다 쓸수 있다~
+                #근데 어차피 n_estimators=400인데 여기서 early_stopping_rounds=400이라 하면 아무 의미 없다. 
+                #eval_set : 검증데이터, verbose : True-트래킹메시지(loss 출력메시지) 띄워줌, False-출력아무것도없이 실행만됨
 
 w_preds = xgb_wrapper.predict(X_test)
 w_pred_proba = xgb_wrapper.predict_proba(X_test)[:, 1]
