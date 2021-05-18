@@ -3,7 +3,7 @@
 
 # In[2]:
 
-
+# * LightGBM 버전 확인
 import lightgbm
 
 print(lightgbm.__version__)

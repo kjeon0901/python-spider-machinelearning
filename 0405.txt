@@ -31,6 +31,7 @@ cowork할 때 변수명, 함수명 이름만 들어도 알 수 있게 하기
 
 실제 ML(Machine Learning) 모델을 생성하고 예측하는 데 있어서 ML알고리즘이 차지하는 비중은 10이고, 그보다 
 데이터를 전처리하고 적절한 피처(Feature)를 가공/추출하는 부분이 훨씬 중요한 90을 차지한다. 
+문제발생하면 1. 전처리 2. 파라미터설정
 
 ■■■■■■■■■■■■■0405 수업中 새로 알게된것■■■■■■■■■■■■■
 
@@ -4365,4 +4366,179 @@ fig, ax = plt.subplots(figsize=(10, 12))
 plot_importance(xgb_wrapper, ax=ax)
 
 =========================================================
+
+# * LightGBM 버전 확인
+import lightgbm
+
+print(lightgbm.__version__)
+
+
+# ### LightGBM 적용 – 위스콘신 Breast Cancer Prediction
+
+# In[3]:
+
+
+# LightGBM의 파이썬 패키지인 lightgbm에서 LGBMClassifier 임포트
+from lightgbm import LGBMClassifier
+
+import pandas as pd
+import numpy as np
+
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+
+dataset = load_breast_cancer()
+ftr = dataset.data
+target = dataset.target
+
+
+# 전체 데이터 중 80%는 학습용 데이터, 20%는 테스트용 데이터 추출
+X_train, X_test, y_train, y_test=train_test_split(ftr, target, test_size=0.2, random_state=156 )
+
+# 앞서 XGBoost와 동일하게 n_estimators는 400 설정. 
+lgbm_wrapper = LGBMClassifier(n_estimators=400)
+
+# LightGBM도 XGBoost와 동일하게 조기 중단 수행 가능. 
+evals = [(X_test, y_test)]
+lgbm_wrapper.fit(X_train, y_train, early_stopping_rounds=100, eval_metric="logloss", 
+                 eval_set=evals, verbose=True)
+
+preds = lgbm_wrapper.predict(X_test)
+pred_proba = lgbm_wrapper.predict_proba(X_test)[:, 1]
+
+# In[5]:
+
+from sklearn.metrics import confusion_matrix, accuracy_score
+from sklearn.metrics import precision_score, recall_score
+from sklearn.metrics import f1_score, roc_auc_score
+
+# 수정된 get_clf_eval() 함수 
+def get_clf_eval(y_test, pred=None, pred_proba=None):
+    confusion = confusion_matrix( y_test, pred)
+    accuracy = accuracy_score(y_test , pred)
+    precision = precision_score(y_test , pred)
+    recall = recall_score(y_test , pred)
+    f1 = f1_score(y_test,pred)
+    # ROC-AUC 추가 
+    roc_auc = roc_auc_score(y_test, pred_proba)
+    print('오차 행렬')
+    print(confusion)
+    # ROC-AUC print 추가
+    print('정확도: {0:.4f}, 정밀도: {1:.4f}, 재현율: {2:.4f},    F1: {3:.4f}, AUC:{4:.4f}'.format(accuracy, precision, recall, f1, roc_auc))
+
+# In[6]:
+
+get_clf_eval(y_test, preds, pred_proba)
+
+# In[7]:
+
+from lightgbm import plot_importance
+import matplotlib.pyplot as plt
+get_ipython().run_line_magic('matplotlib', 'inline')
+
+fig, ax = plt.subplots(figsize=(10, 12))
+# 사이킷런 래퍼 클래스를 입력해도 무방. 
+plot_importance(lgbm_wrapper, ax=ax)
+
+print(dataset.feature_names)
+
+■■■■■■■■■■■■■0520 수업中 새로 알게된것■■■■■■■■■■■■■
+
+############### Kaggle_분류실습_산탄데르 은행 고객 만족 예측 ################
+
+# ### 데이터 전처리
+
+# In[1]:
+
+
+import numpy as np 
+import pandas as pd 
+import matplotlib.pyplot as plt
+import matplotlib
+
+cust_df = pd.read_csv("C:/jeon/santander_train.csv",encoding='latin-1')
+print('dataset shape:', cust_df.shape)
+cust_df.head(3)
+
+
+# In[2]:
+
+
+print(cust_df.info())
+
+
+# In[3]:
+
+
+print(cust_df['TARGET'].value_counts())
+
+unsatisfied_cnt = cust_df[cust_df['TARGET'] == 1]['TARGET'].count() # 1-만족, 0-불만족
+total_cnt = cust_df['TARGET'].count() #null이 아닌 값 전부 세주는데, 여기선 사실상 아까 null 없는거 확인했으니까 전체 size와 같음
+
+print('unsatisfied 비율은 {0:.2f}'.format((unsatisfied_cnt / total_cnt)))
+
+
+# In[4]:
+
+
+print(cust_df.describe( ))
+'''     var3
+min     -999999     엥?? -> 갑자기 뜬금없이 0이나 -1, 또는 이런 숫자가 나오면 '누락된 데이터'일 확률!. 전처리 해주는 게 좋음
+25%     2           대부분의 데이터가 2이구나~    
+50%     2
+75%     2
+max     238         계속 2였다가 마지막에 갑자기 팍 올라가는 그래프이구나~
+'''
+
+# In[5]:
+
+
+print(cust_df['var3'].value_counts( )[:10])
+
+
+# In[6]:
+
+
+# var3 피처 값 대체 및 ID 피처 드롭
+cust_df['var3'].replace(-999999, 2, inplace=True) #여기선 그냥 2라고 치환하는 전처리 해줌. inplace=True : 원본데이터 자체를 수정해주세요. (default:False)
+cust_df.drop('ID',axis=1 , inplace=True)
+
+# 피처 세트와 레이블 세트분리. 레이블 컬럼은 DataFrame의 맨 마지막에 위치해 컬럼 위치 -1로 분리
+X_features = cust_df.iloc[:, :-1]
+y_labels = cust_df.iloc[:, -1]
+print('피처 데이터 shape:{0}'.format(X_features.shape))
+
+
+# In[9]:
+
+
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(X_features, y_labels, test_size=0.2, random_state=0) # stratify=y_labels 하면 target값 0의 비율 둘다 아예 똑같이 0.04정도로 나옴. 
+train_cnt = y_train.count()
+test_cnt = y_test.count()
+print('학습 세트 Shape:{0}, 테스트 세트 Shape:{1}'.format(X_train.shape , X_test.shape))
+
+print(' 학습 세트 레이블 값 분포 비율')
+print(y_train.value_counts()/train_cnt)
+print('\n 테스트 세트 레이블 값 분포 비율')
+print(y_test.value_counts()/test_cnt)
+
+
+# In[10]:
+
+
+from xgboost import XGBClassifier
+from sklearn.metrics import roc_auc_score
+
+# n_estimators는 500으로, random state는 예제 수행 시마다 동일 예측 결과를 위해 설정. 
+xgb_clf = XGBClassifier(n_estimators=500, random_state=156) #XGBClassifier 사용해서 sklearn과 연동
+
+# 성능 평가 지표를 auc로, 조기 중단 파라미터는 100으로 설정하고 학습 수행. 
+xgb_clf.fit(X_train, y_train, early_stopping_rounds=100,
+            eval_metric="auc", eval_set=[(X_train, y_train), (X_test, y_test)]) # eval_metric의 검증 평가지표(얘가 달라지면 언제 중단될지도 달라짐)로 eval_set의 검증 데이터를 검증하겠다.
+                                #검증데이터는 꼭 train, test 모두 필요. 검증데이터 2개니까 조기중단도 둘 모두의 변화를 함께 판단해서 멈춘다. 
+
+xgb_roc_score = roc_auc_score(y_test, xgb_clf.predict_proba(X_test)[:,1],average='macro')
+print('ROC AUC: {0:.4f}'.format(xgb_roc_score))
 

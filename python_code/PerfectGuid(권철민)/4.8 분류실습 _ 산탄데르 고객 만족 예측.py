@@ -11,7 +11,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
 
-cust_df = pd.read_csv("./train_santander.csv",encoding='latin-1')
+cust_df = pd.read_csv("C:/jeon/santander_train.csv",encoding='latin-1')
 print('dataset shape:', cust_df.shape)
 cust_df.head(3)
 
@@ -19,7 +19,7 @@ cust_df.head(3)
 # In[2]:
 
 
-cust_df.info()
+print(cust_df.info())
 
 
 # In[3]:
@@ -27,8 +27,8 @@ cust_df.info()
 
 print(cust_df['TARGET'].value_counts())
 
-unsatisfied_cnt = cust_df[cust_df['TARGET'] == 1]['TARGET'].count()
-total_cnt = cust_df['TARGET'].count()
+unsatisfied_cnt = cust_df[cust_df['TARGET'] == 1]['TARGET'].count() # 1-만족, 0-불만족
+total_cnt = cust_df['TARGET'].count() #null이 아닌 값 전부 세주는데, 여기선 사실상 아까 null 없는거 확인했으니까 전체 size와 같음
 
 print('unsatisfied 비율은 {0:.2f}'.format((unsatisfied_cnt / total_cnt)))
 
@@ -36,8 +36,14 @@ print('unsatisfied 비율은 {0:.2f}'.format((unsatisfied_cnt / total_cnt)))
 # In[4]:
 
 
-cust_df.describe( )
-
+print(cust_df.describe( ))
+'''     var3
+min     -999999     엥?? -> 갑자기 뜬금없이 0이나 -1, 또는 이런 숫자가 나오면 '누락된 데이터'일 확률!. 전처리 해주는 게 좋음
+25%     2           대부분의 데이터가 2이구나~    
+50%     2
+75%     2
+max     238         계속 2였다가 마지막에 갑자기 팍 올라가는 그래프이구나~
+'''
 
 # In[5]:
 
@@ -49,7 +55,7 @@ print(cust_df['var3'].value_counts( )[:10])
 
 
 # var3 피처 값 대체 및 ID 피처 드롭
-cust_df['var3'].replace(-999999, 2, inplace=True)
+cust_df['var3'].replace(-999999, 2, inplace=True) #여기선 그냥 2라고 치환하는 전처리 해줌. inplace=True : 원본데이터 자체를 수정해주세요. (default:False)
 cust_df.drop('ID',axis=1 , inplace=True)
 
 # 피처 세트와 레이블 세트분리. 레이블 컬럼은 DataFrame의 맨 마지막에 위치해 컬럼 위치 -1로 분리
@@ -63,8 +69,7 @@ print('피처 데이터 shape:{0}'.format(X_features.shape))
 
 from sklearn.model_selection import train_test_split
 
-X_train, X_test, y_train, y_test = train_test_split(X_features, y_labels,
-                                                    test_size=0.2, random_state=0)
+X_train, X_test, y_train, y_test = train_test_split(X_features, y_labels, test_size=0.2, random_state=0) # stratify=y_labels 하면 target값 0의 비율 둘다 아예 똑같이 0.04정도로 나옴. 
 train_cnt = y_train.count()
 test_cnt = y_test.count()
 print('학습 세트 Shape:{0}, 테스트 세트 Shape:{1}'.format(X_train.shape , X_test.shape))
@@ -82,11 +87,12 @@ from xgboost import XGBClassifier
 from sklearn.metrics import roc_auc_score
 
 # n_estimators는 500으로, random state는 예제 수행 시마다 동일 예측 결과를 위해 설정. 
-xgb_clf = XGBClassifier(n_estimators=500, random_state=156)
+xgb_clf = XGBClassifier(n_estimators=500, random_state=156) #XGBClassifier 사용해서 sklearn과 연동
 
 # 성능 평가 지표를 auc로, 조기 중단 파라미터는 100으로 설정하고 학습 수행. 
 xgb_clf.fit(X_train, y_train, early_stopping_rounds=100,
-            eval_metric="auc", eval_set=[(X_train, y_train), (X_test, y_test)])
+            eval_metric="auc", eval_set=[(X_train, y_train), (X_test, y_test)]) # eval_metric의 검증 평가지표(얘가 달라지면 언제 중단될지도 달라짐)로 eval_set의 검증 데이터를 검증하겠다.
+                                #검증데이터는 꼭 train, test 모두 필요. 검증데이터 2개니까 조기중단도 둘 모두의 변화를 함께 판단해서 멈춘다. 
 
 xgb_roc_score = roc_auc_score(y_test, xgb_clf.predict_proba(X_test)[:,1],average='macro')
 print('ROC AUC: {0:.4f}'.format(xgb_roc_score))
