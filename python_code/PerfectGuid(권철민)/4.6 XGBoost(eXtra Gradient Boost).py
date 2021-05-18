@@ -211,7 +211,7 @@ get_clf_eval(y_test , ws100_preds, ws100_pred_proba)
 
 
 # early_stopping_rounds를 10으로 설정하고 재 학습. 
-xgb_wrapper.fit(X_train, y_train, early_stopping_rounds=10, 
+xgb_wrapper.fit(X_train, y_train, early_stopping_rounds=10, #early_stopping_rounds를 너무 작게 줌. 충분히 개선될 여지가 있는데 그러지 못함. 
                 eval_metric="logloss", eval_set=evals,verbose=True)
 
 ws10_preds = xgb_wrapper.predict(X_test)
