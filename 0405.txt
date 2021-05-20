@@ -2350,6 +2350,16 @@ GridSearchCV를 통해 지금까지 최고의 정확도를 획득했습니다!
 	   P	FN	TP  |
 		ㅡㅡㅡㅡㅡㅡ
 		재현율
+- 다중 분류 Multiple Classification → 각 label마다 matrix 만든다. label 3개면 각 label을 P로 둔 3개의 matrix
+	     예측 	P	N	N
+	실제	
+	   P	TP________|_FN______FN__| 
+	   N	FP|	| TN	TN  |			--- 사분면 만들기
+	   N	FP|	| TN	TN  |	
+	> Micro Average(3개합 TPtotal,FNtotal,FPtotal,TNtotal) 	--- 최종 사분면 만들기
+	> Macro Average(세 개의 재현율,정밀도 구해서 평균)
+	> Weighted Averate(Macro Average에 가중치)
+
 - 예측 N, P에서 중점적으로 찾아야 하는 매우 적은 수의 결괏값에 Positive, 나머지에 Negative 주자
 - 정밀도와 재현율은 trade-off관계(하나가 높아지면 하나는 낮아짐). 그래서 케이스별로 둘 중에 잘 선택해야 함
 
@@ -4134,6 +4144,13 @@ print('GBM 정확도: {0:.4f}'.format(gb_accuracy))
 		10번째 estimator까지 퍼포먼스 좋았다가, 그때부터 50번만큼 계속 10번째보다 나쁘면(60번째estimator까지) 조기 중단!
 	bagging_fraction : 학습할 때 데이터 일부만 샘플링해서 과적합 막기
 	feature_fraction : 학습할 때 피처 몇 개만 선택해서 과적합 막기
+
+	잔차 = y - y^ = y - f(x) = 실제값과 예측값의 차이
+	estimator1 = f1(x)			: |잔차|의 합이 가장 작은 모델
+	estimator2 = f2(x) = y - f1(x)		: 첫 번째에서 구한 모델과의 잔차2(예측값> f1(x))를 새 그래프에 찍고, |잔차2|의 합이 가장 작은 모델
+	estimator3 = f3(x) = y - f1(x) - f2(x)	: 두 번째에서 구한 모델과의 잔차3(예측값> f1(x) - f2(x))를 새 그래프에 찍고, |잔차3|의 합이 가장 작은 모델
+		:
+	결국 GBM에서 estimator가 늘어날 수록 잔차가 최소화되는 모델 만들어짐
 
 ■■■■■■■■■■■■■0518 수업中 새로 알게된것■■■■■■■■■■■■■
 
