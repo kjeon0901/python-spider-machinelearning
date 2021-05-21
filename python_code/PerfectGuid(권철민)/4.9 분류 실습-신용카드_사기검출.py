@@ -15,14 +15,17 @@ import warnings
 warnings.filterwarnings("ignore")
 get_ipython().run_line_magic('matplotlib', 'inline')
 
-card_df = pd.read_csv('./creditcard.csv')
+card_df = pd.read_csv('C:/jeon/creditcard.csv')
 card_df.head(3)
 
+print(card_df.info()) #null값 없음. 'Class' column만 int, 나머지는 float
+test = card_df.describe() #'Class' column 보니까 값이 0과 1 뿐일 확률이 있구나!
+print(card_df['Class'].value_counts()) #그게 맞다! +극단적으로 1에 해당하는 데이터가 적구나(사기case니까 당연)
 
 # In[2]:
 
 
-card_df.shape
+print(card_df.shape)
 
 
 # ** 원본 DataFrame은 유지하고 데이터 가공을 위한 DataFrame을 복사하여 반환 **
@@ -34,8 +37,8 @@ from sklearn.model_selection import train_test_split
 
 # 인자로 입력받은 DataFrame을 복사 한 뒤 Time 컬럼만 삭제하고 복사된 DataFrame 반환
 def get_preprocessed_df(df=None):
-    df_copy = df.copy()
-    df_copy.drop('Time', axis=1, inplace=True)
+    df_copy = df.copy() #복사본
+    df_copy.drop('Time', axis=1, inplace=True) #정확한 어떤 정보인지는 고객정보니까 알려주지 않았지만, 그냥 계속 증가하는데 별 의미 없어 보임. 그래서 걍 삭제.
     return df_copy
 
 
@@ -54,7 +57,7 @@ def get_train_test_dataset(df=None):
     y_target = df_copy.iloc[:, -1]
     
     # train_test_split( )으로 학습과 테스트 데이터 분할. stratify=y_target으로 Stratified 기반 분할
-    X_train, X_test, y_train, y_test =     train_test_split(X_features, y_target, test_size=0.3, random_state=0, stratify=y_target)
+    X_train, X_test, y_train, y_test = train_test_split(X_features, y_target, test_size=0.3, random_state=0, stratify=y_target)
     
     # 학습과 테스트 데이터 세트 반환
     return X_train, X_test, y_train, y_test
@@ -88,8 +91,14 @@ def get_clf_eval(y_test, pred=None, pred_proba=None):
     roc_auc = roc_auc_score(y_test, pred_proba)
     print('오차 행렬')
     print(confusion)
+    '''
+    [[85282    13]
+     [   56    92]]
+    정확도: 0.9992, 정밀도: 0.8762, 재현율: 0.6216, F1: 0.7273, AUC:0.9582
+    카드사기이기 때문에 재현율이 낮으면 안됨. FN(사기가 Positive인데 Negative라고 잘못 예측하면 x!!)
+    '''
     # ROC-AUC print 추가
-    print('정확도: {0:.4f}, 정밀도: {1:.4f}, 재현율: {2:.4f},    F1: {3:.4f}, AUC:{4:.4f}'.format(accuracy, precision, recall, f1, roc_auc))
+    print('정확도: {0:.4f}, 정밀도: {1:.4f}, 재현율: {2:.4f}, F1: {3:.4f}, AUC:{4:.4f}'.format(accuracy, precision, recall, f1, roc_auc))
 
 
 # In[7]:
@@ -119,7 +128,13 @@ def get_model_train_eval(model, ftr_train=None, ftr_test=None, tgt_train=None, t
     pred = model.predict(ftr_test)
     pred_proba = model.predict_proba(ftr_test)[:, 1]
     get_clf_eval(tgt_test, pred, pred_proba)
-    
+    '''
+    아래에서 LightGbm 써서 오차행렬 보여주니까
+    [[85290     5]
+     [   36   112]]
+    정확도: 0.9995, 정밀도: 0.9573, 재현율: 0.7568, F1: 0.8453, AUC:0.9790
+    재현율 확 올라감. 게다가 정밀도까지 올라감. 
+    '''
 
 
 # ** LightGBM 학습/예측/평가.**
@@ -132,7 +147,7 @@ def get_model_train_eval(model, ftr_train=None, ftr_test=None, tgt_train=None, t
 
 from lightgbm import LGBMClassifier
 
-lgbm_clf = LGBMClassifier(n_estimators=1000, num_leaves=64, n_jobs=-1, boost_from_average=False)
+lgbm_clf = LGBMClassifier(n_estimators=1000, num_leaves=64, n_jobs=-1, boost_from_average=False) #n_jobs=-1: estimator 돌릴 때 모든 cpu 사용해서 한번에 돌려주세요~ 컴퓨터는 느려지지만 속도 빨라짐!
 get_model_train_eval(lgbm_clf, ftr_train=X_train, ftr_test=X_test, tgt_train=y_train, tgt_test=y_test)
 
 
@@ -147,10 +162,11 @@ get_model_train_eval(lgbm_clf, ftr_train=X_train, ftr_test=X_test, tgt_train=y_t
 import seaborn as sns
 
 plt.figure(figsize=(8, 4))
-plt.xticks(range(0, 30000, 1000), rotation=60)
-sns.distplot(card_df['Amount'])
-
-
+plt.xticks(range(0, 30000, 1000), rotation=60) #rotation=60 : x축 좌표 표기들을 60도 각도 틀어서 써줌
+sns.distplot(card_df['Amount']) #Amount : 신용카드 결제 금액. 결제 금액 별 금융사기가 발생한 히스토그램(distplot:몇번 발생했는지 도수분포)
+    #kde=True로 default. --> 히스토그램의 밀도 추세 곡선(연속된 값으로) 그려줌. 얘는 금액이기 때문에 이산적인 값이 아니라 연속된 값으로 봐야 함. 
+    #이산적인 값 : 확률질량함수
+    #연속된 값 : 적분!(dx : x를 굉장히 작게 자른 한 부분) -> 확률밀도함수
 # ** 데이터 사전 가공을 위한 별도의 함수에 StandardScaler를 이용하여 Amount 피처 변환 **
 
 # In[11]:

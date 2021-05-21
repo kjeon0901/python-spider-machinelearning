@@ -3646,7 +3646,7 @@ pmf_binomial = binomial.pmf(k = m) #성공 확률이 0.2인 게임을 10번 했�
 #Distribute "히스토그램" distplot() : 값의 개수를 막대그래프로 나타내줌
 sns.distplot(rvs_binomial, bins = m , kde = False, norm_hist = True, color = 'gray') #bins : x축을 어떻게 정할 건지. 
                                                                                      #y축 : rvs_biomial에서 x축(0~9)에 해당하는 값이 각각 몇 개 있는가 Count => 정규화해서 스케일링 1/10 해줌
-                                                                                     #kde = True로 하면 히스토그램의 추세 곡선 그려줌
+                                                                                     #kde = True로 하면 히스토그램의 밀도 추세 곡선(연속된 값으로) 그려줌
 plt.plot(m, pmf_binomial, color = 'black') #얜 우리가 계속 보던 그냥 그래프. x축-m, y축-pmf_binomial(각각의 m의 element만큼 성공할 확률)
 
 print(1 - sp.stats.binom.cdf(n = 10000, p =0.51, k=4999)) #cdf : 누적 이항분포 확률질량함수 구하는 함수 : 0 ~ k번 성공할 확률 다 더한 것
@@ -4151,6 +4151,7 @@ print('GBM 정확도: {0:.4f}'.format(gb_accuracy))
 	estimator3 = f3(x) = y - f1(x) - f2(x)	: 두 번째에서 구한 모델과의 잔차3(예측값> f1(x) - f2(x))를 새 그래프에 찍고, |잔차3|의 합이 가장 작은 모델
 		:
 	결국 GBM에서 estimator가 늘어날 수록 잔차가 최소화되는 모델 만들어짐
+	4차원 이상(label이 4개 이상)인 데이터는 잔차를 내 머리로 상상해야 쉽다. 
 
 ■■■■■■■■■■■■■0518 수업中 새로 알게된것■■■■■■■■■■■■■
 
@@ -4559,3 +4560,120 @@ xgb_clf.fit(X_train, y_train, early_stopping_rounds=100,
 xgb_roc_score = roc_auc_score(y_test, xgb_clf.predict_proba(X_test)[:,1],average='macro')
 print('ROC AUC: {0:.4f}'.format(xgb_roc_score))
 
+# In[11]:
+
+
+from sklearn.model_selection import GridSearchCV
+
+# 하이퍼 파라미터 테스트의 수행 속도를 향상시키기 위해 n_estimators를 100으로 감소
+xgb_clf = XGBClassifier(n_estimators=100)
+
+params = {'max_depth':[5, 7] , 'min_child_weight':[1,3] ,'colsample_bytree':[0.5, 0.75] }
+
+# 하이퍼 파라미터 테스트의 수행속도를 향상 시키기 위해 cv 를 지정하지 않음. 
+gridcv = GridSearchCV(xgb_clf, param_grid=params)
+gridcv.fit(X_train, y_train, early_stopping_rounds=30, eval_metric="auc",
+           eval_set=[(X_train, y_train), (X_test, y_test)])
+
+print('GridSearchCV 최적 파라미터:',gridcv.best_params_) 
+
+xgb_roc_score = roc_auc_score(y_test, gridcv.predict_proba(X_test)[:,1], average='macro')
+print('ROC AUC: {0:.4f}'.format(xgb_roc_score))
+
+
+# In[12]:
+
+
+# n_estimators는 1000으로 증가시키고, learning_rate=0.02로 감소, reg_alpha=0.03으로 추가함. 
+xgb_clf = XGBClassifier(n_estimators=1000, random_state=156, learning_rate=0.02, max_depth=5,                        min_child_weight=1, colsample_bytree=0.75, reg_alpha=0.03)
+
+# evaluation metric을 auc로, early stopping은 200 으로 설정하고 학습 수행. 
+xgb_clf.fit(X_train, y_train, early_stopping_rounds=200, 
+            eval_metric="auc",eval_set=[(X_train, y_train), (X_test, y_test)])
+
+xgb_roc_score = roc_auc_score(y_test, xgb_clf.predict_proba(X_test)[:,1],average='macro')
+print('ROC AUC: {0:.4f}'.format(xgb_roc_score))
+
+
+# In[13]:
+
+
+# n_estimators는 1000으로 증가시키고, learning_rate=0.02로 감소, reg_alpha=0.03으로 추가함. 
+xgb_clf = XGBClassifier(n_estimators=1000, random_state=156, learning_rate=0.02, max_depth=7,                        min_child_weight=1, colsample_bytree=0.75, reg_alpha=0.03)
+
+# evaluation metric을 auc로, early stopping은 200 으로 설정하고 학습 수행. 
+xgb_clf.fit(X_train, y_train, early_stopping_rounds=200, 
+            eval_metric="auc",eval_set=[(X_train, y_train), (X_test, y_test)])
+
+xgb_roc_score = roc_auc_score(y_test, xgb_clf.predict_proba(X_test)[:,1],average='macro')
+print('ROC AUC: {0:.4f}'.format(xgb_roc_score))
+
+
+# In[14]:
+
+
+from xgboost import plot_importance
+import matplotlib.pyplot as plt
+get_ipython().run_line_magic('matplotlib', 'inline')
+
+fig, ax = plt.subplots(1,1,figsize=(10,8))
+plot_importance(xgb_clf, ax=ax , max_num_features=20,height=0.4)
+
+
+# ### LightGBM 모델 학습과 하이퍼 파라미터 튜닝
+
+# In[15]:
+
+
+from lightgbm import LGBMClassifier
+
+lgbm_clf = LGBMClassifier(n_estimators=500)
+
+evals = [(X_test, y_test)]
+lgbm_clf.fit(X_train, y_train, early_stopping_rounds=100, eval_metric="auc", eval_set=evals,
+                verbose=True)
+
+lgbm_roc_score = roc_auc_score(y_test, lgbm_clf.predict_proba(X_test)[:,1],average='macro')
+print('ROC AUC: {0:.4f}'.format(lgbm_roc_score))
+
+
+# In[16]:
+
+
+from sklearn.model_selection import GridSearchCV
+
+# 하이퍼 파라미터 테스트의 수행 속도를 향상시키기 위해 n_estimators를 100으로 감소
+LGBM_clf = LGBMClassifier(n_estimators=200)
+
+params = {'num_leaves': [32, 64 ],
+          'max_depth':[128, 160],
+          'min_child_samples':[60, 100],
+          'subsample':[0.8, 1]}
+
+
+# 하이퍼 파라미터 테스트의 수행속도를 향상 시키기 위해 cv 를 지정하지 않습니다. 
+gridcv = GridSearchCV(lgbm_clf, param_grid=params)
+gridcv.fit(X_train, y_train, early_stopping_rounds=30, eval_metric="auc",
+           eval_set=[(X_train, y_train), (X_test, y_test)])
+
+print('GridSearchCV 최적 파라미터:', gridcv.best_params_)
+lgbm_roc_score = roc_auc_score(y_test, gridcv.predict_proba(X_test)[:,1], average='macro')
+print('ROC AUC: {0:.4f}'.format(lgbm_roc_score))
+
+
+# In[19]:
+
+
+lgbm_clf = LGBMClassifier(n_estimators=1000, num_leaves=32, sumbsample=0.8, min_child_samples=100,
+                          max_depth=128)
+
+evals = [(X_test, y_test)]
+lgbm_clf.fit(X_train, y_train, early_stopping_rounds=100, eval_metric="auc", eval_set=evals,
+                verbose=True)
+
+lgbm_roc_score = roc_auc_score(y_test, lgbm_clf.predict_proba(X_test)[:,1],average='macro')
+print('ROC AUC: {0:.4f}'.format(lgbm_roc_score))
+
+=============================================================
+
+############### Kaggle_분류실습_캐글 신용카드 사기 검출 ################
