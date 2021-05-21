@@ -181,10 +181,10 @@ def get_preprocessed_df(df=None):
     amount_n = scaler.fit_transform(df_copy['Amount'].values.reshape(-1, 1)) #fit_transform() 안에 가로로 된 series(1차원 데이터)가 아닌 세로로 된 2차원 데이터가 들어가주어야 해서 reshape해줌. 
     
     # 변환된 Amount를 Amount_Scaled로 피처명 변경후 DataFrame맨 앞 컬럼으로 입력
-    df_copy.insert(0, 'Amount_Scaled', amount_n)
+    df_copy.insert(0, 'Amount_Scaled', amount_n) #cf. append는 맨 뒤에만 갖다 붙일 수 있다. 
     
     # 기존 Time, Amount 피처 삭제
-    df_copy.drop(['Time','Amount'], axis=1, inplace=True)
+    df_copy.drop(['Time','Amount'], axis=1, inplace=True) #Time은 애초에 의미 없었고, 기존의 Amount도 필요 없어졌으므로 drop
     return df_copy
 
 
@@ -223,6 +223,14 @@ def get_preprocessed_df(df=None):
 
 
 # log1p 와 expm1 설명 
+'''
+Log Scale
+: 데이터 차이가 극단적으로 차이 많이 나는 경우 log 취해주면 한결 보기 편해짐
+ex_         x = 1,000,000   10,000      100     10  →  그래프 그리면 1,000,000을 제외하고 모두 다닥다닥 바닥에 붙어버림
+       log(x) =     6           4       2       1
+log1p
+: log(1+x) 사용. log(1)==0이므로 log scale 결괏값이 음수가 나오지 않게 하기 위해 1+x를 넣어줌. 
+'''
 import numpy as np
 
 print(1e-1000 == 0.0)
@@ -263,8 +271,25 @@ get_model_train_eval(lgbm_clf, ftr_train=X_train, ftr_test=X_test, tgt_train=y_t
 import seaborn as sns
 
 plt.figure(figsize=(9, 9))
-corr = card_df.corr()
-sns.heatmap(corr, cmap='RdBu')
+corr = card_df.corr() 
+'''
+corr() : 상관계수
+column1이 1-2-3-4-5-6 증가하는데 column2도 2-4-6-8-10-12 같이 증가하는 경향성을 보인다면 '양의 상관관계가 있으며 상관계수는 1이다'
+
+완전 똑같이 움직이면                     corr() = 1
+완전 반대로 움직이면                     corr() = -1   (어쨌든 얘도 상관관계가 ↑높은↑ 것!!)
+방향은 같은데 정도가 다르면 소수점.        corr() = 0.~~
+하나는 바뀌는데 하나는 값의 변화가 없다면   corr() = 0
+'''
+sns.heatmap(corr, cmap='RdBu') #
+'''
+시각화. 각 피처별로 모든 상관도 관계성을 보여줌. 
+RdBu : Red-down Blue-up. 자신과 자신의 corr()값은 1이므로 가장 진한 파란색으로 표현. 
+
+'Class'와 어떤 다른 column이 양의 상관관계/음의 상관관계가 있는 것이 있나?
+=> V14, V17이 그나마 음의 상관관계가 진하다!
+=> 그럼 얘네한테서 이상치(Outlier) 제거해주는 게 의미가 있겠구나!
+'''
 
 
 # ** Dataframe에서 outlier에 해당하는 데이터를 필터링하기 위한 함수 생성. outlier 레코드의 index를 반환함. **
@@ -274,7 +299,7 @@ sns.heatmap(corr, cmap='RdBu')
 
 import numpy as np
 
-def get_outlier(df=None, column=None, weight=1.5):
+def get_outlier(df=None, column=None, weight=1.5): #이상치(Outlier) 인덱스 리턴 함수
     # fraud에 해당하는 column 데이터만 추출, 1/4 분위와 3/4 분위 지점을 np.percentile로 구함. 
     fraud = df[df['Class']==1][column]
     quantile_25 = np.percentile(fraud.values, 25)
@@ -286,11 +311,20 @@ def get_outlier(df=None, column=None, weight=1.5):
     lowest_val = quantile_25 - iqr_weight
     highest_val = quantile_75 + iqr_weight
     
-    # 최대값 보다 크거나, 최소값 보다 작은 값을 아웃라이어로 설정하고 DataFrame index 반환. 
+    # 최대값 보다 크거나, 최소값 보다 작은 값을 boolean index로 접근해서 아웃라이어로 설정하고 걔네의 DataFrame index만을 반환. 
     outlier_index = fraud[(fraud < lowest_val) | (fraud > highest_val)].index
     
     return outlier_index
-    
+'''
+[시각화 - 박스 플롯]
+이상치     : 최댓값 이상
+최댓값     : 3/4 + 1.5*IQR
+IQR       : 3/4, Q3(75%)            //IQR = Q1+Q2+Q3. 사분위(Quantile)값의 편차
+            2/4, Q2(50%)
+            1/4, Q1(25%)
+최솟값     : 1/4 - 1.5*IQR
+이상치     : 최솟값 이하
+'''
 
 
 # In[28]:
@@ -316,12 +350,12 @@ print('이상치 데이터 인덱스:', outlier_index)
 def get_preprocessed_df(df=None):
     df_copy = df.copy()
     amount_n = np.log1p(df_copy['Amount'])
-    df_copy.insert(0, 'Amount_Scaled', amount_n)
+    df_copy.insert(0, 'Amount_Scaled', amount_n) #아까랑 똑같이 Amount_Scaled
     df_copy.drop(['Time','Amount'], axis=1, inplace=True)
     
     # 이상치 데이터 삭제하는 로직 추가
     outlier_index = get_outlier(df=df_copy, column='V14', weight=1.5)
-    df_copy.drop(outlier_index, axis=0, inplace=True)
+    df_copy.drop(outlier_index, axis=0, inplace=True) #axis=0 : 로우방향. 로우를 날려줌. 
     return df_copy
 
 X_train, X_test, y_train, y_test = get_train_test_dataset(card_df)
@@ -331,7 +365,14 @@ get_model_train_eval(lr_clf, ftr_train=X_train, ftr_test=X_test, tgt_train=y_tra
 
 print('### LightGBM 예측 성능 ###')
 get_model_train_eval(lgbm_clf, ftr_train=X_train, ftr_test=X_test, tgt_train=y_train, tgt_test=y_test)
+'''
+[[85290     5]
+ [   25   121]]
+정확도: 0.9996, 정밀도: 0.9603, 재현율: 0.8288, F1: 0.8897, AUC:0.9780
+=> 재현율: 아까 최대로 올린 0.7635에서 0.8288까지 확 올라옴! FN이 확 줄었구나. 
 
+근데 outlier 삭제해서 더 안 좋아지는 경우도 있음. 모든 게 다 케바케. 
+'''
 
 # ### SMOTE 오버 샘플링 적용 후 모델 학습/예측/평가
 
