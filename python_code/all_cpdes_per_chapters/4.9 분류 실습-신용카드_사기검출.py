@@ -382,7 +382,7 @@ get_model_train_eval(lgbm_clf, ftr_train=X_train, ftr_test=X_test, tgt_train=y_t
 from imblearn.over_sampling import SMOTE
 
 smote = SMOTE(random_state=0)
-X_train_over, y_train_over = smote.fit_sample(X_train, y_train)
+X_train_over, y_train_over = smote.fit_resample(X_train, y_train)
 print('SMOTE 적용 전 학습용 피처/레이블 데이터 세트: ', X_train.shape, y_train.shape)
 print('SMOTE 적용 후 학습용 피처/레이블 데이터 세트: ', X_train_over.shape, y_train_over.shape)
 print('SMOTE 적용 후 레이블 값 분포: \n', pd.Series(y_train_over).value_counts())
@@ -391,7 +391,7 @@ print('SMOTE 적용 후 레이블 값 분포: \n', pd.Series(y_train_over).value
 # In[34]:
 
 
-y_train.value_counts()
+print(y_train.value_counts())
 
 
 # ** 로지스틱 회귀로 학습/예측/평가 **
@@ -402,7 +402,12 @@ y_train.value_counts()
 lr_clf = LogisticRegression()
 # ftr_train과 tgt_train 인자값이 SMOTE 증식된 X_train_over와 y_train_over로 변경됨에 유의
 get_model_train_eval(lr_clf, ftr_train=X_train_over, ftr_test=X_test, tgt_train=y_train_over, tgt_test=y_test)
-
+'''
+[[82937  2358]
+ [   11   135]]
+정확도: 0.9723, 정밀도: 0.0542, 재현율: 0.9247, F1: 0.1023, AUC:0.9737
+=> 오버샘플링으로 재현율을 좋아졌지만, 정밀도가 5%로 크게 줄어들음. 원래도 재현율, 정밀도가 trade-off 관계였지만 이번엔 좀 심함
+'''
 
 # ** Precision-Recall 곡선 시각화 **
 
@@ -439,9 +444,10 @@ def precision_recall_curve_plot(y_test , pred_proba_c1):
 
 
 precision_recall_curve_plot( y_test, lr_clf.predict_proba(X_test)[:, 1] )
+#지금 왜 정밀도가 그렇게 낮은지. 로지스틱 회귀 모델에 어떤 문제가 발생하고 있는지 확인하기 위해 재현율, 정밀도 그래프 그리기.
 
 
-# ** LightGBM 모델 적용 **
+# ** LightGBM 모델 적용!!!! **
 
 # In[38]:
 
@@ -449,6 +455,15 @@ precision_recall_curve_plot( y_test, lr_clf.predict_proba(X_test)[:, 1] )
 lgbm_clf = LGBMClassifier(n_estimators=1000, num_leaves=64, n_jobs=-1, boost_from_average=False)
 get_model_train_eval(lgbm_clf, ftr_train=X_train_over, ftr_test=X_test,
                   tgt_train=y_train_over, tgt_test=y_test)
+'''
+[[85283    12]
+ [   22   124]]
+정확도: 0.9996, 정밀도: 0.9118, 재현율: 0.8493, F1: 0.8794, AUC:0.9814
+=> LightGBM 모델로  SMOTE로 오버샘플링된 데이터를 학습/예측/평가하니까
+    정밀도는 사알짝 줄었지만 재현율도 엄청 오름. 정밀도, 재현율이 우수함!!
+=> 물론 신용카드 사기 검출 모델은 재현율이 훨씬 중요하지만, 아무리 그래도 아까 정밀도가 5%인 것은 좀 아니었다^^
+    카드 긁을 때마다 매번 "본인이 결제하시는 것 맞으세요?" 확인전화 오면 안 됨. 실생활 적용 불가능. 
+'''
 
 
 # In[ ]:
