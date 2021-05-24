@@ -94,7 +94,7 @@ print(pred.shape)
 lr_final.fit(pred, y_test) #stacking을 하기 위해 4개의 분류기를 위에서 학습/예측했고, 그 결괏값들을 합친 데이터와 실제 결괏값을 X_train, y_train자리에 넣어 새로 학습.
 final = lr_final.predict(pred) 
 #근데 여기서 pred로 학습시킨 estimator를 또 다시 pred로 예측하면 당연히 퍼포먼스가 좋은 게 아닌가?
-#그래서 CV 셋 기반의 Stacking으로 해주는 거임~~~~~! 아래에서 살펴보자!
+#이 과적합을 개선하기 위해서 CV 셋 기반의 Stacking으로 해주는 거임~~~~~! 아래에서 살펴보자!
 
 print('최종 메타 모델의 예측 정확도: {0:.4f}'.format(accuracy_score(y_test , final)))
 
@@ -109,7 +109,9 @@ from sklearn.metrics import mean_absolute_error
 
 # 개별 기반 모델에서 최종 메타 모델이 사용할 학습 및 테스트용 데이터를 생성하기 위한 함수. 
 def get_stacking_base_datasets(model, X_train_n, y_train_n, X_test_n, n_folds ):
-    # 지정된 n_folds값으로 KFold 생성.
+    # X_train_n (455, 30)   y_train_n (455,)   X_test_n (114, 30)   X_test_n (114,)
+    
+    # 지정된 n_folds값으로 n_folds개의 폴드 세트로 분리하는 KFold 객체 생성.
     kf = KFold(n_splits=n_folds, shuffle=False, random_state=0)
     
     #추후에 메타 모델이 사용할 학습 데이터 반환을 위한 넘파이 배열 초기화 
@@ -117,7 +119,10 @@ def get_stacking_base_datasets(model, X_train_n, y_train_n, X_test_n, n_folds ):
     test_pred = np.zeros((X_test_n.shape[0],n_folds))
     print(model.__class__.__name__ , ' model 시작 ')
     
-    for folder_counter , (train_index, valid_index) in enumerate(kf.split(X_train_n)):
+    for folder_counter , (train_index, valid_index) in enumerate(kf.split(X_train_n)): 
+        # folder_counter : enumerate해줬으니까 loop의 idx가 들어감. 0~6
+        # train_index, valid_index : kfold.split(X)는 폴드 세트를 n_folds번 반복할 때마다 달라지는 학습/테스트 용 데이터 로우 인덱스 번호 반환됨.
+        
         #입력된 학습 데이터에서 기반 모델이 학습/예측할 폴드 데이터 셋 추출 
         print('\t 폴드 세트: ',folder_counter,' 시작 ')
         X_tr = X_train_n[train_index] 
