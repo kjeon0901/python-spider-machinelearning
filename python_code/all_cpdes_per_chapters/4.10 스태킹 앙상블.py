@@ -93,7 +93,7 @@ print(pred.shape)
 
 lr_final.fit(pred, y_test) #stacking을 하기 위해 4개의 분류기를 위에서 학습/예측했고, 그 결괏값들을 합친 데이터와 실제 결괏값을 X_train, y_train자리에 넣어 새로 학습.
 final = lr_final.predict(pred) 
-#근데 여기서 pred로 학습시킨 estimator를 또 다시 pred로 예측하면 당연히 퍼포먼스가 좋은 게 아닌가?
+#근데 여기서 pred로 학습시킨 estimator를 또 다시 pred로 예측하면 당연히 퍼포먼스가 좋은 게 아닌가? ㅇㅇ 안됨!
 #이 과적합을 개선하기 위해서 CV 셋 기반의 Stacking으로 해주는 거임~~~~~! 아래에서 살펴보자!
 
 print('최종 메타 모델의 예측 정확도: {0:.4f}'.format(accuracy_score(y_test , final)))
@@ -112,7 +112,7 @@ def get_stacking_base_datasets(model, X_train_n, y_train_n, X_test_n, n_folds ):
     # X_train_n (455, 30)   y_train_n (455,)   X_test_n (114, 30)   X_test_n (114,)
     
     # 지정된 n_folds값으로 n_folds개의 폴드 세트로 분리하는 KFold 객체 생성.
-    kf = KFold(n_splits=n_folds, shuffle=False, random_state=0)
+    kf = KFold(n_splits=n_folds, shuffle=False)
     
     #추후에 메타 모델이 사용할 학습 데이터 반환을 위한 넘파이 배열 초기화 
     train_fold_pred = np.zeros((X_train_n.shape[0] ,1 ))
@@ -133,13 +133,15 @@ def get_stacking_base_datasets(model, X_train_n, y_train_n, X_test_n, n_folds ):
         model.fit(X_tr , y_tr)
         
         #폴드 세트 내부에서 다시 만들어진 검증 데이터로 기반 모델 예측 후 데이터 저장.
-        train_fold_pred[valid_index, :] = model.predict(X_te).reshape(-1,1)
+        train_fold_pred[valid_index, :] = model.predict(X_te).reshape(-1,1) #model.predict(X_te)만 하면 1차원데이터 (65,) 즉 옆으로 된 series이므로 세로로 된 2차원 데이터로 만들어줌. 
+                                                                            #valid_index는 순서대로 0~64, 65~129, 130~ ...
         
         #입력된 원본 테스트 데이터를 폴드 세트내 학습된 기반 모델에서 예측 후 데이터 저장. 
+        #매 교차 검증마다 X_test_n데이터를 집어넣음. 여기선 총 7번. 이거는 그 estimator의 교차검증 끝나면 row끼리(column방향으로) 평균 내서 결괏값 만들어낼 것임. 
         test_pred[:, folder_counter] = model.predict(X_test_n)
             
     # 폴드 세트 내에서 원본 테스트 데이터를 예측한 데이터를 평균하여 테스트 데이터로 생성 
-    test_pred_mean = np.mean(test_pred, axis=1).reshape(-1,1)    
+    test_pred_mean = np.mean(test_pred, axis=1).reshape(-1,1)     #얘도 np.mean(test_pred, axis=1)만 하면 1차원데이터 (65,) 즉 옆으로 된 series이므로 세로로 된 2차원 데이터로 만들어줌. 
     
     #train_fold_pred는 최종 메타 모델이 사용하는 학습 데이터, test_pred_mean은 테스트 데이터
     return train_fold_pred , test_pred_mean
@@ -147,7 +149,7 @@ def get_stacking_base_datasets(model, X_train_n, y_train_n, X_test_n, n_folds ):
 
 # In[17]:
 
-
+#4개의 estimator로 만들어진 4개의 train_fold_pred , test_pred_mean를 받음
 knn_train, knn_test = get_stacking_base_datasets(knn_clf, X_train, y_train, X_test, 7)
 rf_train, rf_test = get_stacking_base_datasets(rf_clf, X_train, y_train, X_test, 7)
 dt_train, dt_test = get_stacking_base_datasets(dt_clf, X_train, y_train, X_test,  7)    
@@ -156,9 +158,9 @@ ada_train, ada_test = get_stacking_base_datasets(ada_clf, X_train, y_train, X_te
 
 # In[18]:
 
-
-Stack_final_X_train = np.concatenate((knn_train, rf_train, dt_train, ada_train), axis=1)
-Stack_final_X_test = np.concatenate((knn_test, rf_test, dt_test, ada_test), axis=1)
+#스태킹(Stacking) : 그 4개를 concatenate(모양 그대로 column방향:axis=1 / row방향:axis=0 으로 갖다 붙임)
+Stack_final_X_train = np.concatenate((knn_train, rf_train, dt_train, ada_train), axis=1)    #새로 만들어진 Stack_final_X_train는 어쨌든 train 데이터 기반으로 만들어졌다. 
+Stack_final_X_test = np.concatenate((knn_test, rf_test, dt_test, ada_test), axis=1)         #새로 만들어진 Stack_final_X_test는 어쨌든 test 데이터 기반으로 만들어졌다. 
 print('원본 학습 피처 데이터 Shape:',X_train.shape, '원본 테스트 피처 Shape:',X_test.shape)
 print('스태킹 학습 피처 데이터 Shape:', Stack_final_X_train.shape,
       '스태킹 테스트 피처 데이터 Shape:',Stack_final_X_test.shape)
@@ -167,8 +169,14 @@ print('스태킹 학습 피처 데이터 Shape:', Stack_final_X_train.shape,
 # In[19]:
 
 
-lr_final.fit(Stack_final_X_train, y_train)
-stack_final = lr_final.predict(Stack_final_X_test)
+lr_final.fit(Stack_final_X_train, y_train) #Stack_final_X_train를 X_train 자리에, 그리고 label은 원본의 y_train으로!
+stack_final = lr_final.predict(Stack_final_X_test) #Stack_final_X_test를 X_test 자리에. 
+'''
+새로 만들어진 Stack_final_X_train는 어쨌든 train 데이터 기반으로 만들어졌다. 
+새로 만들어진 Stack_final_X_test는 어쨌든 test 데이터 기반으로 만들어졌다. 
+
+=> 이제는 train데이터와 test데이터가 완벽히 분리되었다! ㅎㅎㅎ
+'''
 
 print('최종 메타 모델의 예측 정확도: {0:.4f}'.format(accuracy_score(y_test, stack_final)))
 
