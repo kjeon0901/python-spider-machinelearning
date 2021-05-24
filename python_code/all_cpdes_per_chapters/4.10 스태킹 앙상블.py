@@ -67,7 +67,7 @@ ada_pred = ada_clf.predict(X_test)
 print('KNN 정확도: {0:.4f}'.format(accuracy_score(y_test, knn_pred)))
 print('랜덤 포레스트 정확도: {0:.4f}'.format(accuracy_score(y_test, rf_pred)))
 print('결정 트리 정확도: {0:.4f}'.format(accuracy_score(y_test, dt_pred)))
-print('에이다부스트 정확도: {0:.4f} :'.format(accuracy_score(y_test, ada_pred)))
+print('에이다부스트 정확도: {0:.4f}'.format(accuracy_score(y_test, ada_pred)))
 
 
 # ** 개별 모델의 예측 결과를 메타 모델이 학습할 수 있도록 스태킹 형태로 재 생성 ** 
@@ -76,9 +76,12 @@ print('에이다부스트 정확도: {0:.4f} :'.format(accuracy_score(y_test, ad
 
 
 pred = np.array([knn_pred, rf_pred, dt_pred, ada_pred])
-print(pred.shape)
+print(pred.shape)   #X_test 크기가 (114, 30)이었으므로, 각각의 예측 결괏값들은 크기 (114,)인 series. 걔네 4개가 묶임. 
+                    #그냥 각 예측 결괏값들이 (1, 114)인 2차원 데이터였다면 이 묶는 행위는 concatinate(덩어리 땅! 갖다붙임)에 가까움. 
+                    #concatinate : 덩어리 땅! 옆으로든 아래로든 갖다 붙임. stack은 merge보다 concatinate에 가까움. 
+                    #merge : 어떤 key값을 기준으로 합집합 / 교집합
 
-# transpose를 이용해 행과 열의 위치 교환. 컬럼 레벨로 각 알고리즘의 예측 결과를 피처로 만듦. 
+# transpose(전치행렬)를 이용해 행과 열의 위치 교환. 컬럼 레벨로 각 알고리즘의 예측 결과를 피처로 만듦. 
 pred = np.transpose(pred)
 print(pred.shape)
 
@@ -88,8 +91,10 @@ print(pred.shape)
 # In[14]:
 
 
-lr_final.fit(pred, y_test)
-final = lr_final.predict(pred)
+lr_final.fit(pred, y_test) #stacking을 하기 위해 4개의 분류기를 위에서 학습/예측했고, 그 결괏값들을 합친 데이터와 실제 결괏값을 X_train, y_train자리에 넣어 새로 학습.
+final = lr_final.predict(pred) 
+#근데 여기서 pred로 학습시킨 estimator를 또 다시 pred로 예측하면 당연히 퍼포먼스가 좋은 게 아닌가?
+#그래서 CV 셋 기반의 Stacking으로 해주는 거임~~~~~! 아래에서 살펴보자!
 
 print('최종 메타 모델의 예측 정확도: {0:.4f}'.format(accuracy_score(y_test , final)))
 
