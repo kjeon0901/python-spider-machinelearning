@@ -4136,11 +4136,11 @@ print('GBM 정확도: {0:.4f}'.format(gb_accuracy))
 	2. estimator 총 개수 m번 반복 중 j번째에서 다음을 수행
 		a. 가중치가 부여된 약한 학습기 훈련 Cj = train(X_train, y_train, w)
 		b. 예측값 y^ = predict(Cj, X_test)
-		c. 가중치 적용된 에러율 계산 ε = w 내적 (y^≠y)
+		c. 가중치 적용된 에러율 계산 ε = w 내적 (y^≠y : 틀리면 1 맞으면 0)
 		d. 학습기 가중치 계산 
-		e. 
-		f. 
-	3. 
+		e. 가중치 업데이트
+		f. 업데이트된 가중치의 합이 다시 1이 되도록 정규화
+	3. 최종 예측 계산
 
 2. GBM : 경사하강법 + Boosting
 	경사하강법♣♣♣	- Deep Learning의 핵심!
@@ -5173,9 +5173,25 @@ get_model_train_eval(lgbm_clf, ftr_train=X_train_over, ftr_test=X_test,
 
 ■■■■■■■■■■■■■0524 수업中 새로 알게된것■■■■■■■■■■■■■
 
-'''스태킹 앙상블'''
+스태킹 앙상블 Stacking Ensemble
 
-# ** Basic 스태킹 모델 **
+- cv 이용 → 교차검증 기반의 스태킹 앙상블
+	1. 우선 얘도 앙상블 기법의 하나니까 estimator 여러개 쓰임
+	2. estimator 각각 교차검증
+	3. train, test데이터로 나누고, train데이터는 cv만큼 잘라 1개를 검증데이터, 나머지를 train데이터로 사용
+	4. 학습된 estimator는 메타 모델이 됨
+	5. 교차검증 1번 끝날 때마다(cv로 나눈 검증데이터가 바뀔 때마다) "모든 검증데이터에 대한 예측 레이블값" + "test데이터에 대한 예측 레이블값" 얻음
+	6. cv만큼 나온 "모든 검증데이터에 대한 예측 레이블값"은 하나의 column으로 완성, "test데이터에 대한 예측 레이블값"은 cv크기만큼 나옴. 
+	7. "test데이터에 대한 예측 레이블값"은 row끼리 평균 내서 하나의 column으로 만듦
+	8. 그걸 총 estimator 개수만큼 해서 두 개씩 나온 column들을 concatinate로 column방향으로 합침 => estimator개수:column개수
+				each_estimator_train, each_estimator_test  ───(concatinate)──→  Stack_final_X_train, Stack_final_X_test
+	9. 최종적으로 	메타모델.fit(Stack_final_X_train, y_train)
+			stack_final = 메타모델.predict(Stack_final_X_test)
+			accuracy_score(y_test, stack_final)
+
+==========================================================
+
+# ** 교차검증 없는 Basic 스태킹 모델 **
 # 
 # 데이터 로딩
 
