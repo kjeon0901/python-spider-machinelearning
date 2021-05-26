@@ -203,12 +203,12 @@ class AdalineGD(object):
             test1.append(errors)
             
             self.w_[1:] += self.eta * X.T.dot(errors)   # X.T.dot(errors) : X를 전치행렬시키고, 그 아이와 errors의 내적을 구해라!
-                                                        # dJ/dw = 	J'(w) = - Σ( y(i) - y^(i) ) * xj(i) 를 나타낸 code!
+                                                        # dJ/dw = 	J'(w) = - Σ( y(i) - y^(i) ) * xj(i) 를 나타낸 코드. 
             test2.append(X.T.dot(errors)) #X의 0번 column과 error와의 내적, X의 1번 column과 error와의 내적 결과인 scalar값이 요소 2개로 저장됨. 
             
-            self.w_[0] += self.eta * errors.sum()
-            cost = (errors**2).sum() / 2.0
-            self.cost_.append(cost)
+            self.w_[0] += self.eta * errors.sum() # w0은 X를 곱할 필요가 없음. 그러니까 X와 내적 없이 그냥 전체를 더해주면 됨. 
+            cost = (errors**2).sum() / 2.0 # 아달린의 비용함수 J(w) = 1/2 * Σ( y(i) - y^(i) )^2 를 나타낸 코드. 
+            self.cost_.append(cost) #for문 끝날 때 append해줘서, epoch 별로 비용함수가 어떻게 변하는지 담음. 
         return self
 
     def net_input(self, X):
@@ -246,15 +246,23 @@ class AdalineGD(object):
 fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 4))
 
 ada1 = AdalineGD(n_iter=10, eta=0.01).fit(X, y)
-ax[0].plot(range(1, len(ada1.cost_) + 1), np.log10(ada1.cost_), marker='o')
+ax[0].plot(range(1, len(ada1.cost_) + 1), np.log10(ada1.cost_), marker='o') 
+# x축은 epoch 개수만큼 1~10, y축은 아까 구한 epoch별 비용을 log10 (log scale)로 차이 줄여서 그래프로 보기 편하게 보여줌. 
+# 근데, 결과 그래프 보면 epoch가 늘어날 수록 error가 "증가하는 방향" 으로 발산해버림;; => 문제가 있구나...!
 ax[0].set_xlabel('Epochs')
 ax[0].set_ylabel('log(Sum-squared-error)')
 ax[0].set_title('Adaline - Learning rate 0.01')
 
-ada2 = AdalineGD(n_iter=10, eta=0.0001).fit(X, y)
+ada2 = AdalineGD(n_iter=10, eta=0.0001).fit(X, y) #eta, 즉 learning rate step을 확 줄여버림. 
 ax[1].plot(range(1, len(ada2.cost_) + 1), ada2.cost_, marker='o')
+# 얘는 결과 그래프 보면 epoch가 늘어날 수록 error가 "감소하는 방향" => Good~~~ :)
+# 아까는 learning rate step 값이 너무 커서 발산하고 막 튕겨 버렸구나!
 ax[1].set_xlabel('Epochs')
 ax[1].set_ylabel('Sum-squared-error')
 ax[1].set_title('Adaline - Learning rate 0.0001')
 
 plt.show()
+'''
+아달린이 퍼셉트론보다 빠름! 
+퍼셉트론은 이중 for문으로, 가중치 업데이트를 너무 일일이 해주기 때문. 
+'''
