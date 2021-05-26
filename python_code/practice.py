@@ -1,6 +1,6 @@
 import numpy as np
 
-
+#### 퍼셉트론 !!!
 class Perceptron(object):
     """퍼셉트론 분류기
 
@@ -108,8 +108,9 @@ plt.legend(loc='upper left')
 
 plt.show() #그리기~
 
-###### 이제 우리가 정의한 class 사용
-ppn = Perceptron(eta=0.1, n_iter=10)
+
+
+ppn = Perceptron(eta=0.1, n_iter=10)  # 이제 우리가 정의한 class 사용!
 
 ppn.fit(X, y)
 
@@ -162,5 +163,98 @@ plot_decision_regions(X, y, classifier=ppn)
 plt.xlabel('sepal length [cm]')
 plt.ylabel('petal length [cm]')
 plt.legend(loc='upper left')
+
+plt.show()
+
+
+
+
+
+#### 아달린 !!!
+
+test=[]
+test1=[]
+test2=[]
+class AdalineGD(object):
+    global test
+    global test1
+    global test2
+    
+    def __init__(self, eta=0.01, n_iter=50, random_state=1):
+        #아무것도 안 넣어줬을 땐 이렇지만, 지금은 객체 생성하면서 각각 n_iter=10, eta=0.01, n_iter=10, eta=0.0001 넣어줬음. 
+        self.eta = eta
+        self.n_iter = n_iter
+        self.random_state = random_state
+
+    def fit(self, X, y):
+        rgen = np.random.RandomState(self.random_state)
+        self.w_ = rgen.normal(loc=0.0, scale=0.01, size=1 + X.shape[1])
+        self.cost_ = []
+
+        for i in range(self.n_iter):
+            net_input = self.net_input(X) #row 하나씩 넣어준 퍼셉트론과 달리 여기선 (100, 2) shape의 행렬 그대로 들어감. 
+            test.append(net_input)
+            
+            output = self.activation(net_input) #활성화함수로 net_input값 들어간다. 
+            
+            errors = (y - output) # output y^는 np.dot(X, self.w_[1:]) + self.w_[0] 의 결괏값 계속 그대로 가지고 있음. (퍼셉트론 y^ = 1 or -1 과 다르군!)
+                                  # dJ/dw = 	J'(w) = - Σ( y(i) - y^(i) ) * xj(i) 에서 y(i) - y^(i)을 나타낸 code!
+                                  # y(i) - y^(i)는 개별 요소를 연산하지만, y - output은 벡터를 연산하는 것!!!!
+            test1.append(errors)
+            
+            self.w_[1:] += self.eta * X.T.dot(errors)   # X.T.dot(errors) : X를 전치행렬시키고, 그 아이와 errors의 내적을 구해라!
+                                                        # dJ/dw = 	J'(w) = - Σ( y(i) - y^(i) ) * xj(i) 를 나타낸 code!
+            test2.append(X.T.dot(errors)) #X의 0번 column과 error와의 내적, X의 1번 column과 error와의 내적 결과인 scalar값이 요소 2개로 저장됨. 
+            
+            self.w_[0] += self.eta * errors.sum()
+            cost = (errors**2).sum() / 2.0
+            self.cost_.append(cost)
+        return self
+
+    def net_input(self, X):
+        """최종 입력 계산"""
+        return np.dot(X, self.w_[1:]) + self.w_[0]
+        '''
+        np.dot(X, self.w_[1:]) 를 어떻게 구해야 할까??
+        => X의 각각의 row와의 내적을 구한다! => 결괏값의 shape는 (100,)일 것. 
+        X           self.w_[1:]     np.dot(X, self.w_[1:]) __내적
+        5.1 1.4     w1              5.1*w1 + 1.4*w2
+        4.9 1.4     w2              4.9*w1 + 1.4*w2
+        4.7 1.3                     4.7*w1 + 1.3*w2
+        ...                         ...
+        
+        np.dot(X, self.w_[1:]) + self.w_[0] 를 어떻게 구해야 할까??
+        => np.dot(X, self.w_[1:])로 나온 (100,) 의 요소 각각에 self.w_[0]를 더해준다! => 결괏값의 shape는 (100,)일 것. 
+        np.dot(X, self.w_[1:])  self.w_[0]      np.dot(X, self.w_[1:]) + self.w_[0]
+        5.1*w1 + 1.4*w2         w0              5.1*w1 + 1.4*w2 + w0
+        4.9*w1 + 1.4*w2                         4.9*w1 + 1.4*w2 + w0
+        4.7*w1 + 1.3*w2                         4.7*w1 + 1.3*w2 + w0
+        ...                                     ...
+        
+        '''
+
+    def activation(self, X):
+        """선형 활성화 계산"""
+        return X # 아~무것도 안 함. 아달린에서 쓰이는 선형 활성화 함수가 ∮(wTㆍx) = wTㆍx 이므로. 다른 활성화 함수는 이 절차에서 다른 output 나올 거임!
+
+    def predict(self, X):
+        """최종 예측"""
+        """단위 계단 함수를 사용하여 클래스 레이블을 반환합니다"""
+        return np.where(self.activation(self.net_input(X)) >= 0.0, 1, -1)
+
+
+fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 4))
+
+ada1 = AdalineGD(n_iter=10, eta=0.01).fit(X, y)
+ax[0].plot(range(1, len(ada1.cost_) + 1), np.log10(ada1.cost_), marker='o')
+ax[0].set_xlabel('Epochs')
+ax[0].set_ylabel('log(Sum-squared-error)')
+ax[0].set_title('Adaline - Learning rate 0.01')
+
+ada2 = AdalineGD(n_iter=10, eta=0.0001).fit(X, y)
+ax[1].plot(range(1, len(ada2.cost_) + 1), ada2.cost_, marker='o')
+ax[1].set_xlabel('Epochs')
+ax[1].set_ylabel('Sum-squared-error')
+ax[1].set_title('Adaline - Learning rate 0.0001')
 
 plt.show()
