@@ -51,7 +51,7 @@ class Perceptron(object):
 
         for _ in range(self.n_iter): # 10바퀴만 돈다. 
             errors = 0
-            for xi, target in zip(X, y): # xi = X row 한줄씩, target = y 하나씩  (xi, target은 늘 같은 row)
+            for xi, target in zip(X, y): # xi = X row 한줄씩, target = y 하나씩 100바퀴 돈다. (xi, target은 늘 같은 row)
                 # 가중치 변화량 Δwj = η( y(i) - y^(i) ) * xj(i)
                 update = self.eta * (target - self.predict(xi)) # η( y(i) - y^(i) ) 까지만 구함. xi: X row 하나씩 들어감(vector).
                                                                 # target, self.predict(xi), self.eta 모두 scalar => update도 scalar값. 
@@ -113,11 +113,12 @@ ppn = Perceptron(eta=0.1, n_iter=10)
 
 ppn.fit(X, y)
 
-plt.plot(range(1, len(ppn.errors_) + 1), ppn.errors_, marker='o')
+plt.plot(range(1, len(ppn.errors_) + 1), ppn.errors_, marker='o') # 아까 fit함수에서 print(self.errors_)로 출력된 '''[1, 3, 3, 2, 1, 0, 0, 0, 0, 0]'''를 그래프로!
 plt.xlabel('Epochs')
 plt.ylabel('Number of errors')
 
-plt.show()
+plt.show() # 10(epoch == n_iter)번의 가중치 업데이트를 진행하면서 100번 中 error가 발생한 횟수. 
+           # 중간에 6번째부터 y축이 0이 되었으므로, 이제는 업데이트가 되지 않으므로 끝까지 쭉 0이다. 
 
 
 from matplotlib.colors import ListedColormap
