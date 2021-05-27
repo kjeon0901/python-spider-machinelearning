@@ -10,12 +10,26 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 get_ipython().run_line_magic('matplotlib', 'inline')
 
 np.random.seed(0)
-# y = 4X + 6 식을 근사(w1=4, w0=6). random 값은 Noise를 위해 만듬
-X = 2 * np.random.rand(100,1)
-y = 6 +4 * X+ np.random.randn(100,1)
+# y = 4X + 6 식을 근사(w1=4, w0=6). random 값은 Noise를 위해 만듦
+X = 2 * np.random.rand(100,1) # 0~1 사이에서 균일분포 기반으로 100개 랜덤값 샘플링. 각각의 요소에 x2 해줌.  
+y = 6 + 4*X + np.random.randn(100,1)
+'''
+random.randint(m, n) : m ~ n-1 사이의 랜덤 숫자 1개 뽑기. m 안써주면 0부터~
+random.rand(m, n) : 0 ~ 1 의 '균일분포 표준정규분포' 랜덤 숫자를 (m, n) 크기로 생성.
+        균일분포 == 상수함수(연속) : 샘플링한 값의 range가 0 ~ 1이고 0.3 ~ 0,4 사이의 그래프와 x축간의 면적은 "0.3 ~ 0.4 사이의 값이 뽑힐 확률"
+                                    떨어진 간극만 같다면 걔네의 면적, 즉 확률도 같다. 
+random.randn(m, n) : 평균 0, 표준편차 1의 '가우시안 표준정규분포' 랜덤 숫자를 (m, n) 크기로 생성
+        정규분포 : 0.3 ~ 0.4 사이의 값이 뽑힐 확률과 0.4 ~ 0.5 사이의 값이 뽑힐 확률이 다르다. ex_히스토그램 distplot(정규분포, kde=True)
+'''
+test = np.random.rand(100000,1)
+test2 = np.random.randn(1000,1)
+
+sns.distplot(test, kde=False)  #균일분포
+sns.distplot(test2, kde=False) #정규분포
 
 # X, y 데이터 셋 scatter plot으로 시각화
 plt.scatter(X, y)
@@ -120,7 +134,7 @@ plt.plot(X,y_pred)
 # In[ ]:
 
 
-def stochastic_gradient_descent_steps(X, y, batch_size=10, iters=1000):
+def stochastic_gradient_descent_steps(X, y, batch_size=10, iters=1000): ### ◆확률적 경사하강법◆ ###
     w0 = np.zeros((1,1))
     w1 = np.zeros((1,1))
     prev_cost = 100000
