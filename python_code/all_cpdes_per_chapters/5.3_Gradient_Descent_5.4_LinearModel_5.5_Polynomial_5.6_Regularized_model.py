@@ -210,7 +210,7 @@ plt.plot(X,y_pred) # X의 feature값이 2개였다면 (column이 2개) -> 3차�
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
+import seaborn as sns # DataFrame형태의 데이터를 그릴 때 seaborn 많이 사용. 
 from scipy import stats
 from sklearn.datasets import load_boston
 get_ipython().run_line_magic('matplotlib', 'inline')
@@ -242,19 +242,28 @@ bostonDF.head()
 # * LSTAT: 하위 계층의 비율
 # * MEDV: 본인 소유의 주택 가격(중앙값)
 
-# * 각 컬럼별로 주택가격에 미치는 영향도를 조사
+
+
+
+# * 각 컬럼별로 주택가격에 미치는 영향도를 조사   //각 컬럼별 가중치 구하기 전, 레이블과 무엇이 상관관계가 있는지. 
 
 # In[2]:
 
 
 # 2개의 행과 4개의 열을 가진 subplots를 이용. axs는 4x2개의 ax를 가짐.
-fig, axs = plt.subplots(figsize=(16,8) , ncols=4 , nrows=2)
+fig, axs = plt.subplots(figsize=(16,8) , ncols=4 , nrows=2) # 행 2개, 컬럼 4개. figsize는 가로 16, 세로 8로 그림판 axs를 크게 만들어달라는 말
 lm_features = ['RM','ZN','INDUS','NOX','AGE','PTRATIO','LSTAT','RAD']
 for i , feature in enumerate(lm_features):
-    row = int(i/4)
-    col = i%4
-    # 시본의 regplot을 이용해 산점도와 선형 회귀 직선을 함께 표현
-    sns.regplot(x=feature , y='PRICE',data=bostonDF , ax=axs[row][col])
+    row = int(i/4)  # 0 0 0 0 1 1 1 1 순서대로 들어감
+    col = i%4       # 0 1 2 3 0 1 2 3 순서대로 들어감
+    
+    # 시본의 regplot(선형 회귀 직선 자동적으로 데이터 분포에 의해 알아서 그려줌 ><) 을 이용해 산점도와 선형 회귀 직선을 함께 표현
+    sns.regplot(x=feature , y='PRICE',data=bostonDF , ax=axs[row][col]) #8개의 각 그래프는 x축을 feature, y축을 'PRICE'로 둠. 
+'''
+그래프 대충 봤을 때 상관관계 높은 컬럼 
+RM: 거주할 수 있는 방 개수  -> 양의 상관관계 높음
+LSTAT: 하위 계층의 비율     -> 음의 상관관계 높음
+'''
 
 
 # ** 학습과 테스트 데이터 세트로 분리하고 학습/예측/평가 수행 **
@@ -267,7 +276,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error , r2_score
 
 y_target = bostonDF['PRICE']
-X_data = bostonDF.drop(['PRICE'],axis=1,inplace=False)
+X_data = bostonDF.drop(['PRICE'],axis=1,inplace=False) # bostonDF['PRICE']가 실제 label값이므로 얘만 떼어넴!!!
 
 X_train , X_test , y_train , y_test = train_test_split(X_data , y_target ,test_size=0.3, random_state=156)
 
@@ -276,17 +285,29 @@ lr = LinearRegression()
 lr.fit(X_train ,y_train )
 y_preds = lr.predict(X_test)
 mse = mean_squared_error(y_test, y_preds)
-rmse = np.sqrt(mse)
+rmse = np.sqrt(mse) # np.sqrt(n) : √n (루트 씌워줌)
 
 print('MSE : {0:.3f} , RMSE : {1:.3F}'.format(mse , rmse))
 print('Variance score : {0:.3f}'.format(r2_score(y_test, y_preds)))
+'''
+MSE : 17.297 , RMSE : 4.159
+Variance score : 0.757
+'''
 
 
 # In[4]:
 
-
+# 회귀라는 관점에서 결국 모델링이라는 건, 각 feature(지금 마지막 하나 떼어냈으니까 13가지 컬럼에 곱할 가중치 w13, w12, ..., w1와 w0를 구하는 것! 즉, 13차원의 ~이런 기울기, ~이런 가중치를 갖는 그래프를 그리는 것!
 print('절편 값:',lr.intercept_)
-print('회귀 계수값:', np.round(lr.coef_, 1))
+print('회귀 계수값:', np.round(lr.coef_, 1)) # lr.coef_를 소수점 첫째 자리까지 반올림해라 => 회귀계수(regression coefficient). 지금 이게 W값 구한 것. 
+'''
+절편 값: 40.995595172164336
+회귀 계수값: [ -0.1   0.1   0.    3.  -19.8   3.4   0.   -1.7   0.4  -0.   -0.9   0.  -0.6]
+                                      △ NOX컬럼은 전부 소수점으로, 애초에 데이터값 자체가 다른 컬럼에 비해 상대적으로 많이 작음. 
+                                      지금은 전체 피처들을 SCALE해주지 않았기 때문에 얘만 이렇게 크게 나옴. 얘랑 그래프랑 비교하면 굳이 이렇게 높을 이유가 없음. 
+                                      스케일링 (SCALE)이 필요하다..!
+                                      그래도, 어쨌든 계산된 회귀 계수는 이렇게 하는 게 맞음. 
+'''
 
 
 # In[5]:
@@ -304,23 +325,29 @@ from sklearn.model_selection import cross_val_score
 
 y_target = bostonDF['PRICE']
 X_data = bostonDF.drop(['PRICE'],axis=1,inplace=False)
-lr = LinearRegression()
+lr = LinearRegression() #선형회귀 기반 estimator
 
 # cross_val_score( )로 5 Fold 셋으로 MSE 를 구한 뒤 이를 기반으로 다시  RMSE 구함. 
+# train데이터만을 사용해서 거기에서 일정의 train데이터, 일정의 검증데이터로 나눠 cv만큼 교차검증. 퍼포먼스의 우수성은 neg_mean_squared_error, 즉 MSE값이 가장 낮은 게 우수. 
 neg_mse_scores = cross_val_score(lr, X_data, y_target, scoring="neg_mean_squared_error", cv = 5)
-rmse_scores  = np.sqrt(-1 * neg_mse_scores)
+rmse_scores  = np.sqrt(-1 * neg_mse_scores) # scoring="neg_mean_squared_error" 로 잡아줬으니, 그냥 MSE 구하려면 다시 -1 곱해줘야 함. 
 avg_rmse = np.mean(rmse_scores)
 
 # cross_val_score(scoring="neg_mean_squared_error")로 반환된 값은 모두 음수 
 print(' 5 folds 의 개별 Negative MSE scores: ', np.round(neg_mse_scores, 2))
 print(' 5 folds 의 개별 RMSE scores : ', np.round(rmse_scores, 2))
 print(' 5 folds 의 평균 RMSE : {0:.3f} '.format(avg_rmse))
+'''
+ 5 folds 의 개별 Negative MSE scores:  [-12.46 -26.05 -33.07 -80.76 -33.31]
+ 5 folds 의 개별 RMSE scores :  [3.53 5.1  5.75 8.99 5.77]
+ 5 folds 의 평균 RMSE : 5.829 
+'''
 
 
-# ## 5-5. Polynomial Regression과 오버피팅/언더피팅 이해
-# ### Polynomial Regression 이해
+# ## 5-5. 다항회귀 Polynomial Regression과 오버피팅/언더피팅 이해
+# ### 다항회귀 Polynomial Regression 이해
 
-# PolynomialFeatures 클래스로 다항식 변환
+# 다항회귀 PolynomialFeatures 클래스로 다항식 변환
 # 
 # ![](./image02.png)
 
