@@ -145,7 +145,7 @@ def stochastic_gradient_descent_steps(X, y, batch_size=10, iters=1000): ### ◆�
     for ind in range(iters):
         np.random.seed(ind) # ind라는 규칙(시드값)으로 랜덤하게 뽑겠다. 근데 이 코드 필요 없음. 괜히 쓴듯...ㅎ
         '''
-        시드값 하나로 고정
+        시드값 하나로 고정 (특정 값으로 정해주거나, 정해주지 않음-default)
             => for문 안에서 여러 번 permutation해도 매번 다른 샘플링
             => for문 돌 때마다 매번 다른 샘플링
             => but, 이 프로젝트 전체를 F5 눌러서 다시 실행 or 전원을 껐다 켜면  >  처음 나온 랜덤값들과 똑같이 나옴. 첫번째 랜덤값끼리, 두번째 랜덤값끼리 ...
