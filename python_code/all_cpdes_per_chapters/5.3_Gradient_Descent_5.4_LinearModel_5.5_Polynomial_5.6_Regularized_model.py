@@ -366,6 +366,10 @@ poly = PolynomialFeatures(degree=2)
 poly.fit(X)
 poly_ftr = poly.transform(X)
 print('변환된 2차 다항식 계수 feature:\n', poly_ftr)
+'''
+    x : [x1, x2]         → [1, x1, x2, x1², x1*x2, x2²]
+    w : [w1, w2, w0]     → [w0, w1, w2, w3,    w4, w5] 
+'''
 
 
 # 3차 다항식 결정값을 구하는 함수 polynomial_func(X) 생성. 즉 회귀식은 결정값 y = 1+ 2x_1 + 3x_1^2 + 4x_2^3 

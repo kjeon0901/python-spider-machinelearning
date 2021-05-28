@@ -22,10 +22,15 @@ pr = LinearRegression()
 quadratic = PolynomialFeatures(degree=2) # degree=2 : 2차 다항식으로 만들어줄 것. ax+b → ax²+bx+c
 X_quad = quadratic.fit_transform(X)
 '''
+    PolynomialFeatures(degree=2) : 2차 다항식으로 만들어줄 것. ax+b → ax²+bx+c
+    만약 degree = 3, 4, 5, 6, ... 점점 커진다면?
+    => MSE값은 완전 0에 가까워지지만, 이러면 overfitting 위험!! => "회귀 관점의 Overfitting :("
+    => 그래서 규제가 있는 거임. 
+
     ax+b → ax²+bx+c
     ..................................
     x : [x]         → [x²,  x,  1]
-    w : [w1, w0]    → [w2, w1, w0]      //가중치 4개 아니고 3개인 이유 : [w3, w2, w1, w0]으로 만들어졌는데, 사실상 w1은 계속 1만 곱해지기 때문에 w1, w0 모두 bias. 그래서 그냥 합쳐버림. 
+    w : [w1, w0]    → [w2, w1, w0]      //가중치 4개 아니고 3개인 이유 : [w3, w2, w1, w0]으로 만들어졌는데, 사실상 w1은 계속 1만 곱해지기 때문에 w1, w0 모두 bias. 그래서 그냥 w1+w0로 합쳐버림. 
     Y는 일정
     
     y = w1*x + w0   → w2*x² + w1*x + w0. 
@@ -36,8 +41,8 @@ X_quad = quadratic.fit_transform(X)
 
 # 선형 특성 학습
 lr.fit(X, y)
-X_fit = np.arange(250, 600, 10)[:, np.newaxis]
-y_lin_fit = lr.predict(X_fit)
+X_fit = np.arange(250, 600, 10)[:, np.newaxis] # (35,) → (35, 1)
+y_lin_fit = lr.predict(X_fit) # X_fit는 X_test 데이터로 만들어준 거구나~!!   //지금 y_test데이터는 따로 분류 안해줌. 그냥 예측 어떻게 나오는지만 보자~
 
 # 이차항 특성 학습
 pr.fit(X_quad, y)
