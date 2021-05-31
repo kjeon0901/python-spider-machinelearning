@@ -529,16 +529,25 @@ get_ipython().run_line_magic('matplotlib', 'inline')
 
 # random 값으로 구성된 X값에 대해 Cosine 변환값을 반환. 
 def true_fun(X):
-    return np.cos(1.5 * np.pi * X)
+    return np.cos(1.5 * np.pi * X) # (0~1) * 1.5 * np.pi    => 0 ~ 1.5π 까지의 cosθ 그래프   => 실제 정답값. y_test!!
 
 # X는 0 부터 1까지 30개의 random 값을 순서대로 sampling 한 데이타 입니다.  
 np.random.seed(0)
 n_samples = 30
-X = np.sort(np.random.rand(n_samples)) # 0~1 사이 균일분포, 그 이후 오름차순 정렬
+X = np.sort(np.random.rand(n_samples)) # rand : 0~1 사이 균일분포 30개, 그 이후 오름차순 정렬
 
 # y 값은 cosine 기반의 true_fun() 에서 약간의 Noise 변동값을 더한 값입니다. 
-y = true_fun(X) + np.random.randn(n_samples) * 0.1 # 0~1 사이 정규분포
+y = true_fun(X) + np.random.randn(n_samples) * 0.1 # randn : 0~1 사이 정규분포 30개
+    # 지금 true_fun(X)에서 0 ~ 1.5π 까지의 cosθ 그래프를 구하고, 그 그래프에서 정규분포만큼의 noise를 줌. 
+    # randn은 정규분포로 평균이 0이고 분산이 1이므로, 그런 데이터들을 더해주면 원본 데이터를 기준으로 분산 1만큼의 noise가 살짝씩 생김. (평균에 가까울수록 밀도 높음)
 
+'''
+호도법
+- θ = 1 (rad) ,  π = 3.14 (rad)
+- 대부분의 프로그래밍은 각도가 아니라 호도법(np.pi=3.14)사용!!
+
+np.cos(90)은 90˚가 아니라 90 rad. 그래서 0이 나오지 않고, 쌩뚱맞은 값이 나온다. 
+'''
 
 # In[ ]:
 
@@ -550,33 +559,55 @@ plt.scatter(X, y)
 
 
 plt.figure(figsize=(14, 5))
-degrees = [1, 4, 15]
+degrees = [1, 4, 15] # 나중에 PolynomialFeatures의 인수 degree에 넣어줄 애들이겠네~
 
 # 다항 회귀의 차수(degree)를 1, 4, 15로 각각 변화시키면서 비교합니다. 
 for i in range(len(degrees)):
-    ax = plt.subplot(1, len(degrees), i + 1)
+    ax = plt.subplot(1, len(degrees), i + 1) #subplot(row, column, i) : 큰 그림판 안에서 그래프 여러 개 row x column만큼 그 위치에 그리는데, 그 중 i번째 그래프!
     plt.setp(ax, xticks=(), yticks=())
     
     # 개별 degree별로 Polynomial 변환합니다. 
-    polynomial_features = PolynomialFeatures(degree=degrees[i], include_bias=False)
+    polynomial_features = PolynomialFeatures(degree=degrees[i], include_bias=False) # 처음에 degree 1로 넣을 땐 아무 확장 안 됨. 
     linear_regression = LinearRegression()
     pipeline = Pipeline([("polynomial_features", polynomial_features),
                          ("linear_regression", linear_regression)])
     pipeline.fit(X.reshape(-1, 1), y)
     
     # 교차 검증으로 다항 회귀를 평가합니다. 
-    scores = cross_val_score(pipeline, X.reshape(-1,1), y,scoring="neg_mean_squared_error", cv=10)
-    coefficients = pipeline.named_steps['linear_regression'].coef_
+    scores = cross_val_score(pipeline, X.reshape(-1,1), y,scoring="neg_mean_squared_error", cv=10) #교차 검증 10번으로 나온 10개의 -MSE값. 
+    coefficients = pipeline.named_steps['linear_regression'].coef_ # 교차 검증으로 총 학습된 가중치
     print('\nDegree {0} 회귀 계수는 {1} 입니다.'.format(degrees[i], np.round(coefficients),2))
     print('Degree {0} MSE 는 {1:.2f} 입니다.'.format(degrees[i] , -1*np.mean(scores)))
+    '''
+    Degree 1 회귀 계수는 [-2.] 입니다.
+    Degree 1 MSE 는 0.41 입니다.
+
+    Degree 4 회귀 계수는 [  0. -18.  24.  -7.] 입니다.
+    Degree 4 MSE 는 0.04 입니다.
+
+    Degree 15 회귀 계수는 [-2.98300000e+03  1.03900000e+05 -1.87417100e+06  2.03717220e+07
+                      -1.44873987e+08  7.09318780e+08 -2.47066977e+09  6.24564048e+09
+                      -1.15677067e+10  1.56895696e+10 -1.54006776e+10  1.06457788e+10
+                      -4.91379977e+09  1.35920330e+09 -1.70381654e+08] 입니다.
+    Degree 15 MSE 는 182815433.48 입니다.
+    
+    과적합 → 작아져야 하는 MSE값이 엄청 커짐. 
+    '''
     
     # 0 부터 1까지 테스트 데이터 세트를 100개로 나눠 예측을 수행합니다. 
     # 테스트 데이터 세트에 회귀 예측을 수행하고 예측 곡선과 실제 곡선을 그려서 비교합니다.  
-    X_test = np.linspace(0, 1, 100)
+    X_test = np.linspace(0, 1, 100) # 0~1 사이에서 100등분해서 리턴. X_test = [0, 0.01, 0.02, ..., 0.99], 크기:(100,)
     # 예측값 곡선
-    plt.plot(X_test, pipeline.predict(X_test[:, np.newaxis]), label="Model") 
+    plt.plot(X_test, pipeline.predict(X_test[:, np.newaxis]), label="Model") # (100,) -> (100, 1) 크기 바꿈. 
     # 실제 값 곡선
-    plt.plot(X_test, true_fun(X_test), '--', label="True function")
+    plt.plot(X_test, true_fun(X_test), '--', label="True function") 
+    '''
+    y_train에는 noise를 섞었었지만, y_test에는 noise 섞지 않고 cos값 그대로 넣어주었다. 
+    1. 우리의 궁극적인 목표인 본연의 cos함수를 구하는 모습을 보기 위해 일부러 y_train에는 noise 섞어줌. 
+    2. 실무에서 자연발생 noise없는 데이터는 거의 x. 게다가 실제 데이터는 noise가 대부분 정규분포 x. noise평균이 0이 아니므로 bias가 생김. 얘네 제거해줘야 함. 
+    3. 만약 y_train에 입혀준 noise가 정규분포가 아니라면, 구한 데이터가 한 쪽으로 shift된 그래프가 나올 것. 
+        그러면 이걸 또 여러 번 모델링해서, 그 모델링들의 평균을 찾아내면 그 bias를 제거해줄 수도 있다. 
+    '''
     plt.scatter(X, y, edgecolor='b', s=20, label="Samples")
     
     plt.xlabel("x"); plt.ylabel("y"); plt.xlim((0, 1)); plt.ylim((-2, 2)); plt.legend(loc="best")
