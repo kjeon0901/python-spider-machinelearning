@@ -383,8 +383,8 @@ def polynomial_func(X):
     y = 1 + 2*X[:,0] + 3*X[:,0]**2 + 4*X[:,1]**3  # z = y^ = 1+2x₁+3x₁²+4x₂³ 
     return y
 
-X = np.arange(0,4).reshape(2,2) #[[0,1]
-                                # [2,3]]
+X = np.arange(0,4).reshape(2,2) #[[0,1]   --> x₁
+                                # [2,3]]  --> x₂
 
 print('일차 단항식 계수 feature: \n' ,X)
 y = polynomial_func(X) # y = 1+[0, 4]+[0, 12]+[4, 108] = 1+[4, 124] = [5, 125]
@@ -396,8 +396,9 @@ print('3차 다항식 계수 feature: \n',poly_ftr)
 
 # Linear Regression에 3차 다항식 계수 feature와 3차 다항식 결정값으로 학습 후 회귀 계수 확인
 model = LinearRegression()
-model.fit(poly_ftr,y)
-print('Polynomial 회귀 계수\n' , np.round(model.coef_, 2))
+model.fit(poly_ftr,y) # x_train, y_train. 근데 y값은 degree가 바뀌어도 안 바뀜. 그 y값을 x로 표현하는 방법만 바뀐 것임. 
+                      # 입력값을 poly_ftr로 하고 출력값을 y라고 했을 때 가중치를 구하는 과정. 
+print('Polynomial 회귀 계수\n' , np.round(model.coef_, 2)) #최적의 회귀 계수 이렇게 나왔다~
 print('Polynomial 회귀 Shape :', model.coef_.shape)
 
 
@@ -420,13 +421,45 @@ def polynomial_func(X):
     return y
 
 # Pipeline 객체로 Streamline 하게 Polynomial Feature변환과 Linear Regression을 연결
-model = Pipeline([('poly', PolynomialFeatures(degree=3)),
+model = Pipeline([('poly', PolynomialFeatures(degree=3)), # pipeline 안에 리스트로 두 개의 튜플(두 개의 절차)이 묶여 들어있다. 하나는 PolynomialFeatures, 하나는 LinearRegression
                   ('linear', LinearRegression())])
 X = np.arange(4).reshape(2,2)
 y = polynomial_func(X)
 
 model = model.fit(X, y)
 print('Polynomial 회귀 계수\n', np.round(model.named_steps['linear'].coef_, 2))
+
+'''
+저번에 앙상블에서 사용한 pipe1, pipe3를 보면 
+
+# estimator 객체 3개 만듦
+clf1 = LogisticRegression(solver='liblinear',
+                          penalty='l2', 
+                          C=0.001,
+                          random_state=1)
+
+clf2 = DecisionTreeClassifier(max_depth=1,  #지금 일부러 max_depth를 1로 줘서 너무 얕게 만듦 -> 일부러 약한 분류기를 만들었구나~!
+                              criterion='entropy', #get_param()으로 까보면 criterion default값 : gini    //gini, entropy, 불순물지수 전부 비슷한 목적이다. 같다고 생각.
+                              random_state=0)
+
+clf3 = KNeighborsClassifier(n_neighbors=1,
+                            p=2,
+                            metric='minkowski')
+
+pipe1 = Pipeline([['sc', StandardScaler()], #그냥 clf1 이름이 pipe1로 바꼈구나~라고 생각
+                  ['clf', clf1]])
+pipe3 = Pipeline([['sc', StandardScaler()], #그냥 clf3 이름이 pipe3으로 바꼈구나~라고 생각
+                  ['clf', clf3]])
+
+#   cf. 파이프라인
+#   pipe1, pipe3 얘네는 나중에 estimator처럼 사용할 것이다. (fit, predict)
+#   estimator는 fit(X_train, y_train)해줘야 하는데, Pipiline은 일단 스케일링 해주고 clf1으로 학습해준다. 
+
+이런식으로 스케일링을 해줬는데, 이번에는 여러 절차를 같이 담아서 해주었다. 
+1. X를 먼저 3차 다항식으로 피처를 10개로 늘려주고, 
+2. LinearRegression으로 최적의 가중치를 구해서 그 가중치가 들어간 식을 model에 리턴해서 넣어준다. 
+'''
+
 
 
 # ** 다항 회귀를 이용한 보스턴 주택가격 예측 **
@@ -501,10 +534,10 @@ def true_fun(X):
 # X는 0 부터 1까지 30개의 random 값을 순서대로 sampling 한 데이타 입니다.  
 np.random.seed(0)
 n_samples = 30
-X = np.sort(np.random.rand(n_samples))
+X = np.sort(np.random.rand(n_samples)) # 0~1 사이 균일분포, 그 이후 오름차순 정렬
 
 # y 값은 cosine 기반의 true_fun() 에서 약간의 Noise 변동값을 더한 값입니다. 
-y = true_fun(X) + np.random.randn(n_samples) * 0.1
+y = true_fun(X) + np.random.randn(n_samples) * 0.1 # 0~1 사이 정규분포
 
 
 # In[ ]:
