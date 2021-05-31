@@ -355,6 +355,7 @@ print(' 5 folds 의 평균 RMSE : {0:.3f} '.format(avg_rmse))
 
 
 from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
 import numpy as np
 
 # 다항식으로 변환한 단항식 생성, [[0,1],[2,3]]의 2X2 행렬 생성
@@ -367,8 +368,9 @@ poly.fit(X)
 poly_ftr = poly.transform(X)
 print('변환된 2차 다항식 계수 feature:\n', poly_ftr)
 '''
-    x : [x1, x2]         → [1, x1, x2, x1², x1*x2, x2²]
-    w : [w1, w2, w0]     → [w0, w1, w2, w3,    w4, w5] 
+    x : [[x1, x2]         → [[1, x1, x2, x1², x1*x2, x2²]
+         [x3, x4]]           [1, x3, x4, x3², x3*x4, x4²]]
+    w : [w1, w2, w0]      → [w0, w1, w2, w3,    w4, w5] 
 '''
 
 
@@ -378,13 +380,14 @@ print('변환된 2차 다항식 계수 feature:\n', poly_ftr)
 
 
 def polynomial_func(X):
-    y = 1 + 2*X[:,0] + 3*X[:,0]**2 + 4*X[:,1]**3 
+    y = 1 + 2*X[:,0] + 3*X[:,0]**2 + 4*X[:,1]**3  # z = y^ = 1+2x₁+3x₁²+4x₂³ 
     return y
 
-X = np.arange(0,4).reshape(2,2)
+X = np.arange(0,4).reshape(2,2) #[[0,1]
+                                # [2,3]]
 
 print('일차 단항식 계수 feature: \n' ,X)
-y = polynomial_func(X)
+y = polynomial_func(X) # y = 1+[0, 4]+[0, 12]+[4, 108] = 1+[4, 124] = [5, 125]
 print('삼차 다항식 결정값: \n', y)
 
 # 3 차 다항식 변환 
