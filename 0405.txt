@@ -6210,7 +6210,11 @@ L2규제 (릿지 Ridge)
 - 비용 함수 목표 = Min( RSS(W) + alpha*|W|² )
 
 L1L2규제 (엘라스틱넷 ElasticNet)
-- 비용 함수 목표 = Min( RSS(W) + alpha1*|W| + alpha2*|W|² )
+- 비용 함수 목표 = Min( RSS(W) + alpha1*|W| + alpha2*|W|² ) = Min( RSS(W) + a*L1 + b*L2 )
+- alpha α = a+b
+- l1_ratio = a / (a+b)
+
+
 
 =============================================================
 

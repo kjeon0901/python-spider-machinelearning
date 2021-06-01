@@ -462,56 +462,6 @@ pipe3 = Pipeline([['sc', StandardScaler()], #그냥 clf3 이름이 pipe3으로 �
 
 
 
-# ** 다항 회귀를 이용한 보스턴 주택가격 예측 **
-
-# In[12]:
-
-
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error , r2_score
-from sklearn.preprocessing import PolynomialFeatures
-from sklearn.linear_model import LinearRegression
-from sklearn.pipeline import Pipeline
-import numpy as np
-
-# boston 데이타셋 로드
-boston = load_boston()
-
-# boston 데이타셋 DataFrame 변환 
-bostonDF = pd.DataFrame(boston.data , columns = boston.feature_names)
-
-# boston dataset의 target array는 주택 가격임. 이를 PRICE 컬럼으로 DataFrame에 추가함. 
-bostonDF['PRICE'] = boston.target
-print('Boston 데이타셋 크기 :',bostonDF.shape)
-
-y_target = bostonDF['PRICE']
-X_data = bostonDF.drop(['PRICE'],axis=1,inplace=False)
-
-
-X_train , X_test , y_train , y_test = train_test_split(X_data , y_target ,test_size=0.3, random_state=156)
-
-## Pipeline을 이용하여 PolynomialFeatures 변환과 LinearRegression 적용을 순차적으로 결합. 
-p_model = Pipeline([('poly', PolynomialFeatures(degree=3, include_bias=False)),
-                  ('linear', LinearRegression())])
-
-p_model.fit(X_train, y_train)
-y_preds = p_model.predict(X_test)
-mse = mean_squared_error(y_test, y_preds)
-rmse = np.sqrt(mse)
-
-
-print('MSE : {0:.3f} , RMSE : {1:.3F}'.format(mse , rmse))
-print('Variance score : {0:.3f}'.format(r2_score(y_test, y_preds)))
-
-
-# In[13]:
-
-
-X_train_poly= PolynomialFeatures(degree=2, include_bias=False).fit_transform(X_train, y_train)
-X_train_poly.shape, X_train.shape
-
-
 # ### Polynomial Regression 을 이용한 Underfitting, Overfitting 이해
 
 # ** cosine 곡선에 약간의 Noise 변동값을 더하여 실제값 곡선을 만듬 **
@@ -654,6 +604,54 @@ print(' 5 folds 의 평균 RMSE : {0:.3f} '.format(avg_rmse))
 '''
 
 
+# ** 다항 회귀를 이용한 보스턴 주택가격 예측 **
+
+# In[]:
+
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error , r2_score
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import Pipeline
+import numpy as np
+
+# boston 데이타셋 로드
+boston = load_boston()
+
+# boston 데이타셋 DataFrame 변환 
+bostonDF = pd.DataFrame(boston.data , columns = boston.feature_names)
+
+# boston dataset의 target array는 주택 가격임. 이를 PRICE 컬럼으로 DataFrame에 추가함. 
+bostonDF['PRICE'] = boston.target
+print('Boston 데이타셋 크기 :',bostonDF.shape)
+
+y_target = bostonDF['PRICE']
+X_data = bostonDF.drop(['PRICE'],axis=1,inplace=False)
+
+
+X_train , X_test , y_train , y_test = train_test_split(X_data , y_target ,test_size=0.3, random_state=156)
+
+## Pipeline을 이용하여 PolynomialFeatures 변환과 LinearRegression 적용을 순차적으로 결합. 
+p_model = Pipeline([('poly', PolynomialFeatures(degree=3, include_bias=False)),
+                  ('linear', LinearRegression())])
+
+p_model.fit(X_train, y_train)
+y_preds = p_model.predict(X_test)
+mse = mean_squared_error(y_test, y_preds)
+rmse = np.sqrt(mse)
+
+
+print('MSE : {0:.3f} , RMSE : {1:.3F}'.format(mse , rmse))
+print('Variance score : {0:.3f}'.format(r2_score(y_test, y_preds)))
+
+
+# In[]:
+
+
+X_train_poly= PolynomialFeatures(degree=2, include_bias=False).fit_transform(X_train, y_train)
+X_train_poly.shape, X_train.shape
 # ** alpha값을 0 , 0.1 , 1 , 10 , 100 으로 변경하면서 RMSE 측정 **
 
 # In[ ]:
@@ -732,13 +730,12 @@ def get_linear_reg_eval(model_name, params=None, X_data_n=None, y_target_n=None,
     for param in params:
         if model_name =='Ridge': model = Ridge(alpha=param)
         elif model_name =='Lasso': model = Lasso(alpha=param)
-        elif model_name =='ElasticNet': model = ElasticNet(alpha=param, l1_ratio=0.7)
-        neg_mse_scores = cross_val_score(model, X_data_n, 
-                                             y_target_n, scoring="neg_mean_squared_error", cv = 5)
+        elif model_name =='ElasticNet': model = ElasticNet(alpha=param, l1_ratio=0.7) # 여기서는 단순히 alpha값의 변화만 살피기 위해 l1_ratio( ==a/(a+b) )는 미리 0.7로 고정해둠. 
+        neg_mse_scores = cross_val_score(model, X_data_n, y_target_n, scoring="neg_mean_squared_error", cv = 5)
         avg_rmse = np.mean(np.sqrt(-1 * neg_mse_scores))
         print('alpha {0}일 때 5 폴드 세트의 평균 RMSE: {1:.3f} '.format(param, avg_rmse))
-        # cross_val_score는 evaluation metric만 반환하므로 모델을 다시 학습하여 회귀 계수 추출
         
+        # cross_val_score는 evaluation metric만 반환하므로 모델을 다시 학습하여 회귀 계수 추출. 
         model.fit(X_data , y_target)
         # alpha에 따른 피처별 회귀 계수를 Series로 변환하고 이를 DataFrame의 컬럼으로 추가. 
         coeff = pd.Series(data=model.coef_ , index=X_data.columns )
@@ -754,14 +751,22 @@ def get_linear_reg_eval(model_name, params=None, X_data_n=None, y_target_n=None,
 # 라쏘에 사용될 alpha 파라미터의 값들을 정의하고 get_linear_reg_eval() 함수 호출
 lasso_alphas = [ 0.07, 0.1, 0.5, 1, 3]
 coeff_lasso_df =get_linear_reg_eval('Lasso', params=lasso_alphas, X_data_n=X_data, y_target_n=y_target)
+'''
+#######  Lasso #######
+alpha 0.07일 때 5 폴드 세트의 평균 RMSE: 5.612 
+alpha 0.1일 때 5 폴드 세트의 평균 RMSE: 5.615 
+alpha 0.5일 때 5 폴드 세트의 평균 RMSE: 5.669 
+alpha 1일 때 5 폴드 세트의 평균 RMSE: 5.776 
+alpha 3일 때 5 폴드 세트의 평균 RMSE: 6.189 
+'''
 
 
 # In[ ]:
 
 
 # 반환된 coeff_lasso_df를 첫번째 컬럼순으로 내림차순 정렬하여 회귀계수 DataFrame출력
-sort_column = 'alpha:'+str(lasso_alphas[0])
-coeff_lasso_df.sort_values(by=sort_column, ascending=False)
+sort_column = 'alpha:'+str(lasso_alphas[0]) # 0.07만!
+coeff_lasso_df = coeff_lasso_df.sort_values(by=sort_column, ascending=False) # 0번째 column(alpha:0.07)을 기준으로 ascending=False : 값이 감소하는 거니까 '내림차순'
 
 
 # ### 엘라스틱넷 회귀
@@ -772,8 +777,15 @@ coeff_lasso_df.sort_values(by=sort_column, ascending=False)
 # 엘라스틱넷에 사용될 alpha 파라미터의 값들을 정의하고 get_linear_reg_eval() 함수 호출
 # l1_ratio는 0.7로 고정
 elastic_alphas = [ 0.07, 0.1, 0.5, 1, 3]
-coeff_elastic_df =get_linear_reg_eval('ElasticNet', params=elastic_alphas,
-                                      X_data_n=X_data, y_target_n=y_target)
+coeff_elastic_df =get_linear_reg_eval('ElasticNet', params=elastic_alphas, X_data_n=X_data, y_target_n=y_target)
+'''
+#######  ElasticNet #######
+alpha 0.07일 때 5 폴드 세트의 평균 RMSE: 5.542 
+alpha 0.1일 때 5 폴드 세트의 평균 RMSE: 5.526 
+alpha 0.5일 때 5 폴드 세트의 평균 RMSE: 5.467 
+alpha 1일 때 5 폴드 세트의 평균 RMSE: 5.597 
+alpha 3일 때 5 폴드 세트의 평균 RMSE: 6.068 
+'''
 
 
 # In[ ]:
@@ -781,7 +793,7 @@ coeff_elastic_df =get_linear_reg_eval('ElasticNet', params=elastic_alphas,
 
 # 반환된 coeff_elastic_df를 첫번째 컬럼순으로 내림차순 정렬하여 회귀계수 DataFrame출력
 sort_column = 'alpha:'+str(elastic_alphas[0])
-coeff_elastic_df.sort_values(by=sort_column, ascending=False)
+coeff_elastic_df = coeff_elastic_df.sort_values(by=sort_column, ascending=False)
 
 
 # ### 선형 회귀 모델을 위한 데이터 변환
