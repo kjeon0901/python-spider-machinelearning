@@ -6169,13 +6169,37 @@ pipe3 = Pipeline([['sc', StandardScaler()], #그냥 clf3 이름이 pipe3으로 �
 다항 회귀에서 Underfitting, Overfitting
 : 너무 낮은 차수 ex_ degree=1 - Underfitting, 너무 높은 차수 ex_ degree=15 - Overfitting
 
-편향-분산 트레이드오프 : 머신러닝의 문제점
+ERROR = Bias + Variance + ε(자연발생해서 어떻게 할 수 없는 오류)
+		y = F*(x) + ε	 (F*(x) : 이상적인 회귀선)
+DataSet1       F^(x)₁ = F*(x) + ε₁
+DataSet2       F^(x)₂ = F*(x) + ε₂
+...		  ...
+평균	      F ̄ (x)  = E(F^(x)) = (F^(x)₁+F^(x)₂+...) / n
+
+편향-분산 트레이드오프(Bias-Variance Trade Off) : 머신러닝의 문제점, 없애려면 => 규제
 degree=1
 	- 과소적합 (Underfitting)
 	- 고편향	  (High Bias)
 degree=15
 	- 과적합    (Overfitting)
 	- 고분산    (High Variance)
+
+규제 선형 모델
+- 차수를 줄이는 게 아니라, w에 대한 규제를 준다. 
+	다항 회귀에서 차수를 키울 수록, MSE값을 줄이기 위해서는 |기울기| 즉 |가중치| 값을 올릴 수밖에 없다. 
+- 비용 함수가 이제 바뀜! 우리가 원래 비교하던 RSS(W)값에 규제를 위한 식을 더해줌. 
+- 라쏘 회귀/릿지 회귀/엘라스틱넷 회귀 수행할 때 input값으로 alpha 꼭 정해서 넣어줌. 
+	alpha : 규제 모델에 얼마의 비중을 둘 건가
+	alpha가 작으면 W가 커져도 어느 정도 ㄱㅊ, alpha가 크면 W가 커지는 게 상당히 부담!
+
+L1규제 (라쏘 Lasso)
+- 비용 함수 목표 = Min( RSS(W) + alpha*|W| )
+
+L2규제 (릿지 Ridge)
+- 비용 함수 목표 = Min( RSS(W) + alpha*|W|² )
+
+L1L2규제 (엘라스틱넷 ElasticNet)
+- 비용 함수 목표 = Min( RSS(W) + alpha1*|W| + alpha2*|W|² )
 
 =============================================================
 
@@ -6284,19 +6308,7 @@ plt.show()
 
 ■■■■■■■■■■■■■0531 수업中 새로 알게된것■■■■■■■■■■■■■
 
-규제 선형 모델
-- 차수를 줄이는 게 아니라, w에 대한 규제를 준다. 
-	다항 회귀에서 차수를 키울 수록, MSE값을 줄이기 위해서는 |기울기| 즉 |가중치| 값을 올릴 수밖에 없다. 
-- 비용 함수가 이제 바뀜! 우리가 원래 비교하던 RSS(W)값에 규제를 위한 식을 더해줌. 
-- 라쏘 회귀/릿지 회귀/엘라스틱넷 회귀 수행할 때 input값으로 alpha 꼭 정해서 넣어줌. 
-	alpha : 규제 모델에 얼마의 비중을 둘 건가
-	alpha가 작으면 W가 커져도 어느 정도 ㄱㅊ, alpha가 크면 W가 커지는 게 상당히 부담!
 
-L1규제 (라쏘 Lasso)
-- 비용 함수 목표 = Min( RSS(W) + alpha*|W| )
 
-L2규제 (릿지 Ridge)
-- 비용 함수 목표 = Min( RSS(W) + alpha*|W|² )
+=============================================================
 
-L1L2규제 (엘라스틱넷 ElasticNet)
-- 비용 함수 목표 = Min( RSS(W) + alpha1*|W| + alpha2*|W|² )
