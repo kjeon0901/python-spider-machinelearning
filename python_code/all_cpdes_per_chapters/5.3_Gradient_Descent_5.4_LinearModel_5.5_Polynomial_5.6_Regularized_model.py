@@ -647,6 +647,11 @@ avg_rmse = np.mean(rmse_scores)
 print(' 5 folds 의 개별 Negative MSE scores: ', np.round(neg_mse_scores, 3))
 print(' 5 folds 의 개별 RMSE scores : ', np.round(rmse_scores,3))
 print(' 5 folds 의 평균 RMSE : {0:.3f} '.format(avg_rmse))
+'''
+ 5 folds 의 개별 Negative MSE scores:  [-11.422 -24.294 -28.144 -74.599 -28.517]
+ 5 folds 의 개별 RMSE scores :  [3.38  4.929 5.305 8.637 5.34 ]
+ 5 folds 의 평균 RMSE : 5.518
+'''
 
 
 # ** alpha값을 0 , 0.1 , 1 , 10 , 100 으로 변경하면서 RMSE 측정 **
@@ -655,7 +660,7 @@ print(' 5 folds 의 평균 RMSE : {0:.3f} '.format(avg_rmse))
 
 
 # Ridge에 사용될 alpha 파라미터의 값들을 정의
-alphas = [0 , 0.1 , 1 , 10 , 100]
+alphas = [0 , 0.1 , 1 , 10 , 100] #뒤에 200, 300, 700, ... 계속 넣어봐도 100보다 큼. alpha = 100 일 때 가장 작은 RMSE값!
 
 # alphas list 값을 iteration하면서 alpha에 따른 평균 rmse 구함.
 for alpha in alphas :
@@ -665,7 +670,13 @@ for alpha in alphas :
     neg_mse_scores = cross_val_score(ridge, X_data, y_target, scoring="neg_mean_squared_error", cv = 5)
     avg_rmse = np.mean(np.sqrt(-1 * neg_mse_scores))
     print('alpha {0} 일 때 5 folds 의 평균 RMSE : {1:.3f} '.format(alpha,avg_rmse))
-
+    '''
+    alpha 0 일 때 5 folds 의 평균 RMSE : 5.829 
+    alpha 0.1 일 때 5 folds 의 평균 RMSE : 5.788 
+    alpha 1 일 때 5 folds 의 평균 RMSE : 5.653 
+    alpha 10 일 때 5 folds 의 평균 RMSE : 5.518 
+    alpha 100 일 때 5 folds 의 평균 RMSE : 5.330
+    '''
 
 # ** 각 alpha에 따른 회귀 계수 값을 시각화. 각 alpha값 별로 plt.subplots로 맷플롯립 축 생성 **
 
@@ -679,12 +690,14 @@ coeff_df = pd.DataFrame()
 
 # alphas 리스트 값을 차례로 입력해 회귀 계수 값 시각화 및 데이터 저장. pos는 axis의 위치 지정
 for pos , alpha in enumerate(alphas) :
-    ridge = Ridge(alpha = alpha)
+    ridge = Ridge(alpha = alpha) # ridge도 결국엔 규제가 적용된 회귀 estimator. 최적의 가중치 찾아내야 하는 건 다른 estimator와 똑같음. 
     ridge.fit(X_data , y_target)
+    
     # alpha에 따른 피처별 회귀 계수를 Series로 변환하고 이를 DataFrame의 컬럼으로 추가.  
-    coeff = pd.Series(data=ridge.coef_ , index=X_data.columns )
-    colname='alpha:'+str(alpha)
-    coeff_df[colname] = coeff
+    coeff = pd.Series(data=ridge.coef_ , index=X_data.columns ) #보스턴 주택가격 df의 column들이 RM, CHAS, RAD, ... 13개 있는데, alpha를 정해주면 각각의 column별로 최적의 가중치가 w1, w2, w3, ... 정해질 것이다. 그 가중치들을 coef로 불러와서 Series로 담아줌.. 
+    colname='alpha:'+str(alpha) # 문자열 + 문자열 => 문자열 연결
+    coeff_df[colname] = coeff # 비어있는 coeff_df 데이터프레임에 column 하나씩 집어넣음. 
+    
     # 막대 그래프로 각 alpha 값에서의 회귀 계수를 시각화. 회귀 계수값이 높은 순으로 표현
     coeff = coeff.sort_values(ascending=False)
     axs[pos].set_title(colname)
