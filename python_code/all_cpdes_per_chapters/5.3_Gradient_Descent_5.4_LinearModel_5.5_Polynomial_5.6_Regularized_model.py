@@ -204,7 +204,7 @@ plt.plot(X,y_pred) # X의 feature값이 2개였다면 (column이 2개) -> 3차�
 
 # ## 5.4 사이킷런 LinearRegression을 이용한 보스턴 주택 가격 예측
 
-# In[1]:
+# In[  ]:
 
 
 import numpy as np
@@ -247,7 +247,7 @@ bostonDF.head()
 
 # * 각 컬럼별로 주택가격에 미치는 영향도를 조사   //각 컬럼별 가중치 구하기 전, 레이블과 무엇이 상관관계가 있는지. 
 
-# In[2]:
+# In[  ]:
 
 
 # 2개의 행과 4개의 열을 가진 subplots를 이용. axs는 4x2개의 ax를 가짐.
@@ -822,9 +822,8 @@ def get_scaled_data(method='None', p_degree=None, input_data=None):
     else:
         scaled_data = input_data
 
-    if p_degree != None:
-        scaled_data = PolynomialFeatures(degree=p_degree, 
-                                         include_bias=False).fit_transform(scaled_data)
+    if p_degree != None: # 다항회귀로 만들어준다고 한다면
+        scaled_data = PolynomialFeatures(degree=p_degree, include_bias=False).fit_transform(scaled_data)
     
     return scaled_data
 
@@ -837,13 +836,56 @@ alphas = [0.1, 1, 10, 100]
 #변환 방법은 모두 6개, 원본 그대로, 표준정규분포, 표준정규분포+다항식 특성
 # 최대/최소 정규화, 최대/최소 정규화+다항식 특성, 로그변환 
 scale_methods=[(None, None), ('Standard', None), ('Standard', 2), 
-               ('MinMax', None), ('MinMax', 2), ('Log', None)]
+               ('MinMax', None), ('MinMax', 2), ('Log', None), ('Log', 2)]
 for scale_method in scale_methods:
-    X_data_scaled = get_scaled_data(method=scale_method[0], p_degree=scale_method[1], 
-                                    input_data=X_data)
+    X_data_scaled = get_scaled_data(method=scale_method[0], p_degree=scale_method[1], input_data=X_data)
     print('\n## 변환 유형:{0}, Polynomial Degree:{1}'.format(scale_method[0], scale_method[1]))
-    get_linear_reg_eval('Ridge', params=alphas, X_data_n=X_data_scaled, 
-                        y_target_n=y_target, verbose=False)
+    get_linear_reg_eval('Ridge', params=alphas, X_data_n=X_data_scaled, y_target_n=y_target, verbose=False) # 각 변환 유형마다 alpha값별 RMSE 출력
+    '''
+    THE BEST PERFORMANCE : ('Log', 2)
+    
+    ## 변환 유형:None, Polynomial Degree:None
+    alpha 0.1일 때 5 폴드 세트의 평균 RMSE: 5.788 
+    alpha 1일 때 5 폴드 세트의 평균 RMSE: 5.653 
+    alpha 10일 때 5 폴드 세트의 평균 RMSE: 5.518 
+    alpha 100일 때 5 폴드 세트의 평균 RMSE: 5.330 
+
+    ## 변환 유형:Standard, Polynomial Degree:None
+    alpha 0.1일 때 5 폴드 세트의 평균 RMSE: 5.826 
+    alpha 1일 때 5 폴드 세트의 평균 RMSE: 5.803 
+    alpha 10일 때 5 폴드 세트의 평균 RMSE: 5.637 
+    alpha 100일 때 5 폴드 세트의 평균 RMSE: 5.421 
+
+    ## 변환 유형:Standard, Polynomial Degree:2
+    alpha 0.1일 때 5 폴드 세트의 평균 RMSE: 8.827 
+    alpha 1일 때 5 폴드 세트의 평균 RMSE: 6.871 
+    alpha 10일 때 5 폴드 세트의 평균 RMSE: 5.485 
+    alpha 100일 때 5 폴드 세트의 평균 RMSE: 4.634 
+
+    ## 변환 유형:MinMax, Polynomial Degree:None
+    alpha 0.1일 때 5 폴드 세트의 평균 RMSE: 5.764 
+    alpha 1일 때 5 폴드 세트의 평균 RMSE: 5.465 
+    alpha 10일 때 5 폴드 세트의 평균 RMSE: 5.754 
+    alpha 100일 때 5 폴드 세트의 평균 RMSE: 7.635 
+
+    ## 변환 유형:MinMax, Polynomial Degree:2
+    alpha 0.1일 때 5 폴드 세트의 평균 RMSE: 5.298 
+    alpha 1일 때 5 폴드 세트의 평균 RMSE: 4.323 
+    alpha 10일 때 5 폴드 세트의 평균 RMSE: 5.185 
+    alpha 100일 때 5 폴드 세트의 평균 RMSE: 6.538 
+
+    ## 변환 유형:Log, Polynomial Degree:None
+    alpha 0.1일 때 5 폴드 세트의 평균 RMSE: 4.770 
+    alpha 1일 때 5 폴드 세트의 평균 RMSE: 4.676 
+    alpha 10일 때 5 폴드 세트의 평균 RMSE: 4.836 
+    alpha 100일 때 5 폴드 세트의 평균 RMSE: 6.241 
+
+    ## 변환 유형:Log, Polynomial Degree:2
+    alpha 0.1일 때 5 폴드 세트의 평균 RMSE: 9.547 
+    alpha 1일 때 5 폴드 세트의 평균 RMSE: 5.847 
+    alpha 10일 때 5 폴드 세트의 평균 RMSE: 4.270  <---THE BEST!
+    alpha 100일 때 5 폴드 세트의 평균 RMSE: 4.559 
+    '''
 
 
 # In[ ]:
