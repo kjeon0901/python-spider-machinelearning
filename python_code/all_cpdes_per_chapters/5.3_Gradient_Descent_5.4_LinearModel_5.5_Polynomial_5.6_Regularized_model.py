@@ -750,7 +750,7 @@ def get_linear_reg_eval(model_name, params=None, X_data_n=None, y_target_n=None,
 
 # 라쏘에 사용될 alpha 파라미터의 값들을 정의하고 get_linear_reg_eval() 함수 호출
 lasso_alphas = [ 0.07, 0.1, 0.5, 1, 3]
-coeff_lasso_df =get_linear_reg_eval('Lasso', params=lasso_alphas, X_data_n=X_data, y_target_n=y_target)
+coeff_lasso_df = get_linear_reg_eval('Lasso', params=lasso_alphas, X_data_n=X_data, y_target_n=y_target)
 '''
 #######  Lasso #######
 alpha 0.07일 때 5 폴드 세트의 평균 RMSE: 5.612 
@@ -777,7 +777,7 @@ coeff_lasso_df = coeff_lasso_df.sort_values(by=sort_column, ascending=False) # 0
 # 엘라스틱넷에 사용될 alpha 파라미터의 값들을 정의하고 get_linear_reg_eval() 함수 호출
 # l1_ratio는 0.7로 고정
 elastic_alphas = [ 0.07, 0.1, 0.5, 1, 3]
-coeff_elastic_df =get_linear_reg_eval('ElasticNet', params=elastic_alphas, X_data_n=X_data, y_target_n=y_target)
+coeff_elastic_df = get_linear_reg_eval('ElasticNet', params=elastic_alphas, X_data_n=X_data, y_target_n=y_target)
 '''
 #######  ElasticNet #######
 alpha 0.07일 때 5 폴드 세트의 평균 RMSE: 5.542 
