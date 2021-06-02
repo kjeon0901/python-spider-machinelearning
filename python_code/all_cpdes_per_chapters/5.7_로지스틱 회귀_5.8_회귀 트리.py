@@ -217,11 +217,13 @@ ax1.plot(X_test, pred_lr,label="linear", linewidth=2 )
 ax2.set_title('Decision Tree Regression: \n max_depth=2')
 ax2.scatter(bostonDF_sample.RM, bostonDF_sample.PRICE, c="darkorange")
 ax2.plot(X_test, pred_rf2, label="max_depth:3", linewidth=2 )
+'''세 번 꺾인 것으로 보아 조건 3개로 나누어졌구나.'''
 
 # DecisionTreeRegressor의 max_depth를 7로 했을 때 회귀 예측선 
 ax3.set_title('Decision Tree Regression: \n max_depth=7')
 ax3.scatter(bostonDF_sample.RM, bostonDF_sample.PRICE, c="darkorange")
 ax3.plot(X_test, pred_rf7, label="max_depth:7", linewidth=2)
+'''트리가 너~무 깊어서 조건이 너~무 세분화되었다. 과적합 Overfitting!'''
 
 
 # In[ ]:
