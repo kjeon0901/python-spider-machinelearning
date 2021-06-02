@@ -158,7 +158,12 @@ lr_reg.fit(X_train, y_train)
 pred = lr_reg.predict(X_test)
 
 evaluate_regr(y_test ,pred)
-'''RMSLE: 1.165, RMSE: 140.900, MAE: 105.924'''
+'''
+RMSLE: 1.165, RMSE: 140.900, MAE: 105.924
+
+MAE와 MSE를 바로 비교하면 절댓값과 제곱을 비교하는 것이기 때문에, 
+지금처럼 단순 직접 비교로는 MAE와 RMSE를 비교하는 것이 맞다. 
+'''
 
 
 # In[8]:
@@ -178,7 +183,7 @@ get_top_error_data(y_test,pred,n_tops=20)
 # In[9]:
 
 
-y_target.hist()
+y_target.hist() # y_target(=='count'컬럼)이 정규분포 이루는지 확인. 
 
 
 # In[10]:
