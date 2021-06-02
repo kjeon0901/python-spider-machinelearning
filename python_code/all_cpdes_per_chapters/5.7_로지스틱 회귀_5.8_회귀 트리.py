@@ -49,13 +49,14 @@ print('roc_auc: {:0.3f}'.format(roc_auc_score(y_test , lr_preds)))
 
 from sklearn.model_selection import GridSearchCV # 교차검증 수행하며 자동적으로 최적의 파라미터 찾아줌
 
-params={'penalty':['l2', 'l1'], # 규제 유형을 l2(ridge) or l1(lasso) 로 하겠다
-        'C':[0.01, 0.1, 1, 1, 5, 10]} # C = 1/alpha  ==>  alpha = [100, 10, 1, 1, 0.2, 0.1]
+params={'penalty':['l2', 'l1'], 
+        'C':[0.01, 0.1, 1, 1, 5, 10]} 
+# 규제 유형을 l2(ridge) or l1(lasso) 로 하겠다
+# C = 1/alpha  ==>  alpha = [100, 10, 1, 1, 0.2, 0.1]
 
 grid_clf = GridSearchCV(lr_clf, param_grid=params, scoring='accuracy', cv=3 )
 grid_clf.fit(data_scaled, cancer.target)
-print('최적 하이퍼 파라미터:{0}, 최적 평균 정확도:{1:.3f}'.format(grid_clf.best_params_, 
-                                                  grid_clf.best_score_))
+print('최적 하이퍼 파라미터:{0}, 최적 평균 정확도:{1:.3f}'.format(grid_clf.best_params_, grid_clf.best_score_))
 
 
 # ## 5.8 회귀 트리
@@ -74,11 +75,12 @@ boston = load_boston()
 bostonDF = pd.DataFrame(boston.data, columns = boston.feature_names)
 
 bostonDF['PRICE'] = boston.target
-y_target = bostonDF['PRICE']
-X_data = bostonDF.drop(['PRICE'], axis=1,inplace=False)
+y_target = bostonDF['PRICE'] # 레이블 데이터 세트
+X_data = bostonDF.drop(['PRICE'], axis=1,inplace=False) # 피처 데이터 세트
 
-rf = RandomForestRegressor(random_state=0, n_estimators=1000)
-neg_mse_scores = cross_val_score(rf, X_data, y_target, scoring="neg_mean_squared_error", cv = 5)
+
+rf = RandomForestRegressor(random_state=0, n_estimators=1000) # 랜덤포레스트 트리를 기반으로 회귀 estimator rf 선언
+neg_mse_scores = cross_val_score(rf, X_data, y_target, scoring="neg_mean_squared_error", cv = 5) # rf로 k폴드 교차검증
 rmse_scores  = np.sqrt(-1 * neg_mse_scores)
 avg_rmse = np.mean(rmse_scores)
 
@@ -90,10 +92,10 @@ print(' 5 교차 검증의 평균 RMSE : {0:.3f} '.format(avg_rmse))
 # In[ ]:
 
 
-def get_model_cv_prediction(model, X_data, y_target):
+def get_model_cv_prediction(model, X_data, y_target): # 각 모델, X_data, y_target마다 교차검증 후 퍼포먼스 결과까지 출력하는 함수
     neg_mse_scores = cross_val_score(model, X_data, y_target, scoring="neg_mean_squared_error", cv = 5)
     rmse_scores  = np.sqrt(-1 * neg_mse_scores)
-    avg_rmse = np.mean(rmse_scores)
+    avg_rmse = np.mean(rmse_scores) # 교차검증이니까 각 fold마다 나온 결과를 평균해줌
     print('##### ',model.__class__.__name__ , ' #####')
     print(' 5 교차 검증의 평균 RMSE : {0:.3f} '.format(avg_rmse))
 
@@ -115,9 +117,9 @@ xgb_reg = XGBRegressor(n_estimators=1000)
 lgb_reg = LGBMRegressor(n_estimators=1000)
 
 # 트리 기반의 회귀 모델을 반복하면서 평가 수행 
-models = [dt_reg, rf_reg, gb_reg, xgb_reg, lgb_reg]
+models = [dt_reg, rf_reg, gb_reg, xgb_reg, lgb_reg] # estimator 클래스 객체들 
 for model in models:  
-    get_model_cv_prediction(model, X_data, y_target)
+    get_model_cv_prediction(model, X_data, y_target) # 아까 위에서 X_data:피처데이터세트, y_target:레이블데이터세트 둘로 나눔
 
 
 # ** 회귀 트리는 선형 회귀의 회귀 계수 대신, 피처 중요도로 피처의 상대적 중요도를 알 수 있습니다. **
