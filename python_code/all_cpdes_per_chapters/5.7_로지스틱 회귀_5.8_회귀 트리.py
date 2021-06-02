@@ -75,8 +75,8 @@ boston = load_boston()
 bostonDF = pd.DataFrame(boston.data, columns = boston.feature_names)
 
 bostonDF['PRICE'] = boston.target
-y_target = bostonDF['PRICE'] # 레이블 데이터 세트
-X_data = bostonDF.drop(['PRICE'], axis=1,inplace=False) # 피처 데이터 세트
+y_target = bostonDF['PRICE'] # 레이블 데이터 세트 - 나중에 train_test_split 할 것
+X_data = bostonDF.drop(['PRICE'], axis=1,inplace=False) # 피처 데이터 세트 - 나중에 train_test_split 할 것
 
 
 rf = RandomForestRegressor(random_state=0, n_estimators=1000) # 랜덤포레스트 트리를 기반으로 회귀 estimator rf 선언
@@ -92,8 +92,8 @@ print(' 5 교차 검증의 평균 RMSE : {0:.3f} '.format(avg_rmse))
 # In[ ]:
 
 
-def get_model_cv_prediction(model, X_data, y_target): # 각 모델, X_data, y_target마다 교차검증 후 퍼포먼스 결과까지 출력하는 함수
-    neg_mse_scores = cross_val_score(model, X_data, y_target, scoring="neg_mean_squared_error", cv = 5)
+def get_model_cv_prediction(model, X_data, y_target): # 각 모델, X_data, y_target마다 train_test_split 해서 교차검증 후 퍼포먼스 결과까지 출력하는 함수
+    neg_mse_scores = cross_val_score(model, X_data, y_target, scoring="neg_mean_squared_error", cv = 5) # 여기에서 5개의 교차검증마다 X_train, y_train, X_test, y_test 알아서 나눠지고 모델 만들어짐. 
     rmse_scores  = np.sqrt(-1 * neg_mse_scores)
     avg_rmse = np.mean(rmse_scores) # 교차검증이니까 각 fold마다 나온 결과를 평균해줌
     print('##### ',model.__class__.__name__ , ' #####')
@@ -119,7 +119,20 @@ lgb_reg = LGBMRegressor(n_estimators=1000)
 # 트리 기반의 회귀 모델을 반복하면서 평가 수행 
 models = [dt_reg, rf_reg, gb_reg, xgb_reg, lgb_reg] # estimator 클래스 객체들 
 for model in models:  
-    get_model_cv_prediction(model, X_data, y_target) # 아까 위에서 X_data:피처데이터세트, y_target:레이블데이터세트 둘로 나눔
+    get_model_cv_prediction(model, X_data, y_target) # 아까 위에서 X_data:레이블 데이터 세트, y_target:피처 데이터 세트 둘로 나눔 (train_test_split은 안에서!)
+'''
+#####  DecisionTreeRegressor  #####
+ 5 교차 검증의 평균 RMSE : 5.978 
+#####  RandomForestRegressor  #####
+ 5 교차 검증의 평균 RMSE : 4.423 
+#####  GradientBoostingRegressor  #####
+ 5 교차 검증의 평균 RMSE : 4.269 
+#####  XGBRegressor  #####
+ 5 교차 검증의 평균 RMSE : 4.251 
+#####  LGBMRegressor  #####
+ 5 교차 검증의 평균 RMSE : 4.646 
+'''
+
 
 
 # ** 회귀 트리는 선형 회귀의 회귀 계수 대신, 피처 중요도로 피처의 상대적 중요도를 알 수 있습니다. **
@@ -136,9 +149,14 @@ rf_reg = RandomForestRegressor(n_estimators=1000)
 rf_reg.fit(X_data, y_target)
 
 feature_series = pd.Series(data=rf_reg.feature_importances_, index=X_data.columns )
-feature_series = feature_series.sort_values(ascending=False)
-sns.barplot(x= feature_series, y=feature_series.index)
-
+    # feature_importances_ : 트리 만들 때 어떤 feature가 가장 결정적으로 영향을 미쳤는가 (예전에 이거 막대그래프로 만들어봤었음)
+feature_series = feature_series.sort_values(ascending=False) # ascending :오름차순. True-오름차순, Falst-내림차순
+sns.barplot(x= feature_series, y=feature_series.index) # 이번에도 순서대로 barplot 막대그래프 그림. 
+'''
+RM: 방개수, LSTAT: 빈곤층..
+트리 기반의 회귀를 사용했고, 그 결과로 RM, LSTAT의 영향력이 아주 크다는 걸 알 수 있다. 
+생각해보면 그 전 선형 회귀에서도 얘네가 꽤 높은 비중이었었다. 
+'''
 
 # ** 오버피팅을 시각화 하기 위해 한개의 피처 RM과 타겟값 PRICE기반으로 회귀 예측 수행 **
 
@@ -148,11 +166,12 @@ sns.barplot(x= feature_series, y=feature_series.index)
 import matplotlib.pyplot as plt
 get_ipython().run_line_magic('matplotlib', 'inline')
 
-bostonDF_sample = bostonDF[['RM','PRICE']]
-bostonDF_sample = bostonDF_sample.sample(n=100,random_state=0)
-print(bostonDF_sample.shape)
+bostonDF_sample = bostonDF[['RM','PRICE']] # shape : (506, 2). 피처값은 연습이니까 보기 편하게 RM 하나만 가져옴. (PRICE는 target데이터)
+bostonDF_sample = bostonDF_sample.sample(n=100,random_state=0) # 랜덤하게 100개만 샘플링해서 리턴
+print(bostonDF_sample.shape) # shape : (100, 2)
 plt.figure()
-plt.scatter(bostonDF_sample.RM , bostonDF_sample.PRICE,c="darkorange")
+plt.scatter(bostonDF_sample.RM , bostonDF_sample.PRICE,c="darkorange") # x축-RM, y축-PRICE
+# plt.scatter(bostonDF_sample['RM'] , bostonDF_sample['PRICE'],c="darkorange") 얘와 똑같음. 
 
 
 # In[ ]:
@@ -163,19 +182,19 @@ from sklearn.linear_model import LinearRegression
 
 # 선형 회귀와 결정 트리 기반의 Regressor 생성. DecisionTreeRegressor의 max_depth는 각각 2, 7
 lr_reg = LinearRegression()
-rf_reg2 = DecisionTreeRegressor(max_depth=2)
+rf_reg2 = DecisionTreeRegressor(max_depth=2) # Classifier때와 똑같이 max_depth 정해줘서 과적합 막을 수 있음. 
 rf_reg7 = DecisionTreeRegressor(max_depth=7)
 
 # 실제 예측을 적용할 테스트용 데이터 셋을 4.5 ~ 8.5 까지 100개 데이터 셋 생성. 
-X_test = np.arange(4.5, 8.5, 0.04).reshape(-1, 1)
+X_test = np.arange(4.5, 8.5, 0.04).reshape(-1, 1) # X_test. 1차원데이터를 2차원으로 바꿈. 
 
 # 보스턴 주택가격 데이터에서 시각화를 위해 피처는 RM만, 그리고 결정 데이터인 PRICE 추출
-X_feature = bostonDF_sample['RM'].values.reshape(-1,1)
-y_target = bostonDF_sample['PRICE'].values.reshape(-1,1)
+X_feature = bostonDF_sample['RM'].values.reshape(-1,1) # X_train
+y_target = bostonDF_sample['PRICE'].values.reshape(-1,1) # y_train
 
 # 학습과 예측 수행. 
-lr_reg.fit(X_feature, y_target)
-rf_reg2.fit(X_feature, y_target)
+lr_reg.fit(X_feature, y_target) # RM에 따라 가장 낮은 MSE값을 갖도록 하는 회귀선 만들 것임. 
+rf_reg2.fit(X_feature, y_target) # RM에다가 조건식(트리의 노드)을 막 부여해서 ~이만큼 잘라봐, ~이만큼 잘라봐.. ~요기의 평균값, ~요기의 평균값... 
 rf_reg7.fit(X_feature, y_target)
 
 pred_lr = lr_reg.predict(X_test)
@@ -186,12 +205,12 @@ pred_rf7 = rf_reg7.predict(X_test)
 # In[ ]:
 
 
-fig , (ax1, ax2, ax3) = plt.subplots(figsize=(14,4), ncols=3)
+fig , (ax1, ax2, ax3) = plt.subplots(figsize=(14,4), ncols=3) # 하나의 그림판에 3개의 subplot 그릴 것임. 
 
 # X축값을 4.5 ~ 8.5로 변환하며 입력했을 때, 선형 회귀와 결정 트리 회귀 예측 선 시각화
 # 선형 회귀로 학습된 모델 회귀 예측선 
 ax1.set_title('Linear Regression')
-ax1.scatter(bostonDF_sample.RM, bostonDF_sample.PRICE, c="darkorange")
+ax1.scatter(bostonDF_sample.RM, bostonDF_sample.PRICE, c="darkorange") # y_test를 scatter찍음. y_test는 동일하므로 셋 다 scatter는 똑같음. 
 ax1.plot(X_test, pred_lr,label="linear", linewidth=2 )
 
 # DecisionTreeRegressor의 max_depth를 2로 했을 때 회귀 예측선 
