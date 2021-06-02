@@ -704,6 +704,9 @@ for pos , alpha in enumerate(alphas) :
 
 # for 문 바깥에서 맷플롯립의 show 호출 및 alpha에 따른 피처별 회귀 계수를 DataFrame으로 표시
 plt.show()
+'''
+alpha값이 0 - 0.1 - 1 - 10 - 100 으로 커질 수록, 피처별 회귀 계수 w들의 |w| 크기가 다들 작아진다. 
+'''
 
 
 # ** alpha 값에 따른 컬럼별 회귀계수 출력 **

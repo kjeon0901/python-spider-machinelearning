@@ -47,10 +47,10 @@ print('roc_auc: {:0.3f}'.format(roc_auc_score(y_test , lr_preds)))
 # In[22]:
 
 
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV # 교차검증 수행하며 자동적으로 최적의 파라미터 찾아줌
 
-params={'penalty':['l2', 'l1'],
-        'C':[0.01, 0.1, 1, 1, 5, 10]}
+params={'penalty':['l2', 'l1'], # 규제 유형을 l2(ridge) or l1(lasso) 로 하겠다
+        'C':[0.01, 0.1, 1, 1, 5, 10]} # C = 1/alpha  ==>  alpha = [100, 10, 1, 1, 0.2, 0.1]
 
 grid_clf = GridSearchCV(lr_clf, param_grid=params, scoring='accuracy', cv=3 )
 grid_clf.fit(data_scaled, cancer.target)
