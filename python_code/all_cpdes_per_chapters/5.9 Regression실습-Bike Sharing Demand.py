@@ -69,7 +69,7 @@ dtypes: float64(3), int64(8), object(1)
 
 # 문자열을 datetime 타입으로 변경. 
 bike_df['datetime'] = bike_df.datetime.apply(pd.to_datetime) # bike_df.datetime == bike_df['datetime']
-    # pd.to_datetime를 써서 → datetime type(pandas에서 날짜와 시간을 나타냄)으로 바꿈. 
+    # pd.to_datetime를 써서 → datetime type(pandas, 원하는 날짜와 시간만 뽑아 사용 가능)으로 바꿈. 
 bike_df.info()
 '''
 <class 'pandas.core.frame.DataFrame'>
@@ -165,6 +165,7 @@ MAE와 MSE를 바로 비교하면 절댓값과 제곱을 비교하는 것이기 
 지금처럼 단순 직접 비교로는 MAE와 RMSE를 비교하는 것이 맞다. 
 '''
 
+####################여기까지만 씀!
 
 # In[8]:
 
