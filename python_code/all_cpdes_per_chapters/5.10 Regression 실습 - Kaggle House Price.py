@@ -14,7 +14,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 get_ipython().run_line_magic('matplotlib', 'inline')
 
-house_df_org = pd.read_csv('house_price.csv')
+house_df_org = pd.read_csv('C:/jeon/house_price_train.csv')
 house_df = house_df_org.copy()
 house_df.head(3)
 
@@ -91,10 +91,41 @@ house_df.info()
 
 
 print('데이터 세트의 Shape:', house_df.shape)
+test = house_df.dtypes # index : df의 각 컬럼 네임, 시리즈 값 : 컬럼별 데이터 타입(하나의 컬럼에는 하나의 dtype만!)
 print('\n전체 feature 들의 type \n',house_df.dtypes.value_counts())
-isnull_series = house_df.isnull().sum()
-print('\nNull 컬럼과 그 건수:\n ', isnull_series[isnull_series > 0].sort_values(ascending=False))
-
+'''
+전체 feature 들의 type 
+ object     43  => string은 그대로 못 넣으니까 뭔가 처리 해줘야겠군!
+int64      35
+float64     3
+dtype: int64
+'''
+isnull_series = house_df.isnull() # 똑같은 데이터프레임 형태로, 각 요소에는 boolean값 들어감. (null이면 True, 아니면 False)
+isnull_series = house_df.isnull().sum() # 컬럼별 True의 개수
+print('\nNull 컬럼과 그 건수:\n ', isnull_series[isnull_series > 0].sort_values(ascending=False)) # 불린인덱싱
+'''
+Null 컬럼과 그 건수:
+  PoolQC          1453
+MiscFeature     1406
+Alley           1369
+Fence           1179
+FireplaceQu      690
+LotFrontage      259
+GarageYrBlt       81
+GarageType        81
+GarageFinish      81
+GarageQual        81
+GarageCond        81
+BsmtFinType2      38
+BsmtExposure      38
+BsmtFinType1      37
+BsmtCond          37
+BsmtQual          37
+MasVnrArea         8
+MasVnrType         8
+Electrical         1
+dtype: int64
+'''
 
 # ** 타겟값 SalePrice의 분포도 확인 **
 
@@ -102,7 +133,7 @@ print('\nNull 컬럼과 그 건수:\n ', isnull_series[isnull_series > 0].sort_v
 
 
 plt.title('Original Sale Price Histogram')
-sns.distplot(house_df['SalePrice'])
+sns.distplot(house_df['SalePrice']) # 레이블값 
 
 
 # ** 로그 변환을 통해 SalePrice 값 분포도 확인 **
