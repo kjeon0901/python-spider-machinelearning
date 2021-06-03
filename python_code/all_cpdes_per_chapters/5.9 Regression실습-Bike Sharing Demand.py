@@ -172,27 +172,43 @@ MAE와 MSE를 바로 비교하면 절댓값과 제곱을 비교하는 것이기 
 
 def get_top_error_data(y_test, pred, n_tops = 5):
     # DataFrame에 컬럼들로 실제 대여횟수(count)와 예측 값을 서로 비교 할 수 있도록 생성. 
-    result_df = pd.DataFrame(y_test.values, columns=['real_count'])
-    result_df['predicted_count']= np.round(pred)
-    result_df['diff'] = np.abs(result_df['real_count'] - result_df['predicted_count'])
+    result_df = pd.DataFrame(y_test.values, columns=['real_count']) # 실제값 y 담은 column 만듦
+    result_df['predicted_count']= np.round(pred) # 예측값 y^ 담은 column 만듦
+    result_df['diff'] = np.abs(result_df['real_count'] - result_df['predicted_count']) # |y-y^|
     # 예측값과 실제값이 가장 큰 데이터 순으로 출력. 
-    print(result_df.sort_values('diff', ascending=False)[:n_tops])
+    print(result_df.sort_values('diff', ascending=False)[:n_tops]) # 오류값 가장 큰 순(ascending=False:내림차순)으로 10개만 뽑아봄
     
-get_top_error_data(y_test,pred,n_tops=20)
+get_top_error_data(y_test,pred,n_tops=10) # 초기값 5 있지만, 10 넣어줬으니 10이 우선. 
 
 
 # In[9]:
 
 
 y_target.hist() # y_target(=='count'컬럼)이 정규분포 이루는지 확인. 
-
+plt.plot(range(0,100), y_target[0:100])
 
 # In[10]:
 
 
 y_log_transform = np.log1p(y_target)
 y_log_transform.hist()
-
+plt.plot(range(0,100), y_log_transform[0:100])
+'''
+skewness(비대칭도)가 높다 == 데이터 분포가 한쪽으로 치우쳐있다
+    → 이런 값들을 정규 분포로 바꾸는 방법 : 로그변환★
+    
+로그변환
+- 스케일이 변한 것이지, 분포 그래프의 모양이 바뀌는 게 아님.    // a > b 이면 log1p(a) > log1p(b)
+        ex_ 데이터분포 그래프를 f(x)라 할 때
+                    원본 : f(70) > f(5) > f(25) > f(100)
+              log1p(원본): f(70) > f(5) > f(25) > f(100) 그대로! 그냥 기울기가 완만해질 뿐!!      
+- 로그변환 이후 히스토그램은 왜 모양 자체가 바뀔까??
+        => 로그변환을 하면 f(x)값의 극단적인 비대칭성이 줄어들고, 새로 그리는 그래프는 step을 그 줄어든 비율만큼 짧게 잡을 것이다. 
+           그러면 새로운 도수 분포는 f(x)값이 보다 고르게 퍼지고, 결국 히스토그램이 정규분포를 닮아간다. 
+'''
+#y_log_log_transform = np.log1p(y_log_transform)
+#y_log_log_transform.hist()
+#plt.plot(range(0,100), y_log_log_transform[0:100])
 
 # In[11]:
 
