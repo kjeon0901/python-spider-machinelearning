@@ -23,8 +23,8 @@ bike_df.head(3)
 
 # datetime: hourly date + timestamp  
 # season: 1 = 봄, 2 = 여름, 3 = 가을, 4 = 겨울  
-# holiday: 1 = 토, 일요일의 주말을 제외한 국경일 등의 휴일, 0 = 휴일이 아닌 날  
-# workingday: 1 = 토, 일요일의 주말 및 휴일이 아닌 주중, 0 = 주말 및 휴일  
+# holiday: 1 = 주말을 제외한 국경일 등의 휴일, 0 = 휴일이 아닌 날  
+# workingday: 1 = 주말 및 휴일이 아닌 주중, 0 = 주말 및 휴일  
 # weather:  
 # • 1 = 맑음, 약간 구름 낀 흐림  
 # • 2 = 안개, 안개 + 흐림  
@@ -186,6 +186,7 @@ get_top_error_data(y_test,pred,n_tops=10) # 초기값 5 있지만, 10 넣어줬�
 
 y_target.hist() # y_target(=='count'컬럼)이 정규분포 이루는지 확인. 
 plt.plot(range(0,100), y_target[0:100])
+plt.scatter(range(0,100), y_target[0:100])
 
 # In[10]:
 
@@ -193,6 +194,7 @@ plt.plot(range(0,100), y_target[0:100])
 y_log_transform = np.log1p(y_target)
 y_log_transform.hist()
 plt.plot(range(0,100), y_log_transform[0:100])
+plt.scatter(range(0,100), y_log_transform[0:100])
 '''
 skewness(비대칭도)가 높다 == 데이터 분포가 한쪽으로 치우쳐있다
     → 이런 값들을 정규 분포로 바꾸는 방법 : 로그변환★
@@ -209,6 +211,7 @@ skewness(비대칭도)가 높다 == 데이터 분포가 한쪽으로 치우쳐�
 #y_log_log_transform = np.log1p(y_log_transform)
 #y_log_log_transform.hist()
 #plt.plot(range(0,100), y_log_log_transform[0:100])
+#plt.scatter(range(0,100), y_log_log_transform[0:100])
 
 # In[11]:
 
@@ -217,7 +220,8 @@ skewness(비대칭도)가 높다 == 데이터 분포가 한쪽으로 치우쳐�
 y_target_log = np.log1p(y_target)
 
 # 로그 변환된 y_target_log를 반영하여 학습/테스트 데이터 셋 분할
-X_train, X_test, y_train, y_test = train_test_split(X_features, y_target_log, test_size=0.3, random_state=0)
+X_train, X_test, y_train, y_test = train_test_split(X_features, y_target_log, test_size=0.3, random_state=0) # X_features:피처데이터세트, y_target_log:
+                                                                                                             # 로그변환된 아이들로 학습됐으므로, 그거에 맞춰서 w 학습됨. 
 lr_reg = LinearRegression()
 lr_reg.fit(X_train, y_train)
 pred = lr_reg.predict(X_test)
@@ -229,6 +233,13 @@ y_test_exp = np.expm1(y_test)
 pred_exp = np.expm1(pred)
 
 evaluate_regr(y_test_exp ,pred_exp)
+'''
+RMSLE: 1.017, RMSE: 162.594, MAE: 109.286
+
+RMSLE는 줄었지만, RMSE는 오히려 더 늘어남. 
+이유 찾아보자!
+     ↓↓↓
+'''
 
 
 # In[12]:
@@ -237,29 +248,37 @@ evaluate_regr(y_test_exp ,pred_exp)
 coef = pd.Series(lr_reg.coef_, index=X_features.columns)
 coef_sort = coef.sort_values(ascending=False)
 sns.barplot(x=coef_sort.values, y=coef_sort.index)
+'''
+Year 피처의  회귀 계수 값이 독보적으로 크다. 
+자전거 대여 횟수에 별 영향 없는 무의미한 값인데, 회귀에서는 숫자가 가중치 등에 큰 영향을 줌. 게다가 값이 2011, 2012로 엄청 큰 값이다. 
+=> 원-핫 인코딩 해주자!
 
+원-핫 인코딩 : 유니크한 요소의 개수만큼 컬럼 만들어서 각각 해당되면 1, 아니면 0 집어넣음. 
+ex_ 2011, 2012 컬럼 추가해서 각 컬럼에 요소마다 0, 1 집어넣음
+    year(2col), month(12col), day(31col), hour(24col) - 이렇게 한다면 총 69개의 컬럼 추가해서 원-핫 인코딩
+    컬럼이 너무 늘어나긴 하지만,,,,ㅜㅜ
+'''
 
 # In[13]:
 
 
 # 'year','month','hour','season','weather' feature들을 One Hot Encoding
-X_features_ohe = pd.get_dummies(X_features, columns=['year','month','hour', 'holiday',
-                                              'workingday','season','weather'])
-
+X_features_ohe = pd.get_dummies(X_features, columns=['year','month','day','hour', 'holiday', 'workingday','season','weather']) # 새로운 df에 원-핫 인코딩 결과 컬럼 추가
+    # 참고로, day 20부터는 bike_test.csv 파일에 있음. 
+    # 지금은 bike_train.csv 파일 안에서만 실행하고 코드 다룰 것이기 때문에, bike_test.csv와 합칠 걱정 하지 않고 그냥 마음대로 원-핫 인코딩 해줬음. 
 
 # In[14]:
 
 
-# 원-핫 인코딩이 적용된 feature 데이터 세트 기반으로 학습/예측 데이터 분할. 
-X_train, X_test, y_train, y_test = train_test_split(X_features_ohe, y_target_log,
-                                                    test_size=0.3, random_state=0)
+# 원-핫 인코딩이 적용된 feature 데이터 세트 기반으로 다시 학습/예측 데이터 분할. 
+X_train, X_test, y_train, y_test = train_test_split(X_features_ohe, y_target_log, test_size=0.3, random_state=0)
 
 # 모델과 학습/테스트 데이터 셋을 입력하면 성능 평가 수치를 반환
 def get_model_predict(model, X_train, X_test, y_train, y_test, is_expm1=False):
-    model.fit(X_train, y_train)
-    pred = model.predict(X_test)
+    model.fit(X_train, y_train) # 로그변환된 아이들로 학습됐으므로, 그거에 맞춰서 w 학습됨.
+    pred = model.predict(X_test) # 예측도 로그 변환 영향 받음. 
     if is_expm1 :
-        y_test = np.expm1(y_test)
+        y_test = np.expm1(y_test) # 로그함수 log(x)의 반대 지수함수 exp(x), log1p(x)의 반대 expm1(x)
         pred = np.expm1(pred)
     print('###',model.__class__.__name__,'###')
     evaluate_regr(y_test, pred)
@@ -272,6 +291,14 @@ lasso_reg = Lasso(alpha=0.01)
 
 for model in [lr_reg, ridge_reg, lasso_reg]:
     get_model_predict(model,X_train, X_test, y_train, y_test,is_expm1=True)
+'''
+### LinearRegression ###
+RMSLE: 0.590, RMSE: 97.688, MAE: 63.382
+### Ridge ###
+RMSLE: 0.590, RMSE: 98.529, MAE: 63.893
+### Lasso ###
+RMSLE: 0.635, RMSE: 113.219, MAE: 72.803
+'''
 
 
 # In[15]:
@@ -280,6 +307,10 @@ for model in [lr_reg, ridge_reg, lasso_reg]:
 coef = pd.Series(lr_reg.coef_ , index=X_features_ohe.columns)
 coef_sort = coef.sort_values(ascending=False)[:10]
 sns.barplot(x=coef_sort.values , y=coef_sort.index)
+'''
+이제는 좀 영향력 있는 컬럼 순으로 나옴. 
+month_9 - month_8 - month_7 - month_5 - month_6 - month_4 - workingday_0 - workingday_1 - month_10 - month_11 - ....
+'''
 
 
 # In[16]:
@@ -298,6 +329,18 @@ lgbm_reg = LGBMRegressor(n_estimators=500)
 
 for model in [rf_reg, gbm_reg, xgb_reg, lgbm_reg]:
     get_model_predict(model,X_train, X_test, y_train, y_test,is_expm1=True)
+'''
+### RandomForestRegressor ###
+RMSLE: 0.355, RMSE: 50.321, MAE: 31.134
+### GradientBoostingRegressor ###
+RMSLE: 0.330, RMSE: 53.349, MAE: 32.744
+### XGBRegressor ###
+RMSLE: 0.342, RMSE: 51.732, MAE: 31.251
+### LGBMRegressor ###
+RMSLE: 0.319, RMSE: 47.215, MAE: 29.029
+
+아까 LinearRegression, Ridge, lasso 로 평가한 것보다 훨~씬 결과 좋음!! ^-^ 확실히 최신에 나온 게 퍼포먼스가 좋음~~
+'''
 
 
 # In[ ]:
