@@ -1028,6 +1028,7 @@ inplace = True 로 설정  	→ 리턴값 없고 원본 데이터 자체를 수�
 [::-1] 			→ 내림차순정렬
 np.sort(ndarray명, axis=0)	→ 로우 방향, 즉 로우가 증가하는 방향으로 정렬, axis=0
 np.sort(ndarray명, axis=1)	→ 컬럼 방향, 즉 컬럼이 증가하는 방향으로 정렬, axis=1
+// 보통 row방향은 axis=0인데, apply lambda에서는 axis=1
 np.argsort()♣		→ 원본 행렬의 인덱스가 정렬되면 어디에 있는지
 
 np.dot(A, B) 		→ A와 B 행렬 내적 (==행렬 곱)

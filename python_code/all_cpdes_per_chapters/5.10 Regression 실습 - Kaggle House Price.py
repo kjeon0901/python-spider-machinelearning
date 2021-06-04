@@ -373,16 +373,24 @@ lr_reg = LinearRegression()
 lr_reg.fit(X_train, y_train)
 ridge_reg = Ridge(alpha=12)
 ridge_reg.fit(X_train, y_train)
-lasso_reg = Lasso(alpha=0.001)
+lasso_reg = Lasso(alpha=0.0005)
 lasso_reg.fit(X_train, y_train)
 
 # 모든 모델의 RMSE 출력
 models = [lr_reg, ridge_reg, lasso_reg]
 get_rmses(models)
+'''
+LinearRegression 로그 변환된 RMSE: 0.132
+Ridge 로그 변환된 RMSE: 0.124
+Lasso 로그 변환된 RMSE: 0.115
+'''
 
 # 모든 모델의 회귀 계수 시각화 
 models = [lr_reg, ridge_reg, lasso_reg]
 visualize_coefficient(models)
+'''
+예측 성능 더 좋아짐.
+'''
 
 
 # ** 숫자 피처들에 대한 데이터 분포 왜곡도 확인 후 높은 왜곡도를 가지는 피처 추출 **
@@ -394,13 +402,40 @@ from scipy.stats import skew
 
 # object가 아닌 숫자형 피쳐의 컬럼 index 객체 추출.
 features_index = house_df.dtypes[house_df.dtypes != 'object'].index
+    # skew()를 적용하는 숫자형 피쳐에서 원-핫 인코딩된 카테고리 숫자형 피처는 제외해야 함
+    #   → 숫자값이 무의미함 + 히스토그램 그리면 비대칭성 클 수밖에 없기 때문
+    # 그래서 house_df_ohe 말고 house_df 사용
 
 # house_df에 컬럼 index를 [ ]로 입력하면 해당하는 컬럼 데이터 셋 반환. apply lambda로 skew( )호출 
-skew_features = house_df[features_index].apply(lambda x : skew(x))
+skew_features = house_df[features_index].apply(lambda x : skew(x)) # house_df에서 features_index에 들어있는 인덱스의 컬럼들만. 
+    # df.apply(lambda x : ~ , axis=0(default))   => df 안의 column 하나하나★
+    # df.apply(lambda x : ~ , axis=1)            => df 안의 row 하나하나★ (보통 row방향은 axis=0인데, apply lambda에서는 axis=1)
 
-# skew 정도가 1 이상인 컬럼들만 추출. 
+# skew 정도가 1 이상(왜곡 정도가 높다 == skew() > 1)인 컬럼들만 추출. 
 skew_features_top = skew_features[skew_features > 1]
 print(skew_features_top.sort_values(ascending=False))
+'''
+MiscVal          24.451640
+PoolArea         14.813135
+LotArea          12.195142
+3SsnPorch        10.293752
+LowQualFinSF      9.002080
+KitchenAbvGr      4.483784
+BsmtFinSF2        4.250888
+ScreenPorch       4.117977
+BsmtHalfBath      4.099186
+EnclosedPorch     3.086696
+MasVnrArea        2.673661
+LotFrontage       2.382499
+OpenPorchSF       2.361912
+BsmtFinSF1        1.683771
+WoodDeckSF        1.539792
+TotalBsmtSF       1.522688
+MSSubClass        1.406210
+1stFlrSF          1.375342
+GrLivArea         1.365156
+dtype: float64
+'''
 
 
 # ** 왜곡도가 1인 피처들은 로그 변환 적용하고 다시 하이퍼 파라미터 튜닝 후 재 학습/예측/평가 **
@@ -422,7 +457,7 @@ X_train, X_test, y_train, y_test = train_test_split(X_features, y_target, test_s
 
 # 피처들을 로그 변환 후 다시 최적 하이퍼 파라미터와 RMSE 출력
 ridge_params = { 'alpha':[0.05, 0.1, 1, 5, 8, 10, 12, 15, 20] }
-lasso_params = { 'alpha':[0.001, 0.005, 0.008, 0.05, 0.03, 0.1, 0.5, 1,5, 10] }
+lasso_params = { 'alpha':[0.0001, 0.0003, 0.0005, 0.0008, 0.001, 0.005] }
 best_ridge = get_best_params(ridge_reg, ridge_params)
 best_lasso = get_best_params(lasso_reg, lasso_params)
 
@@ -433,9 +468,9 @@ best_lasso = get_best_params(lasso_reg, lasso_params)
 # 앞의 최적화 alpha값으로 학습데이터로 학습, 테스트 데이터로 예측 및 평가 수행. 
 lr_reg = LinearRegression()
 lr_reg.fit(X_train, y_train)
-ridge_reg = Ridge(alpha=10)
+ridge_reg = Ridge(alpha=12)
 ridge_reg.fit(X_train, y_train)
-lasso_reg = Lasso(alpha=0.001)
+lasso_reg = Lasso(alpha=0.0005)
 lasso_reg.fit(X_train, y_train)
 
 # 모든 모델의 RMSE 출력
