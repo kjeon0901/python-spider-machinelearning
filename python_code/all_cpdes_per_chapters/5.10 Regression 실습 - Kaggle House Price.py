@@ -639,7 +639,7 @@ def visualize_ftr_importances(models):
 # 앞 예제에서 get_best_params( )가 반환한 GridSearchCV로 최적화된 모델의 피처 중요도 시각화    
 models = [best_xgb, best_lgbm]
 visualize_ftr_importances(models) # models의 피처 중요도 보여주는 함수
-'''두 모델의 피처 중요도가 완전히 다르네~!!???'''
+'''두 모델의 피처 중요도가 완전히 다르네~!!??? 그런가보다...'''
 
 
 # ### 회귀 모델들의 예측 결과 혼합을 통한 최종 예측
@@ -663,13 +663,18 @@ lasso_reg.fit(X_train, y_train)
 ridge_pred = ridge_reg.predict(X_test)
 lasso_pred = lasso_reg.predict(X_test)
 
-# 개별 모델 예측값 혼합으로 최종 예측값 도출
-pred = 0.4 * ridge_pred + 0.6 * lasso_pred
+# 개별 모델 예측값 "혼합"으로 최종 예측값 도출 > 약~간의 앙상블 느낌을 줬군!
+pred = 0.4 * ridge_pred + 0.6 * lasso_pred # 아까 Lasso 로그 변환된 RMSE 성능이 조금 더 좋았기에, 가중치 더 줌. 
 preds = {'최종 혼합': pred,
          'Ridge': ridge_pred,
          'Lasso': lasso_pred}
 #최종 혼합 모델, 개별모델의 RMSE 값 출력
 get_rmse_pred(preds)
+'''
+최종 혼합 모델의 RMSE: 0.10007930884470514
+Ridge 모델의 RMSE: 0.10345177546603257
+Lasso 모델의 RMSE: 0.10024170460890039
+'''
 
 
 # In[29]:
@@ -690,7 +695,13 @@ preds = {'최종 혼합': pred,
          'LGBM': lgbm_pred}
         
 get_rmse_pred(preds)
+'''
+최종 혼합 모델의 RMSE: 0.10170077353447762
+XGBM 모델의 RMSE: 0.10738295638346222
+LGBM 모델의 RMSE: 0.10382510019327311
 
+오히려 더 안 좋음.. 얘네를 사용하기엔 데이터가 너무 적다. 특히 LightGBM은 어느 정도 이상의 데이터를 사용해야 성능 좋음. 
+'''
 
 # ### 스태킹 모델을 통한 회귀 예측
 
@@ -701,15 +712,18 @@ from sklearn.model_selection import KFold
 from sklearn.metrics import mean_absolute_error
 
 # 개별 기반 모델에서 최종 메타 모델이 사용할 학습 및 테스트용 데이터를 생성하기 위한 함수. 
-def get_stacking_base_datasets(model, X_train_n, y_train_n, X_test_n, n_folds ):
+def get_stacking_base_datasets(model, X_train_n, y_train_n, X_test_n, n_folds ): # n_folds:5
     # 지정된 n_folds값으로 KFold 생성.
-    kf = KFold(n_splits=n_folds, shuffle=False, random_state=0)
+    kf = KFold(n_splits=n_folds, shuffle=False, random_state=0) 
+        # 일반적으로는 교차검증을 위해 cross_val_score를 해주는데, KFold를 해주면 "어떻게 교차검증 해줄지" 정해줌!
     #추후에 메타 모델이 사용할 학습 데이터 반환을 위한 넘파이 배열 초기화 
-    train_fold_pred = np.zeros((X_train_n.shape[0] ,1 ))
-    test_pred = np.zeros((X_test_n.shape[0],n_folds))
+    train_fold_pred = np.zeros((X_train_n.shape[0] ,1 )) # X_train size:(1166, 270), X_train_n.shape[0]:1166
+    test_pred = np.zeros((X_test_n.shape[0],n_folds)) # X_test size:(292, 270), X_test_n.shape[0]:292
     print(model.__class__.__name__ , ' model 시작 ')
     
-    for folder_counter , (train_index, valid_index) in enumerate(kf.split(X_train_n)):
+    for folder_counter , (train_index, valid_index) in enumerate(kf.split(X_train_n)): 
+            # 묶음마다 n_fold=5만큼 나눠 하나를 검증데이터, 나머지를 train데이터로 두고, 그 index들을 리턴
+        
         #입력된 학습 데이터에서 기반 모델이 학습/예측할 폴드 데이터 셋 추출 
         print('\t 폴드 세트: ',folder_counter,' 시작 ')
         X_tr = X_train_n[train_index] 
@@ -717,7 +731,7 @@ def get_stacking_base_datasets(model, X_train_n, y_train_n, X_test_n, n_folds ):
         X_te = X_train_n[valid_index]  
         
         #폴드 세트 내부에서 다시 만들어진 학습 데이터로 기반 모델의 학습 수행.
-        model.fit(X_tr , y_tr)       
+        model.fit(X_tr , y_tr)   #     
         #폴드 세트 내부에서 다시 만들어진 검증 데이터로 기반 모델 예측 후 데이터 저장.
         train_fold_pred[valid_index, :] = model.predict(X_te).reshape(-1,1)
         #입력된 원본 테스트 데이터를 폴드 세트내 학습된 기반 모델에서 예측 후 데이터 저장. 
