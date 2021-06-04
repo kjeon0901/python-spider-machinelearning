@@ -142,7 +142,7 @@ sns.distplot(house_df['SalePrice']) # 레이블값
 
 
 plt.title('Log Transformed Sale Price Histogram')
-log_SalePrice = np.log1p(house_df['SalePrice'])
+log_SalePrice = np.log1p(house_df['SalePrice']) # 로그변환으로 조금 더 정규분포와 가깝게 만듦
 sns.distplot(log_SalePrice)
 
 
@@ -153,23 +153,44 @@ sns.distplot(log_SalePrice)
 
 # SalePrice 로그 변환
 original_SalePrice = house_df['SalePrice']
-house_df['SalePrice'] = np.log1p(house_df['SalePrice'])
+house_df['SalePrice'] = np.log1p(house_df['SalePrice']) # 원본 복사한 house_df의 'SalePrice'컬럼 수정
 
 # Null 이 너무 많은 컬럼들과 불필요한 컬럼 삭제
 house_df.drop(['Id','PoolQC' , 'MiscFeature', 'Alley', 'Fence','FireplaceQu'], axis=1 , inplace=True)
+
 # Drop 하지 않는 숫자형 Null컬럼들은 평균값으로 대체
 house_df.fillna(house_df.mean(),inplace=True)
 
 # Null 값이 있는 피처명과 타입을 추출
 null_column_count = house_df.isnull().sum()[house_df.isnull().sum() > 0]
+    # [house_df.isnull().sum() > 0] : 불린인덱싱 - null값이 1개 이상 있는 컬럼 인덱스-True, 없으면-False 넣어줌. 
+    # house_df.isnull().sum()에서 위의 불린인덱싱으로 인덱스 집어넣으면, True인 row(index에 컬럼네임 들어있음)만 가져옴. 
 print('## Null 피처의 Type :\n', house_df.dtypes[null_column_count.index])
+    # house_df.dtypes : 전체 컬럼의 데이터 타입을 시리즈로, 인덱스-컬럼네임
+    # 거기에서 [null_column_count.index], 즉 null값이 있는 컬럼들(index가 컬럼네임이었음)만 골라서 dtype 알려줌
+'''
+숫자들은 다 평균값으로 채워줬기 때문에, 이제 남은 건 object타입밖에 안 나옴 
 
+## Null 피처의 Type :
+ MasVnrType      object
+BsmtQual        object
+BsmtCond        object
+BsmtExposure    object
+BsmtFinType1    object
+BsmtFinType2    object
+Electrical      object
+GarageType      object
+GarageFinish    object
+GarageQual      object
+GarageCond      object
+dtype: object
+'''
 
 # ** 문자열값은 모두 카테고리값. 판다스의 get_dummies( )를 이용하여 원-핫 인코딩 수행 **
 
 # In[7]:
 
-
+# get_dummies( ) : 원-핫 인코딩 수행 후 컬럼들이 추가되어 만들어진 새로운 df를 리턴 .
 print('get_dummies() 수행 전 데이터 Shape:', house_df.shape)
 house_df_ohe = pd.get_dummies(house_df)
 print('get_dummies() 수행 후 데이터 Shape:', house_df_ohe.shape)
