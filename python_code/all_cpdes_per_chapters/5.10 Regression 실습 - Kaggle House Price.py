@@ -195,6 +195,7 @@ print('get_dummies() 수행 전 데이터 Shape:', house_df.shape)
 house_df_ohe = pd.get_dummies(house_df)
 print('get_dummies() 수행 후 데이터 Shape:', house_df_ohe.shape)
 
+# 이제 null값이 없음을 확인
 null_column_count = house_df_ohe.isnull().sum()[house_df_ohe.isnull().sum() > 0]
 print('## Null 피처의 Type :\n', house_df_ohe.dtypes[null_column_count.index])
 
@@ -247,6 +248,11 @@ lasso_reg.fit(X_train, y_train)
 
 models = [lr_reg, ridge_reg, lasso_reg]
 get_rmses(models)
+'''
+LinearRegression 로그 변환된 RMSE: 0.132
+Ridge 로그 변환된 RMSE: 0.128
+Lasso 로그 변환된 RMSE: 0.176
+'''
 
 
 # ** 회귀 계수값과 컬럼명 시각화를 위해 상위 10개, 하위 10개(-값으로 가장 큰 10개) 회귀 계수값과 컬럼명을 가지는 Series생성 함수. **  
@@ -256,9 +262,9 @@ get_rmses(models)
 
 def get_top_bottom_coef(model):
     # coef_ 속성을 기반으로 Series 객체를 생성. index는 컬럼명. 
-    coef = pd.Series(model.coef_, index=X_features.columns)
+    coef = pd.Series(model.coef_, index=X_features.columns) # 회귀계수를 담고(총 271개일 것), 그 인덱스는 컬럼네임으로 하는 Series 만듦
     
-    # + 상위 10개 , - 하위 10개 coefficient 추출하여 반환.
+    # 이따가 20개만 barplot으로 한눈에 확인해보려고 + 상위 10개 , - 하위 10개 coefficient 추출하여 반환.
     coef_high = coef.sort_values(ascending=False).head(10)
     coef_low = coef.sort_values(ascending=False).tail(10)
     return coef_high, coef_low
@@ -277,7 +283,7 @@ def visualize_coefficient(models):
     for i_num, model in enumerate(models):
         # 상위 10개, 하위 10개 회귀 계수를 구하고, 이를 판다스 concat으로 결합. 
         coef_high, coef_low = get_top_bottom_coef(model)
-        coef_concat = pd.concat( [coef_high , coef_low] )
+        coef_concat = pd.concat( [coef_high , coef_low] ) # concat : concatenate, 물리적으로 합침
         
         # 순차적으로 ax subplot에 barchar로 표현. 한 화면에 표현하기 위해 tick label 위치와 font 크기 조정. 
         axs[i_num].set_title(model.__class__.__name__+' Coeffiecents', size=25)
@@ -285,10 +291,23 @@ def visualize_coefficient(models):
         for label in (axs[i_num].get_xticklabels() + axs[i_num].get_yticklabels()):
             label.set_fontsize(22)
         sns.barplot(x=coef_concat.values, y=coef_concat.index , ax=axs[i_num])
+        '''
+        회귀계수는 LinearRegression이 Ridge, Lasso보다 더 큼. 
+        지금 그래프는 스케일링이 달라서 Ridge가 더 커보일 뿐 값은 더 작다. 
+        
+        당연히 규제는 w가 커지지 않도록 하는 비용함수를 가지므로, w는 LinearRegression이 클 수밖에!
+        '''
 
 # 앞 예제에서 학습한 lr_reg, ridge_reg, lasso_reg 모델의 회귀 계수 시각화.    
 models = [lr_reg, ridge_reg, lasso_reg]
 visualize_coefficient(models)
+'''
+LinearRegression 로그 변환된 RMSE: 0.132
+Ridge 로그 변환된 RMSE: 0.128
+Lasso 로그 변환된 RMSE: 0.176
+
+cf. LinearRegression의 과적합 해결하기 위해 Ridge, Lasso 등의 규제 만듦. 
+'''
 
 
 # ** 5 폴드 교차검증으로 모델별로 RMSE와 평균 RMSE출력 **
@@ -296,9 +315,9 @@ visualize_coefficient(models)
 # In[12]:
 
 
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_val_score # 교차점증
 
-def get_avg_rmse_cv(models):
+def get_avg_rmse_cv(models): # 모델별 교차검증
     for model in models:
         # 분할하지 않고 전체 데이터로 cross_val_score( ) 수행. 모델별 CV RMSE값과 평균 RMSE 출력
         rmse_list = np.sqrt(-cross_val_score(model, X_features, y_target,
@@ -310,7 +329,16 @@ def get_avg_rmse_cv(models):
 # 앞 예제에서 학습한 lr_reg, ridge_reg, lasso_reg 모델의 CV RMSE값 출력           
 models = [lr_reg, ridge_reg, lasso_reg]
 get_avg_rmse_cv(models)
+'''
+LinearRegression CV RMSE 값 리스트: [0.135 0.165 0.168 0.111 0.198]
+LinearRegression CV 평균 RMSE 값: 0.155
 
+Ridge CV RMSE 값 리스트: [0.117 0.154 0.142 0.117 0.189]
+Ridge CV 평균 RMSE 값: 0.144
+
+Lasso CV RMSE 값 리스트: [0.161 0.204 0.177 0.181 0.265]
+Lasso CV 평균 RMSE 값: 0.198
+'''
 
 # ** 각 모델들의 alpha값을 변경하면서 하이퍼 파라미터 튜닝 후 다시 재 학습/예측/평가 ** 
 
@@ -318,9 +346,9 @@ get_avg_rmse_cv(models)
 
 
 
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV # 최적의 파라미터 찾기
 
-def get_best_params(model, params):
+def get_best_params(model, params): # 교차검증 기반으로 퍼포먼스 측정했을 때, 최적의 alpha값 찾기. 
     grid_model = GridSearchCV(model, param_grid=params, 
                               scoring='neg_mean_squared_error', cv=5)
     grid_model.fit(X_features, y_target)
@@ -330,9 +358,11 @@ def get_best_params(model, params):
     return grid_model.best_estimator_
 
 ridge_params = { 'alpha':[0.05, 0.1, 1, 5, 8, 10, 12, 15, 20] }
-lasso_params = { 'alpha':[0.001, 0.005, 0.008, 0.05, 0.03, 0.1, 0.5, 1,5, 10] }
+lasso_params = { 'alpha':[0.0001, 0.0003, 0.0005, 0.0008, 0.001, 0.005] }
 best_rige = get_best_params(ridge_reg, ridge_params)
+'''Ridge 5 CV 시 최적 평균 RMSE 값: 0.1418, 최적 alpha:{'alpha': 12}'''
 best_lasso = get_best_params(lasso_reg, lasso_params)
+'''Lasso 5 CV 시 최적 평균 RMSE 값: 0.14, 최적 alpha:{'alpha': 0.0005}'''
 
 
 # In[16]:
