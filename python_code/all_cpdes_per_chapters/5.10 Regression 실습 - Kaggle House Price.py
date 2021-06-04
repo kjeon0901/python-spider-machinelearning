@@ -714,34 +714,35 @@ from sklearn.metrics import mean_absolute_error
 # 개별 기반 모델에서 최종 메타 모델이 사용할 학습 및 테스트용 데이터를 생성하기 위한 함수. 
 def get_stacking_base_datasets(model, X_train_n, y_train_n, X_test_n, n_folds ): # n_folds:5
     # 지정된 n_folds값으로 KFold 생성.
-    kf = KFold(n_splits=n_folds, shuffle=False, random_state=0) 
+    kf = KFold(n_splits=n_folds, shuffle=False, random_state=None) 
         # 일반적으로는 교차검증을 위해 cross_val_score를 해주는데, KFold를 해주면 "어떻게 교차검증 해줄지" 정해줌!
     #추후에 메타 모델이 사용할 학습 데이터 반환을 위한 넘파이 배열 초기화 
-    train_fold_pred = np.zeros((X_train_n.shape[0] ,1 )) # X_train size:(1166, 270), X_train_n.shape[0]:1166
-    test_pred = np.zeros((X_test_n.shape[0],n_folds)) # X_test size:(292, 270), X_test_n.shape[0]:292
+    train_fold_pred = np.zeros((X_train_n.shape[0] ,1 )) # 학습 데이터 세트 5영역 구분해서 각각 예측한 결괏값. X_train size:(1166, 270), X_train_n.shape[0]:1166
+    test_pred = np.zeros((X_test_n.shape[0],n_folds)) # 원본 테스트 세트의 모든 결괏값 5개를 각각 담음. 나중에 가로로 평균할것. X_test size:(292, 270), X_test_n.shape[0]:292
     print(model.__class__.__name__ , ' model 시작 ')
     
     for folder_counter , (train_index, valid_index) in enumerate(kf.split(X_train_n)): 
-            # 묶음마다 n_fold=5만큼 나눠 하나를 검증데이터, 나머지를 train데이터로 두고, 그 index들을 리턴
+            # for문 돌때마다 원래 train데이터세트를 n_fold=5만큼 나눠 하나를 검증데이터, 나머지를 train데이터로 두고, 그 index들을 리턴
+            # train_index : 4개의 train데이터, valid_index : 1개의 검증데이터
         
         #입력된 학습 데이터에서 기반 모델이 학습/예측할 폴드 데이터 셋 추출 
         print('\t 폴드 세트: ',folder_counter,' 시작 ')
-        X_tr = X_train_n[train_index] 
-        y_tr = y_train_n[train_index] 
-        X_te = X_train_n[valid_index]  
+        X_tr = X_train_n[train_index] # 4개의 train데이터 안에서 train_test_split된 X_train
+        y_tr = y_train_n[train_index] # 4개의 train데이터 안에서 train_test_split된 y_train
+        X_te = X_train_n[valid_index] # 1개의 검증데이터
         
         #폴드 세트 내부에서 다시 만들어진 학습 데이터로 기반 모델의 학습 수행.
-        model.fit(X_tr , y_tr)   #     
+        model.fit(X_tr , y_tr)    
         #폴드 세트 내부에서 다시 만들어진 검증 데이터로 기반 모델 예측 후 데이터 저장.
-        train_fold_pred[valid_index, :] = model.predict(X_te).reshape(-1,1)
+        train_fold_pred[valid_index, :] = model.predict(X_te).reshape(-1,1) # 검증fold 예측한 결괏값 => for문 다 돌면 5영역이 꽉 찬 하나의 컬럼이 나옴. 
         #입력된 원본 테스트 데이터를 폴드 세트내 학습된 기반 모델에서 예측 후 데이터 저장. 
-        test_pred[:, folder_counter] = model.predict(X_test_n)
+        test_pred[:, folder_counter] = model.predict(X_test_n) # 원본 테스트 세트로 예측한 결괏값 컬럼 한 줄씩 담음 => for문 다 돌면 컬럼 5개
             
     # 폴드 세트 내에서 원본 테스트 데이터를 예측한 데이터를 평균하여 테스트 데이터로 생성 
-    test_pred_mean = np.mean(test_pred, axis=1).reshape(-1,1)    
+    test_pred_mean = np.mean(test_pred, axis=1).reshape(-1,1)  # test_pred 이거 column 방향으로 row끼리 평균. (292, 5) → (292, 1)
     
     #train_fold_pred는 최종 메타 모델이 사용하는 학습 데이터, test_pred_mean은 테스트 데이터
-    return train_fold_pred , test_pred_mean
+    return train_fold_pred , test_pred_mean # 한줄씩 2개 리턴
 
 
 # ** 기반 모델은 리지, 라소, XGBoost, LightGBM 으로 만들고 최종 메타 모델은 라소로 생성하여 학습/예측/평가 **
@@ -766,9 +767,9 @@ lgbm_train, lgbm_test = get_stacking_base_datasets(lgbm_reg, X_train_n, y_train_
 
 # 개별 모델이 반환한 학습 및 테스트용 데이터 세트를 Stacking 형태로 결합.  
 Stack_final_X_train = np.concatenate((ridge_train, lasso_train, 
-                                      xgb_train, lgbm_train), axis=1)
+                                      xgb_train, lgbm_train), axis=1) # 4개의 train데이터끼리 column방향으로(옆으로) 땅! 붙임
 Stack_final_X_test = np.concatenate((ridge_test, lasso_test, 
-                                     xgb_test, lgbm_test), axis=1)
+                                     xgb_test, lgbm_test), axis=1) # 4개의 test데이터끼리 column방향으로(옆으로) 땅! 붙임
 
 # 최종 메타 모델은 라쏘 모델을 적용. 
 meta_model_lasso = Lasso(alpha=0.0005)
@@ -776,9 +777,13 @@ meta_model_lasso = Lasso(alpha=0.0005)
 #기반 모델의 예측값을 기반으로 새롭게 만들어진 학습 및 테스트용 데이터로 예측하고 RMSE 측정.
 meta_model_lasso.fit(Stack_final_X_train, y_train)
 final = meta_model_lasso.predict(Stack_final_X_test)
+
 mse = mean_squared_error(y_test , final)
 rmse = np.sqrt(mse)
 print('스태킹 회귀 모델의 최종 RMSE 값은:', rmse)
+'''
+스태킹 회귀 모델의 최종 RMSE 값은: 0.09799152965189689
+'''
 
 
 # In[ ]:
