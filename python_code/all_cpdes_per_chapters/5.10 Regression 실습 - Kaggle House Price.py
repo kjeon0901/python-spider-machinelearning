@@ -455,11 +455,13 @@ y_target = house_df_ohe['SalePrice']
 X_features = house_df_ohe.drop('SalePrice',axis=1, inplace=False)
 X_train, X_test, y_train, y_test = train_test_split(X_features, y_target, test_size=0.2, random_state=156)
 
-# 피처들을 로그 변환 후 다시 최적 하이퍼 파라미터와 RMSE 출력
+# 피처들을 로그 변환 후 다시 한번 최적 하이퍼 파라미터와 RMSE 찾아서 출력
 ridge_params = { 'alpha':[0.05, 0.1, 1, 5, 8, 10, 12, 15, 20] }
 lasso_params = { 'alpha':[0.0001, 0.0003, 0.0005, 0.0008, 0.001, 0.005] }
 best_ridge = get_best_params(ridge_reg, ridge_params)
+'''Ridge 5 CV 시 최적 평균 RMSE 값: 0.1275, 최적 alpha:{'alpha': 10}'''
 best_lasso = get_best_params(lasso_reg, lasso_params)
+'''Lasso 5 CV 시 최적 평균 RMSE 값: 0.1238, 최적 alpha:{'alpha': 0.0005}'''
 
 
 # In[20]:
@@ -468,7 +470,7 @@ best_lasso = get_best_params(lasso_reg, lasso_params)
 # 앞의 최적화 alpha값으로 학습데이터로 학습, 테스트 데이터로 예측 및 평가 수행. 
 lr_reg = LinearRegression()
 lr_reg.fit(X_train, y_train)
-ridge_reg = Ridge(alpha=12)
+ridge_reg = Ridge(alpha=10)
 ridge_reg.fit(X_train, y_train)
 lasso_reg = Lasso(alpha=0.0005)
 lasso_reg.fit(X_train, y_train)
@@ -476,6 +478,11 @@ lasso_reg.fit(X_train, y_train)
 # 모든 모델의 RMSE 출력
 models = [lr_reg, ridge_reg, lasso_reg]
 get_rmses(models)
+'''
+LinearRegression 로그 변환된 RMSE: 0.128     → 줄어듦
+Ridge 로그 변환된 RMSE: 0.122                → 줄어듦
+Lasso 로그 변환된 RMSE: 0.116                → 늘어남
+'''
 
 # 모든 모델의 회귀 계수 시각화 
 models = [lr_reg, ridge_reg, lasso_reg]
@@ -491,6 +498,16 @@ plt.scatter(x = house_df_org['GrLivArea'], y = house_df_org['SalePrice'])
 plt.ylabel('SalePrice', fontsize=15)
 plt.xlabel('GrLivArea', fontsize=15)
 plt.show()
+'''
+GrLivArea : 주거 공간의 크기
+
+[이상한 값 발견 !]
+논리적으로는, 주거 공간의 크기가 커질 수록 가격이 늘어나야 하는데, 
+몇몇 데이터는 크기가 엄청나게 커도 가격이 낮은 집이 있다. 
+=> 실제 값일 수도 있지만, 뭔가 오류가 있을 수 있다! => 뭐든 상관 없다. 제거하자!!
+
+이런 outlier만 제거해줘도 퍼포먼스 굉장히 높아짐 ㅎㅎ
+'''
 
 
 # ** 이상치 데이터 삭제 후 재 학습/예측/평가 **
@@ -505,26 +522,31 @@ house_df_ohe['GrLivArea']
 
 
 # GrLivArea와 SalePrice 모두 로그 변환되었으므로 이를 반영한 조건 생성. 
-cond1 = house_df_ohe['GrLivArea'] > np.log1p(4000)
-cond2 = house_df_ohe['SalePrice'] < np.log1p(500000)
-outlier_index = house_df_ohe[cond1 & cond2].index
+cond1 = house_df_ohe['GrLivArea'] > np.log1p(4000)   # house_df_ohe['GrLivArea']는 이미 로그캐스팅 돼 있으니까
+cond2 = house_df_ohe['SalePrice'] < np.log1p(500000) # house_df_ohe['SalePrice']는 이미 로그캐스팅 돼 있으니까
+outlier_index = house_df_ohe[cond1 & cond2].index # 좌표에서 outlier 좌표만 포함된 범위 선택
 
 print('아웃라이어 레코드 index :', outlier_index.values)
 print('아웃라이어 삭제 전 house_df_ohe shape:', house_df_ohe.shape)
 # DataFrame의 index를 이용하여 아웃라이어 레코드 삭제. 
-house_df_ohe.drop(outlier_index, axis=0, inplace=True)
+house_df_ohe.drop(outlier_index, axis=0, inplace=True) # axis=0 : 로우를 제거
 print('아웃라이어 삭제 후 house_df_ohe shape:', house_df_ohe.shape)
+'''
+아웃라이어 레코드 index : [ 523 1298]
+아웃라이어 삭제 전 house_df_ohe shape: (1460, 271)
+아웃라이어 삭제 후 house_df_ohe shape: (1458, 271) // 잘 삭제됐는지 확인 
+'''
 
 
 # In[23]:
 
-
+# 로우 바뀌었으니, 이제 새롭게 다시 해보기! train_test_split, get_best_params
 y_target = house_df_ohe['SalePrice']
 X_features = house_df_ohe.drop('SalePrice',axis=1, inplace=False)
 X_train, X_test, y_train, y_test = train_test_split(X_features, y_target, test_size=0.2, random_state=156)
 
 ridge_params = { 'alpha':[0.05, 0.1, 1, 5, 8, 10, 12, 15, 20] }
-lasso_params = { 'alpha':[0.001, 0.005, 0.008, 0.05, 0.03, 0.1, 0.5, 1,5, 10] }
+lasso_params = { 'alpha':[0.0001, 0.0003, 0.0005, 0.0008, 0.001, 0.005] }
 best_ridge = get_best_params(ridge_reg, ridge_params)
 best_lasso = get_best_params(lasso_reg, lasso_params)
 
@@ -537,16 +559,24 @@ lr_reg = LinearRegression()
 lr_reg.fit(X_train, y_train)
 ridge_reg = Ridge(alpha=8)
 ridge_reg.fit(X_train, y_train)
-lasso_reg = Lasso(alpha=0.001)
+lasso_reg = Lasso(alpha=0.0005)
 lasso_reg.fit(X_train, y_train)
 
 # 모든 모델의 RMSE 출력
 models = [lr_reg, ridge_reg, lasso_reg]
 get_rmses(models)
+'''
+LinearRegression 로그 변환된 RMSE: 0.129
+Ridge 로그 변환된 RMSE: 0.103
+Lasso 로그 변환된 RMSE: 0.101
+'''
 
 # 모든 모델의 회귀 계수 시각화 
 models = [lr_reg, ridge_reg, lasso_reg]
 visualize_coefficient(models)
+'''
+또 더 좋아짐!
+'''
 
 
 # ### 회귀 트리 학습/예측/평가 
@@ -561,7 +591,10 @@ from xgboost import XGBRegressor
 xgb_params = {'n_estimators':[1000]}
 xgb_reg = XGBRegressor(n_estimators=1000, learning_rate=0.05, 
                        colsample_bytree=0.5, subsample=0.8)
-best_xgb = get_best_params(xgb_reg, xgb_params)
+best_xgb = get_best_params(xgb_reg, xgb_params) # 최적 estimator
+'''
+XGBRegressor 5 CV 시 최적 평균 RMSE 값: 0.1178, 최적 alpha:{'n_estimators': 1000}
+'''
 
 
 # In[26]:
@@ -572,8 +605,10 @@ from lightgbm import LGBMRegressor
 lgbm_params = {'n_estimators':[1000]}
 lgbm_reg = LGBMRegressor(n_estimators=1000, learning_rate=0.05, num_leaves=4, 
                          subsample=0.6, colsample_bytree=0.4, reg_lambda=10, n_jobs=-1)
-best_lgbm = get_best_params(lgbm_reg, lgbm_params)
-
+best_lgbm = get_best_params(lgbm_reg, lgbm_params) # 최적 estimator
+'''
+LGBMRegressor 5 CV 시 최적 평균 RMSE 값: 0.1163, 최적 alpha:{'n_estimators': 1000}
+'''
 
 # ** 트리 회귀 모델의 피처 중요도 시각화 **
 
@@ -584,7 +619,7 @@ best_lgbm = get_best_params(lgbm_reg, lgbm_params)
 def get_top_features(model):
     ftr_importances_values = model.feature_importances_
     ftr_importances = pd.Series(ftr_importances_values, index=X_features.columns  )
-    ftr_top20 = ftr_importances.sort_values(ascending=False)[:20]
+    ftr_top20 = ftr_importances.sort_values(ascending=False)[:20] # 상위 20개만
     return ftr_top20
 
 def visualize_ftr_importances(models):
@@ -603,7 +638,8 @@ def visualize_ftr_importances(models):
 
 # 앞 예제에서 get_best_params( )가 반환한 GridSearchCV로 최적화된 모델의 피처 중요도 시각화    
 models = [best_xgb, best_lgbm]
-visualize_ftr_importances(models)
+visualize_ftr_importances(models) # models의 피처 중요도 보여주는 함수
+'''두 모델의 피처 중요도가 완전히 다르네~!!???'''
 
 
 # ### 회귀 모델들의 예측 결과 혼합을 통한 최종 예측
