@@ -41,9 +41,16 @@ zero_to_mean=['Glucose', 'BloodPressure', 'Insulin']
 for each in zero_to_mean:
     mean = int(X[X[each]!=0][each].agg('mean'))
     X[each] = X[each].apply(lambda x:mean if x==0 else x)
-X['SkinThickness'] = X['Pregnancies'].apply(lambda x:25 if x>0 else 15)
-X['BMI'] = X['BloodPressure'].apply(lambda x:X_describe['BMI']['75%'] if x >= 110 \
+
+test = X[X['SkinThickness']==0]['Pregnancies'].apply(lambda x:x if x!=0 else(25 if x>0 else 15))
+indexes = test.index
+X['SkinThickness'][indexes] = test[indexes]
+
+test = X[X['BMI']==0]['BloodPressure'].apply(lambda x:X_describe['BMI']['75%'] if x >= 110 \
                                     else(X_describe['BMI']['50%'] if (x>=90 and x<110) else X_describe['BMI']['25%']))
+indexes = test.index
+X['BMI'][indexes] = test[indexes]
+
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=156, stratify=y)
 
