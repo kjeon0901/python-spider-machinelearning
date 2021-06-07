@@ -1,56 +1,79 @@
+import numpy as np
 import pandas as pd
-import numpy as np 
 import matplotlib.pyplot as plt
-import seaborn as sns
-from scipy.stats import skew # 비대칭도(skewness)에 대한 값 뱉어줌. 
 
-sample_size = 500
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score
+from sklearn.metrics import f1_score, confusion_matrix, precision_recall_curve, roc_curve
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from lightgbm import LGBMClassifier
+from xgboost import XGBClassifier
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier
 
-X = np.random.normal(0, 5, sample_size) # 평균 0 표준편차 5인 데이터 500개 뽑아줌
-    # random.randn(m, n) : 평균 0 표준편차 1인 정규분포를 (m,n)만큼 뽑아준다. 
-    # random.normal(평균, 표준편차, size) : 구체적으로 평균과 표준편차를 알려줌!
-sns.distplot(X)
-print(abs(X.min()))
-'''12.134544252814834'''
 
-X = X + abs(X.min()) # |최솟값|을 X벡터에 모두 더해줌 => 최솟값이 0이 되도록 shift !
-sns.distplot(X)
+diabetes_data = pd.read_csv('C:/jeon/diabetes.csv')
 
-r = np.random.normal(0, 2, sample_size)
-sns.distplot(r)
+print(diabetes_data.info()) # null값 x
 
-Y = X * 1.0 + r + abs(r.min()) 
-    # y=x 그래프에 r라는 noise 정규분포를 또 줘서 scatter 주변에 막 찍히게 해줌. 
-    # 대신 y값이 음수가 나오지 않도록 r의 최솟값도 또 더해줘서 shift시켜줌. 
-plt.scatter(X,Y)
+'''
+Outcome 1-당뇨병o, 0-당뇨병x
 
-df = pd.DataFrame({'X':X, 'Y':Y})
-print(df.head())
-'''        X          Y
-0  21.482822  31.258772
-1  19.002501  26.392140
-2  14.705231  25.367837
-3  16.741191  22.972485
-4  10.085656  22.446603
+1. 로지스틱 회귀, LGB, XGB, GBM, 랜덤포레스트 이용
+    => 각 estimator 마다 - 정확도, 정밀도, 재현율, f1, roc_auc(predict_proba() 필요함)값 측정
+
+2. Glucose, BloodPressure, Insulin의 0 -> 평균값으로 바꿈
+SkinTickness의 0 ->  임신횟수(Pregnancies) > 0이면 SkinTickness = 25
+                                        == 0                 = 15
+BMI의 0 ->   혈압(BloodPressure) >= 110 이면 BMI의 quentile 75%값 (describe로 확인)
+                            90<= x <110                     50%
+                                 < 90                       25%
+
 '''
 
-sns.jointplot(x='X', y='Y', data=df, alpha=0.5)
-#plt.savefig('../../assets/images/markdown_img/180605_1519_resolve_skewness_scatter_plot.svg')
-plt.show()
-'''
-jointplot() : scatter 그래프에 X축, Y축에 대한 히스토그램까지 함께 보여줌. 
-sample_size가 엄청 커지면 도수분포도 그냥 scatter 그래프로만은 판단하기 어렵기 때문에 유용. 
-'''
 
-sqr_vs = [0.2, 0.5, 1.0, 2.0, 3.0]
+X = diabetes_data.iloc[:, :-1]
+y = diabetes_data.iloc[:, -1]
+X_describe = X.describe()
 
-f, axes = plt.subplots(1, 5, figsize=(15, 3))
-for i, j in enumerate(sqr_vs):
-    axes[i].set_title('X ** {} \nskewness = {:.2f}'.format(j, skew(df['X']**j)))
-    sns.distplot(df['X']**j, ax=axes[i], kde=False)
-#plt.savefig('../../assets/images/markdown_img/180605_1517_resolve_skewness_compare.svg')
-plt.show()
-'''
-skewness의 절댓값이 커질수록 비대칭성 커짐. 
-skewness가 0에 가까울수록 표준정규분포와 가까워짐. 
-'''
+zero_to_mean=['Glucose', 'BloodPressure', 'Insulin']
+for each in zero_to_mean:
+    mean = int(X[X[each]!=0][each].agg('mean'))
+    X[each] = X[each].apply(lambda x:mean if x==0 else x)
+X['SkinThickness'] = X['Pregnancies'].apply(lambda x:25 if x>0 else 15)
+X['BMI'] = X['BloodPressure'].apply(lambda x:X_describe['BMI']['75%'] if x >= 110 \
+                                    else(X_describe['BMI']['50%'] if (x>=90 and x<110) else X_describe['BMI']['25%']))
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=156, stratify=y)
+
+#아래에서 인수로 추가해준 건 warning 제거해주기 위해 추가함. 안써줘도 상관없음. 
+lr_clf = LogisticRegression(max_iter=200)
+lgb_clf = LGBMClassifier()
+xgb_clf = XGBClassifier(use_label_encoder=False, eval_metric='mlogloss')
+gbm_clf = GradientBoostingClassifier()
+rf_clf = RandomForestClassifier()
+
+models = [lr_clf, lgb_clf, xgb_clf, gbm_clf, rf_clf]
+for idx, model in enumerate(models):
+    model.fit(X_train, y_train)
+    pred = model.predict(X_test)
+    pred_proba = model.predict_proba(X_test)[:, 1]
+    
+    print("\n",end='')
+    print(idx+1)
+    print("정확도 : {0:.4f}".format(accuracy_score(pred, y_test)))
+    print("정밀도 : {0:.4f}".format(precision_score(pred, y_test)))
+    print("재현율 : {0:.4f}".format(recall_score(pred, y_test)))
+    print("f1 : {0:.4f}".format(f1_score(pred, y_test)))
+    print("roc_auc : {0:.4f}".format(roc_auc_score(y_test, pred_proba)))
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
