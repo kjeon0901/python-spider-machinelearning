@@ -28,25 +28,42 @@ Outcome : Class 0-사기X 1-사기O (신용카드)
     outlier같은 index는 제거해버리기. 
 '''
 
+def get_performance(X, y):
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=156, stratify=y)
+
+    lr_clf = LogisticRegression(max_iter=500)
+    lgb_clf = LGBMClassifier()
+
+    models = [lr_clf, lgb_clf]
+    for idx, model in enumerate(models):
+        model.fit(X_train, y_train)
+        pred = model.predict(X_test)
+        pred_proba = model.predict_proba(X_test)[:, 1]
+        
+        print("\n정확도 : {0:.4f}".format(accuracy_score(pred, y_test)))
+        print("정밀도 : {0:.4f}".format(precision_score(pred, y_test)))
+        print("재현율 : {0:.4f}".format(recall_score(pred, y_test)))
+        print("f1 : {0:.4f}".format(f1_score(pred, y_test)))
+        print("roc_auc : {0:.4f}".format(roc_auc_score(y_test, pred_proba)))
+
+
 X = creditcard_data.iloc[:, :-1]
 y = creditcard_data.iloc[:, -1]
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=156, stratify=y)
+get_performance(X, y)
+'''
+정확도 : 0.9990
+정밀도 : 0.4898
+재현율 : 0.8421
+f1 : 0.6194
+roc_auc : 0.9126
 
-lr_clf = LogisticRegression(max_iter=200)
-lgb_clf = LGBMClassifier()
-
-models = [lr_clf, lgb_clf]
-for idx, model in enumerate(models):
-    model.fit(X_train, y_train)
-    pred = model.predict(X_test)
-    pred_proba = model.predict_proba(X_test)[:, 1]
-
-    print("\n정확도 : {0:.4f}".format(accuracy_score(pred, y_test)))
-    print("정밀도 : {0:.4f}".format(precision_score(pred, y_test)))
-    print("재현율 : {0:.4f}".format(recall_score(pred, y_test)))
-    print("f1 : {0:.4f}".format(f1_score(pred, y_test)))
-    print("roc_auc : {0:.4f}".format(roc_auc_score(y_test, pred_proba)))
+정확도 : 0.9970
+정밀도 : 0.5102
+재현율 : 0.2924
+f1 : 0.3717
+roc_auc : 0.6391
+'''
     
 corr = creditcard_data.corr()
 sns.heatmap(corr, cmap = 'RdBu')
@@ -54,6 +71,12 @@ sns.heatmap(corr, cmap = 'RdBu')
 label_corr = corr.iloc[:-1, -1] # 레이블 데이터와의 상관계수
 label_corr = abs(label_corr).sort_values(ascending=False)
 print(label_corr.head(3))
+'''
+V17    0.326481
+V14    0.302544
+V12    0.260593
+Name: Class, dtype: float64
+'''
 
 head3=[]
 for i in range(3):
@@ -76,18 +99,31 @@ cond2 = head3[1] > 10
 cond3 = head3[2] > 6
 
 outlier_index = X[ cond1 | cond2 | cond3 ].index # 좌표에서 outlier 좌표만 포함된 범위 선택
-X_copy = X.copy()
-X_copy = X_copy.drop(outlier_index, axis=0)
+creditcard_copy = creditcard_data.copy()
+creditcard_copy = creditcard_copy.drop(outlier_index, axis=0)
+
+X = creditcard_copy.iloc[:, :-1]
+y = creditcard_copy.iloc[:, -1]
+
+get_performance(X, y)
+'''
+정확도 : 0.9990
+정밀도 : 0.5204
+재현율 : 0.8095
+f1 : 0.6335
+roc_auc : 0.9381
+
+    better  => 정확도, 정밀도, f1, roc_auc 
+    worse   => 재현율
 
 
+정확도 : 0.9964
+정밀도 : 0.6327
+재현율 : 0.2672
+f1 : 0.3758
+roc_auc : 0.8082
 
-
-
-
-
-
-
-
-
-
+    better  => 정밀도, f1, roc_auc 
+    worse   => 정확도, 재현율
+'''
 
