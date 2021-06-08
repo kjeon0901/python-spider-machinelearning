@@ -65,6 +65,11 @@ min_y_axle = max(max(head3[0]), max(head3[1]), max(head3[2]))
 plt.scatter(np.linspace(min_x_axle, min_y_axle, num=284807), head3[0].values, marker='o', c=head3[0], s=25, cmap='rainbow', edgecolor='k')
 plt.scatter(np.linspace(min_x_axle, min_y_axle, num=284807), head3[1].values, marker='o', c=head3[1], s=25, cmap='rainbow', edgecolor='k')
 plt.scatter(np.linspace(min_x_axle, min_y_axle, num=284807), head3[2].values, marker='o', c=head3[2], s=25, cmap='rainbow', edgecolor='k')
+'''
+quentile (75%, 50%, 25%) 확인해서 최댓값+1.5*q, 최솟값-1.5*q로 이상치 구하는 것보다 이렇게 직접 구하는 게 더 정확할 때 多 !
+그래프에서 어떤 값까지 이상치로 볼지는 온전히 내 판단. 
+나중에 퍼포먼스 보고 다시 여러번 이상치 걸러서 그렇게 이상치 제거된 최적의 피처데이터 만들면 됨. 
+'''
 
 cond1 = head3[0] < -25
 cond2 = head3[1] > 10
