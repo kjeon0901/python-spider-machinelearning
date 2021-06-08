@@ -23,8 +23,9 @@ Outcome : Class 0-사기X 1-사기O (신용카드)
 
 1. 원본 데이터 프레임 복사 후, 로지스틱회귀와 LGB 이용해서 정확도, 정밀도, 재현율, F1, roc_auc 구하기
 2. corr()함수로 데이터 간의 상관관계 계수 구한 후, heatmap 그리기
-3. 레이블 데이터와 상관계수의 '절댓값'이 가장 높은 3개의 feature데이터가 뭔지 구하기
-
+   그리고 레이블 데이터와 상관계수의 '절댓값'이 가장 높은 3개의 feature데이터가 뭔지 구하기
+3. 3개의 feature데이터 오름차순 정렬해서 scatter 찍어보면 outlier 보임. sorting 해야 더 명확히 보임. 
+    outlier같은 index는 제거해버리기. 
 '''
 
 X = creditcard_data.iloc[:, :-1]
@@ -53,3 +54,35 @@ sns.heatmap(corr, cmap = 'RdBu')
 label_corr = corr.iloc[:-1, -1] # 레이블 데이터와의 상관계수
 label_corr = abs(label_corr).sort_values(ascending=False)
 print(label_corr.head(3))
+
+head3=[]
+for i in range(3):
+    head3.append(X[label_corr.head(3).index[i]].sort_values(ascending=False))
+
+min_x_axle = min(min(head3[0]), min(head3[1]), min(head3[2]))
+min_y_axle = max(max(head3[0]), max(head3[1]), max(head3[2]))
+
+plt.scatter(np.linspace(min_x_axle, min_y_axle, num=284807), head3[0].values, marker='o', c=head3[0], s=25, cmap='rainbow', edgecolor='k')
+plt.scatter(np.linspace(min_x_axle, min_y_axle, num=284807), head3[1].values, marker='o', c=head3[1], s=25, cmap='rainbow', edgecolor='k')
+plt.scatter(np.linspace(min_x_axle, min_y_axle, num=284807), head3[2].values, marker='o', c=head3[2], s=25, cmap='rainbow', edgecolor='k')
+
+cond1 = head3[0] < -25
+cond2 = head3[1] > 10
+cond3 = head3[2] > 6
+
+outlier_index = X[ cond1 | cond2 | cond3 ].index # 좌표에서 outlier 좌표만 포함된 범위 선택
+X_copy = X.copy()
+X_copy = X_copy.drop(outlier_index, axis=0)
+
+
+
+
+
+
+
+
+
+
+
+
+
