@@ -15,9 +15,9 @@ get_ipython().run_line_magic('matplotlib', 'inline')
 iris = load_iris()
 
 # 넘파이 데이터 셋을 Pandas DataFrame으로 변환
-columns = ['sepal_length','sepal_width','petal_length','petal_width']
+columns = ['sepal_length','sepal_width','petal_length','petal_width'] # 4개의 feature
 irisDF = pd.DataFrame(iris.data , columns=columns)
-irisDF['target']=iris.target
+irisDF['target']=iris.target # 3개의 label
 irisDF.head(3)
 
 
@@ -31,9 +31,13 @@ markers=['^', 's', 'o']
 
 #setosa의 target 값은 0, versicolor는 1, virginica는 2. 각 target 별로 다른 shape으로 scatter plot 
 for i, marker in enumerate(markers):
-    x_axis_data = irisDF[irisDF['target']==i]['sepal_length']
+    x_axis_data = irisDF[irisDF['target']==i]['sepal_length'] # feature 2개만 뽑아서 축 2개로 scatter해봄
     y_axis_data = irisDF[irisDF['target']==i]['sepal_width']
-    plt.scatter(x_axis_data, y_axis_data, marker=marker,label=iris.target_names[i])
+    plt.scatter(x_axis_data, y_axis_data, marker=marker,label=iris.target_names[i]) # 3개의 label이 scatter로 그려지는 마커가 서로 다르다. 
+    '''
+    setosa는 scatter 그래프에서 구분이 명확. 
+    versicolor, virginica는 섞여 있는 데이터가 많아서 나중에 모델이 구분 못함. 
+    '''
 
 plt.legend()
 plt.xlabel('sepal length')
@@ -48,7 +52,7 @@ plt.show()
 
 from sklearn.preprocessing import StandardScaler
 
-iris_scaled = StandardScaler().fit_transform(irisDF.iloc[:, :-1])
+iris_scaled = StandardScaler().fit_transform(irisDF.iloc[:, :-1]) # StandardScaler로 정규분포로 표준화해서 label값 제외한 피처데이터만 리턴
 
 
 # In[4]:
@@ -64,11 +68,15 @@ iris_scaled.shape
 
 from sklearn.decomposition import PCA
 
-pca = PCA(n_components=2)
+pca = PCA(n_components=2) # 2개의 축 만들어서 2차원으로 차원 축소하겠다. pca를 수행하는 객체. 
 
 #fit( )과 transform( ) 을 호출하여 PCA 변환 데이터 반환
 pca.fit(iris_scaled)
-iris_pca = pca.transform(iris_scaled)
+iris_pca = pca.transform(iris_scaled) # pca가 iris_scaled를 가장 잘 나타내는 축 2개에 데이터 투영해서 리턴
+    # 순서1. iris_scaled의 공분산 행렬 만듦
+    # 순서2. 가장 높은 고유값 2개 구함
+    # 순서3. 그 고유값에 해당하는 2개의 고유벡터(주성분벡터) 구함
+    # 순서4. 2개의 주성분벡터에 데이터 투영
 print(iris_pca.shape)
 
 
@@ -92,9 +100,17 @@ markers=['^', 's', 'o']
 
 #pca_component_1 을 x축, pc_component_2를 y축으로 scatter plot 수행. 
 for i, marker in enumerate(markers):
-    x_axis_data = irisDF_pca[irisDF_pca['target']==i]['pca_component_1']
+    x_axis_data = irisDF_pca[irisDF_pca['target']==i]['pca_component_1'] # 이제는 pca 끝난 2개의 축으로 scatter. 
     y_axis_data = irisDF_pca[irisDF_pca['target']==i]['pca_component_2']
     plt.scatter(x_axis_data, y_axis_data, marker=marker,label=iris.target_names[i])
+    '''
+    setosa는 scatter 그래프에서 구분이 여전히 명확. 
+    versicolor, virginica는 원본 데이터보다 훨씬 구분 명확해짐. 
+     => 아까보다 모델링 정확도 높일 수 있음. 
+     
+    즉, 차원 축소한답시고 column 2개만 남기고 다 제거해서 보는 것보다, 
+    이렇게 PCA로 제대로 2개의 축 만들어서 모델링하는 게 훨씬 좋다!!!!
+    '''
 
 plt.legend()
 plt.xlabel('pca_component_1')
