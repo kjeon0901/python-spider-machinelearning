@@ -8636,10 +8636,30 @@ roc_auc : 0.8082
 차원 축소 (Dimension Reduction)
 - 피처끼리 종속적인 데이터에 사용. 상관관계가 높은지 확인 : corr() 구해서 heatmap(corr)
 - 종류
-	PCA (고유 값, 고유 벡터♣) : 피처를 삭제하는 게 아니라, 피처들을 잘 설명하는 (고유값이 가장 큰) 고유벡터를 내가 원하는 k개만큼(걔네는 모두 서로 직각) 찾는 것. 걔네들이 새로운 축이 되는 것. 
+	PCA多 (고유 값, 고유 벡터♣) : 피처를 삭제하는 게 아니라, 피처들을 잘 설명하는 (고유값이 가장 큰) 고유벡터를 내가 원하는 k개만큼(걔네는 모두 서로 직각) 찾는 것. 걔네들이 새로운 축이 되는 것. 
 	LDA : PCA에서 더 나아가, 클래스 간 분산은 최대화하고 클래스 내부 분산은 최소화하는 방향으로 차원 축소. 
-	SVD
+	SVD多
 	NMF
+	원-핫 인코딩에서 레이블이 많을 수록 새로생긴 column 값이 대부분 0인 Sparse Matrix(↔Dense Matrix 꽉차있는 행렬)가 만들어질 수밖에 없다.  => PCA가 어려움. 대신 SVD 많이 씀. 
+
+PCA ♣
+- Ax = λx
+	A : 공분산행렬
+	x : PCA의 주성분벡터, 입력 데이터의 분산이 큰 '방향'
+	λ : PCA의 주성분벡터의 크기, 입력 데이터의 분산(=변동성). "분류"의 관점에서, 클수록 label값 여러개인 데이터 설명 GOOD :)
+- λ가 제일 큰(가장 높은 분산을 가지는) 데이터의 축 x(= 주성분벡터 = 고유벡터)를 찾아서 그 축으로 투영해서 차원 축소
+- 고유 벡터로 새로운 축 만들지 않으면, 잘못 만들어져서 투영된 label값 다 섞임.
+- ex)	개별 데이터를 평가할 'c언어', '파이썬' 2개의 피처에 가중치(고유벡터)를 주어 '종합 점수' 1개로만 평가할 수 있게 되는 느낌. 
+	새로 만들어진 '종합점수' 축으로 원래의 2차원 좌표에 찍혀 있던 개별 데이터들의 점수를 투영해서 1차원으로 평가한다. 
+
+LDA
+- PCA(공분산행렬로 분산이 가장 큰 축 찾음)에서 더 나아가, LDA는 label을 최대한 분리할 수 있는 축 찾음. 
+- 클래스 간 분산 Sb (between-class scatter) 최대↑
+  클래스 내부 분산 Sw (within-class scatter) 최소↓
+- pca에서 사용했던 Ax = λx 에서 고유값, 고유벡터는 똑같이 구함 - A 어떻게구하는지는 자세히 몰라도 됨^-^
+
+SVD ♣
+- 
 
 고유 값, 고유 벡터
 - Ax = λx (A:정방행렬(nxn)인 "공분산행렬", x:벡터, λ:상수)
@@ -8689,20 +8709,13 @@ roc_auc : 0.8082
 - 선형 변환이 어떻게 되는지 나타내는 표기법. 현재 우리가 가진 데이터 분포를 설명하는 행렬. 
 - 대각선 원소 : 각 변수의 분산
 
-PCA
-- Ax = λx
-	A : 공분산행렬
-	x : PCA의 주성분벡터, 입력 데이터의 분산이 큰 '방향'
-	λ : PCA의 주성분벡터의 크기, 입력 데이터의 분산(=변동성). "분류"의 관점에서, 클수록 label값 여러개인 데이터 설명 GOOD :)
-- λ가 제일 큰(가장 높은 분산을 가지는) 데이터의 축 x(= 주성분벡터 = 고유벡터)를 찾아서 그 축으로 투영해서 차원 축소
-- 고유 벡터로 새로운 축 만들지 않으면, 잘못 만들어져서 투영된 label값 다 섞임.
-- ex)	개별 데이터를 평가할 'c언어', '파이썬' 2개의 피처에 가중치(고유벡터)를 주어 '종합 점수' 1개로만 평가할 수 있게 되는 느낌. 
-	새로 만들어진 '종합점수' 축으로 원래의 2차원 좌표에 찍혀 있던 개별 데이터들의 점수를 투영해서 1차원으로 평가한다. 
+직교행렬 Orthogonal Matrix
+- 행렬을 이루는 각 벡터(세로)끼리 모두 직각
 
-LDA
+대각행렬 Diagonal Matrix
+- 주대각선 위의 x1, x2, x3, ..., xn을 제외한 나머지 요소가 모두 0. (x1, x2, x3, ..., xn도 0이 될 수 있음. )
 
-
-=============================================================
+■■■■■■■■■■■■■0610 수업中 새로 알게된것■■■■■■■■■■■■■
 
 # ### PCA 개요 
 
@@ -9002,10 +9015,115 @@ print('PCA 변환 데이터 셋 평균 정확도:{0:.4f}'.format(np.mean(scores_
 모든 25개의 축이 전부 다 독립적이었다면 퍼포먼스가 나빠졌겠지만, 상관관계가 높은 축들이 있었기에 크게 나빠지진 않은 것임!!
 '''
 
-■■■■■■■■■■■■■0610 수업中 새로 알게된것■■■■■■■■■■■■■
+=============================================================
+
+# ### LDA 개요 
+# ### 붓꽃 데이터 셋에 LDA 적용하기 
+
+# In[2]:
+
+
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.preprocessing import StandardScaler
+from sklearn.datasets import load_iris
+
+iris = load_iris()
+iris_scaled = StandardScaler().fit_transform(iris.data) # label빼고 피처값만 모두 정규화
+
+
+# In[3]:
+
+'''
+무조건 갖다 쓰는 건 bad. 
+항상 뭘 하든 내부에 어떤 일이 있는지, 어떻게 해야 하는지, 내 뜻대로 안 되면 뭐가 문제인지 
+개인 시간 투자해서 10시간 걸려도 파고들어야 한다. 
+그래야 감이 생김. => 1년, 2년, 연차 쌓일 수록 속도 확연히 빨라짐. 
+'''
+lda = LinearDiscriminantAnalysis(n_components=2)
+# fit()호출 시 target값 입력 
+lda.fit(iris_scaled, iris.target)   # 보통은 fit 시킬 때 feature, target 같이 넣어줘야 함. 
+                                    # PCA는 각각의 sample들이 어떤 target값을 가지는지 알 필요 x. feature만 넣어도 됐음.
+                                    # LDA는 알고리즘 상 target값이 필요함. label데이터 군집 끼리의 분산, 각 label군집 안에서의 분산이 필요. 그래서 target값도 넣어줌. 
+iris_lda = lda.transform(iris_scaled)
+print(iris_lda.shape)
+
+
+# In[4]:
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+get_ipython().run_line_magic('matplotlib', 'inline')
+
+lda_columns=['lda_component_1','lda_component_2']
+irisDF_lda = pd.DataFrame(iris_lda,columns=lda_columns)
+irisDF_lda['target']=iris.target # irisDF_lda size:(150, 3)
+
+#setosa는 세모, versicolor는 네모, virginica는 동그라미로 표현
+markers=['^', 's', 'o']
+
+#setosa의 target 값은 0, versicolor는 1, virginica는 2. 각 target 별로 다른 shape으로 scatter plot
+for i, marker in enumerate(markers):
+    x_axis_data = irisDF_lda[irisDF_lda['target']==i]['lda_component_1']
+    y_axis_data = irisDF_lda[irisDF_lda['target']==i]['lda_component_2']
+
+    plt.scatter(x_axis_data, y_axis_data, marker=marker,label=iris.target_names[i])
+
+plt.legend(loc='upper right')
+plt.xlabel('lda_component_1')
+plt.ylabel('lda_component_2')
+plt.show()
+
+
+# In[ ]:
+
+# PCA 변환한 데이터로 그린 scatter 와 비교. 아래 코드는 PCA. 위에서 그린 LDA가 조금 더 명확하게 분류됨. 
+
+from sklearn.datasets import load_iris
+import pandas as pd
+import matplotlib.pyplot as plt
+get_ipython().run_line_magic('matplotlib', 'inline')
+
+# 사이킷런 내장 데이터 셋 API 호출
+iris = load_iris()
+
+# 넘파이 데이터 셋을 Pandas DataFrame으로 변환
+columns = ['sepal_length','sepal_width','petal_length','petal_width']
+irisDF = pd.DataFrame(iris.data , columns=columns)
+irisDF['target']=iris.target
+irisDF.head(3)
+from sklearn.preprocessing import StandardScaler
+
+iris_scaled = StandardScaler().fit_transform(irisDF.iloc[:, :-1])
+from sklearn.decomposition import PCA
+
+pca = PCA(n_components=2)
+
+#fit( )과 transform( ) 을 호출하여 PCA 변환 데이터 반환
+pca.fit(iris_scaled)
+iris_pca = pca.transform(iris_scaled)
+print(iris_pca.shape)
+pca_columns=['pca_component_1','pca_component_2']
+irisDF_pca = pd.DataFrame(iris_pca,columns=pca_columns)
+irisDF_pca['target']=iris.target
+#setosa를 세모, versicolor를 네모, virginica를 동그라미로 표시
+markers=['^', 's', 'o']
+
+#pca_component_1 을 x축, pc_component_2를 y축으로 scatter plot 수행. 
+for i, marker in enumerate(markers):
+    x_axis_data = irisDF_pca[irisDF_pca['target']==i]['pca_component_1']
+    y_axis_data = irisDF_pca[irisDF_pca['target']==i]['pca_component_2']
+    plt.scatter(x_axis_data, y_axis_data, marker=marker,label=iris.target_names[i])
+
+plt.legend()
+plt.xlabel('pca_component_1')
+plt.ylabel('pca_component_2')
+plt.show()
+
+============================================================
 
 
 
 
 
-
+■■■■■■■■■■■■■0611 수업中 새로 알게된것■■■■■■■■■■■■■

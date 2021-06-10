@@ -12,11 +12,16 @@
 import numpy as np
 from numpy.linalg import svd
 
-# 4X4 Random 행렬 a 생성 
+# 4X4 Random 행렬 a 생성 - 행렬 개별 row끼리의 의존성 없애려고. 
 np.random.seed(121)
 a = np.random.randn(4,4)
 print(np.round(a, 3))
-
+'''
+[[-0.212 -0.285 -0.574 -0.44 ]
+ [-0.33   1.184  1.615  0.367]
+ [-0.014  0.63   1.71  -1.327]
+ [ 0.402 -0.191  1.404 -1.969]]
+'''
 
 # **SVD 행렬 분해**
 
@@ -24,7 +29,7 @@ print(np.round(a, 3))
 
 
 U, Sigma, Vt = svd(a)
-print(U.shape, Sigma.shape, Vt.shape)
+print(U.shape, Sigma.shape, Vt.shape) '''(4, 4) (4,) (4, 4)'''
 print('U matrix:\n',np.round(U, 3))
 print('Sigma Value:\n',np.round(Sigma, 3))
 print('V transpose matrix:\n',np.round(Vt, 3))

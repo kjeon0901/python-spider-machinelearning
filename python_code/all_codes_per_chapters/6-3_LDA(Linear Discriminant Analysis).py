@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+# ### LDA 개요 
 # ### 붓꽃 데이터 셋에 LDA 적용하기 
 
 # In[2]:
@@ -11,15 +12,22 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.datasets import load_iris
 
 iris = load_iris()
-iris_scaled = StandardScaler().fit_transform(iris.data)
+iris_scaled = StandardScaler().fit_transform(iris.data) # label빼고 피처값만 모두 정규화
 
 
 # In[3]:
 
-
+'''
+무조건 갖다 쓰는 건 bad. 
+항상 뭘 하든 내부에 어떤 일이 있는지, 어떻게 해야 하는지, 내 뜻대로 안 되면 뭐가 문제인지 
+개인 시간 투자해서 10시간 걸려도 파고들어야 한다. 
+그래야 감이 생김. => 1년, 2년, 연차 쌓일 수록 속도 확연히 빨라짐. 
+'''
 lda = LinearDiscriminantAnalysis(n_components=2)
 # fit()호출 시 target값 입력 
-lda.fit(iris_scaled, iris.target)
+lda.fit(iris_scaled, iris.target)   # 보통은 fit 시킬 때 feature, target 같이 넣어줘야 함. 
+                                    # PCA는 각각의 sample들이 어떤 target값을 가지는지 알 필요 x. feature만 넣어도 됐음.
+                                    # LDA는 알고리즘 상 target값이 필요함. label데이터 군집 끼리의 분산, 각 label군집 안에서의 분산이 필요. 그래서 target값도 넣어줌. 
 iris_lda = lda.transform(iris_scaled)
 print(iris_lda.shape)
 
@@ -33,7 +41,7 @@ get_ipython().run_line_magic('matplotlib', 'inline')
 
 lda_columns=['lda_component_1','lda_component_2']
 irisDF_lda = pd.DataFrame(iris_lda,columns=lda_columns)
-irisDF_lda['target']=iris.target
+irisDF_lda['target']=iris.target # irisDF_lda size:(150, 3)
 
 #setosa는 세모, versicolor는 네모, virginica는 동그라미로 표현
 markers=['^', 's', 'o']
@@ -53,6 +61,7 @@ plt.show()
 
 # In[ ]:
 
+# PCA 변환한 데이터로 그린 scatter 와 비교. 아래 코드는 PCA. 위에서 그린 LDA가 조금 더 명확하게 분류됨. 
 
 from sklearn.datasets import load_iris
 import pandas as pd
