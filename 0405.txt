@@ -8353,6 +8353,138 @@ for idx, model in enumerate(models):
     print("f1 : {0:.4f}".format(f1_score(pred, y_test)))
     print("roc_auc : {0:.4f}".format(roc_auc_score(y_test, pred_proba)))
 
+'''
+=== 선생님 풀이! ===
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score
+from sklearn.metrics import f1_score, confusion_matrix, precision_recall_curve, roc_curve
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from lightgbm import LGBMClassifier
+from xgboost import XGBClassifier
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier
+
+diabetes_data = pd.read_csv('E:/no1/cho/archive/diabetes.csv')
+
+test1 = diabetes_data.describe()
+diabetes_data.info()
+
+def get_clf_eval(y_test, pred=None, pred_proba=None):
+    confusion = confusion_matrix( y_test, pred)
+    accuracy = accuracy_score(y_test , pred)
+    precision = precision_score(y_test , pred)
+    recall = recall_score(y_test , pred)
+    f1 = f1_score(y_test,pred)
+    roc_auc = roc_auc_score(y_test, pred_proba)
+    print('정확도: {0:.4f}, 정밀도: {1:.4f}, 재현율: {2:.4f},\
+    F1: {3:.4f}, AUC:{4:.4f}'.format(accuracy, precision, recall, f1, roc_auc))
+
+
+def get_model_predict(model, X_train, X_test, y_train, y_test):
+    print('model: ' , type(model).__name__)
+    model.fit(X_train, y_train)
+    pred = model.predict(X_test)
+    pred_proba = model.predict_proba(X_test)[:, 1]
+    get_clf_eval(y_test , pred, pred_proba)
+
+
+X = diabetes_data.iloc[:, :-1]
+y = diabetes_data.iloc[:, -1]
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 156, stratify=y)
+
+lr_clf = LogisticRegression()
+LGB_clf = LGBMClassifier()
+XGB_clf = XGBClassifier()
+GB_clf = GradientBoostingClassifier()
+rf_clf = RandomForestClassifier()
+
+total = [lr_clf ,LGB_clf, XGB_clf, GB_clf, rf_clf]
+
+for row in total:
+    get_model_predict(row, X_train, X_test, y_train, y_test )
+    
+test = X['SkinThickness'].isnull().sum()
+
+bool0 = X['SkinThickness'] == 0
+bool1 = X['Pregnancies'] == 0
+bool2 = X['Pregnancies'] > 0
+
+#print(X['SkinThickness'].value_counts())
+
+X['SkinThickness'][bool0 & bool1] = 15
+X['SkinThickness'][bool0 & bool2] = 25
+
+#print(X['SkinThickness'].value_counts())
+
+test = X.describe()
+
+test1 = X['BMI'].value_counts()
+
+print(test1[36.6])
+print(test1[32])
+print(test1[27.3])
+
+bool3 = X['BMI'] == 0
+print(bool3.sum())
+
+bool4 = bool3 & X['BloodPressure'] > 110
+print(bool4.sum())
+
+bool5 = bool3 & (X['BloodPressure'] <= 110) & (X['BloodPressure'] > 90)
+print(bool5.sum())
+
+bool6 = bool3 & (X['BloodPressure'] <= 90)
+print(bool6.sum())
+
+X['BMI'][bool3] = 36.6
+X['BMI'][bool4] = 32
+X['BMI'][bool5] = 27.3
+
+print('-------------------------------------')
+
+test2 = X['BMI'].value_counts()
+print(test2[36.6])
+print(test2[32])
+print(test2[27.3])
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 156, stratify=y)
+
+# 로지스틱 회귀로 학습,예측 및 평가 수행. 
+lr_clf = LogisticRegression()
+LGB_clf = LGBMClassifier()
+XGB_clf = XGBClassifier()
+GB_clf = GradientBoostingClassifier()
+rf_clf = RandomForestClassifier()
+
+total = [lr_clf ,LGB_clf, XGB_clf, GB_clf, rf_clf]
+
+for row in total:
+    get_model_predict(row, X_train, X_test, y_train, y_test )
+
+from sklearn.preprocessing import Binarizer
+
+def get_eval_by_threshold(y_test , pred_proba_c1, thresholds):
+    # thresholds 리스트 객체내의 값을 차례로 iteration하면서 Evaluation 수행.
+    for custom_threshold in thresholds:
+        binarizer = Binarizer(threshold=custom_threshold).fit(pred_proba_c1) 
+        custom_predict = binarizer.transform(pred_proba_c1)
+        print('임곗값:',custom_threshold)
+        get_clf_eval(y_test , custom_predict, pred_proba_c1)
+
+print('-------------------------------------------------------------')
+thresholds = [0.3 , 0.33 ,0.36,0.39, 0.42 , 0.45 ,0.48, 0.50]
+pred_proba = lr_clf.predict_proba(X_test)
+get_eval_by_threshold(y_test, pred_proba[:,1].reshape(-1,1), thresholds)
+
+'''
+
 ■■■■■■■■■■■■■0608 수업中 새로 알게된것■■■■■■■■■■■■■
 
 ######### creditcard.csv 연습퀴즈 #########
@@ -8502,13 +8634,15 @@ roc_auc : 0.8082
 - 요즘 Airbnb도 집 구조 3D로 보여줌. 마우스 휠로 드르륵~ 하면 그래픽 바뀌는걸 보여주는데, 그 행위로 내가 벡터에 계속 어떤 값을 곱해 주면서 선형 변환을 일으킨다. 
 
 차원 축소 (Dimension Reduction)
-- PCA (고유 값, 고유 벡터♣) : 피처를 삭제하는 게 아닐, 피처들을 잘 설명하는 (고유값이 가장 큰) 고유벡터를 내가 원하는 k개만큼(걔네는 모두 서로 직각) 찾는 것. 걔네들이 새로운 축이 되는 것. 
-- LDA
-- SVD
-- NMF
+- 피처끼리 종속적인 데이터에 사용. 상관관계가 높은지 확인 : corr() 구해서 heatmap(corr)
+- 종류
+	PCA (고유 값, 고유 벡터♣) : 피처를 삭제하는 게 아니라, 피처들을 잘 설명하는 (고유값이 가장 큰) 고유벡터를 내가 원하는 k개만큼(걔네는 모두 서로 직각) 찾는 것. 걔네들이 새로운 축이 되는 것. 
+	LDA : PCA에서 더 나아가, 클래스 간 분산은 최대화하고 클래스 내부 분산은 최소화하는 방향으로 차원 축소. 
+	SVD
+	NMF
 
 고유 값, 고유 벡터
-- Ax = λx (A:정방행렬(nxn)인 공분산행렬, x:벡터, λ:상수)
+- Ax = λx (A:정방행렬(nxn)인 "공분산행렬", x:벡터, λ:상수)
 	수많은 벡터가 있을 텐데, 어떤 x라는 벡터는 x벡터에 A라는 공분산행렬을 곱해서 x에 선형 변환을 해줬을 때, 이 변환이 방향은 그대로이고 크기만 바뀌는 그런 벡터 x가 있다. 
 	그 때의 벡터 x : 고유 벡터  (크기가 바뀌기 때문에 0이 아님!)
 	그 때의 크기 λ : 고유 값
@@ -8524,7 +8658,7 @@ roc_auc : 0.8082
 
 - 행렬 A가 주어졌을 때
 	1. 고유 값(λ) 을 구해보자!
-		: det( A - λI ) = 0 식에 A=주어진A 넣고, 고유 값 λ 구하기!
+		: det( A - λI ) = 0 식에 A=주어진 공분산행렬 A 넣고, 고유 값 λ 구하기!
 		> A가 2x2면 λ가 될 수 있는 2차방정식 det( A - λI )=ad-bc=0의 해 최대 2개
 		> A가 3x3면 λ, 즉 3차방정식 det( A - λI )=0의 해 최대 3개
 	2. 고유 벡터(x) 를 구해보자!
@@ -8552,18 +8686,21 @@ roc_auc : 0.8082
 
 공분산 행렬
 - n개의 모든 피처 간의 공분산을 나타낸 nxn 행렬 (정방행렬(nxn)이자 대칭행렬(A^T=A))
-- 선형 변환이 어떻게 되는지 나타내는 표기법
+- 선형 변환이 어떻게 되는지 나타내는 표기법. 현재 우리가 가진 데이터 분포를 설명하는 행렬. 
 - 대각선 원소 : 각 변수의 분산
 
 PCA
 - Ax = λx
 	A : 공분산행렬
 	x : PCA의 주성분벡터, 입력 데이터의 분산이 큰 '방향'
-	λ : PCA의 주성분벡터의 크기, 입력 데이터의 분산. 클수록 데이터 설명 GOOD :)
+	λ : PCA의 주성분벡터의 크기, 입력 데이터의 분산(=변동성). "분류"의 관점에서, 클수록 label값 여러개인 데이터 설명 GOOD :)
 - λ가 제일 큰(가장 높은 분산을 가지는) 데이터의 축 x(= 주성분벡터 = 고유벡터)를 찾아서 그 축으로 투영해서 차원 축소
 - 고유 벡터로 새로운 축 만들지 않으면, 잘못 만들어져서 투영된 label값 다 섞임.
 - ex)	개별 데이터를 평가할 'c언어', '파이썬' 2개의 피처에 가중치(고유벡터)를 주어 '종합 점수' 1개로만 평가할 수 있게 되는 느낌. 
 	새로 만들어진 '종합점수' 축으로 원래의 2차원 좌표에 찍혀 있던 개별 데이터들의 점수를 투영해서 1차원으로 평가한다. 
+
+LDA
+
 
 =============================================================
 
@@ -8810,9 +8947,9 @@ df_cols_scaled = scaler.fit_transform(X_features[cols_bill]) # ID, label 데이�
 pca = PCA(n_components=2) # 고유값 가장 높은 축 2개로 차원축소하겠다. 
 pca.fit(df_cols_scaled) # 6줄의 데이터를 축 2개로 축소시켰다. 
 
-print('PCA Component별 변동성:', pca.explained_variance_ratio_)
+print('PCA Component별 변동성:', pca.explained_variance_ratio_) # 각 축의 분산값
 '''
-PCA Component별 변동성: [0.90555253 0.0509867 ]  => 각 축마다 전체 데이터를 얼만큼 설명하는지. 
+PCA Component별 변동성: [0.90555253 0.0509867 ]  => 각 축의 분산값 == 각 축마다 전체 데이터를 얼만큼 설명하는지. 
 총 2개의 축으로 df_cols_scaled의 전체 데이터 6줄을 95%만큼 설명한다.  => 6줄 상관계수가 정말 높았구나~
 '''
 

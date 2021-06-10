@@ -244,9 +244,9 @@ df_cols_scaled = scaler.fit_transform(X_features[cols_bill]) # ID, label 데이�
 pca = PCA(n_components=2) # 고유값 가장 높은 축 2개로 차원축소하겠다. 
 pca.fit(df_cols_scaled) # 6줄의 데이터를 축 2개로 축소시켰다. 
 
-print('PCA Component별 변동성:', pca.explained_variance_ratio_)
+print('PCA Component별 변동성:', pca.explained_variance_ratio_) # 각 축의 분산값
 '''
-PCA Component별 변동성: [0.90555253 0.0509867 ]  => 각 축마다 전체 데이터를 얼만큼 설명하는지. 
+PCA Component별 변동성: [0.90555253 0.0509867 ]  => 각 축의 분산값 == 각 축마다 전체 데이터를 얼만큼 설명하는지. 
 총 2개의 축으로 df_cols_scaled의 전체 데이터 6줄을 95%만큼 설명한다.  => 6줄 상관계수가 정말 높았구나~
 '''
 
