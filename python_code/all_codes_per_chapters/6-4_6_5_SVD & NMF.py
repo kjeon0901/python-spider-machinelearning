@@ -104,27 +104,46 @@ print(U.shape, Sigma.shape, Vt.shape)
 (4, 4) (4,) (4, 4) → 여전히 ∑는 1차원으로 리턴되었다. 
 어차피 대각선에 있는 값들만 필요하기 때문에 걔네만 이렇게 받아도 ㄱㅊ
 '''
-print('Sigma Value:\n',np.round(Sigma,3))
+print('Sigma Value:\n',Sigma)
+print('Sigma Value_round3:\n',np.round(Sigma,3))
 '''
 Sigma Value:
+ [2.66335286e+00 8.07035060e-01 1.30310447e-16 3.87711837e-17]   → 1.30310447e-16, 3.87711837e-17 ≒ 0
+Sigma Value_round3:
  [2.663 0.807 0.    0.   ]       → 이번엔 ∑에 0값이 포함되어 있다!
                                  → row끼리 의존성이 있는 A를 쪼갰을 때 나오는 ∑는 뒤로 갈수록 0에 수렴하는 값을 보인다!
-                                 → 그래서 이게 차원 축소와 무슨 상관? => 뒤의 0은 제거해도 됨!!
+                                 → 그래서 이게 차원 축소와 무슨 상관?
+                                         => 뒤의 0은 제거해도 됨!! 축을 줄일 수 있다!!
 '''
 
 # In[8]:
 
 
+"""
+    <차원축소>
+    0이 아닌 Sigma값 2개니까 Uㆍ∑ㆍ(V^T) 크기는 각각 4x2, 2x2, 2x4 로 차원 축소할 수 있음!!
+"""
 # U 행렬의 경우는 Sigma와 내적을 수행하므로 Sigma의 앞 2행에 대응되는 앞 2열만 추출
-U_ = U[:, :2]
+U_ = U[:, :2] 
 Sigma_ = np.diag(Sigma[:2])
 # V 전치 행렬의 경우는 앞 2행만 추출
 Vt_ = Vt[:2]
 print(U_.shape, Sigma_.shape, Vt_.shape)
+'''
+(4, 2) (2, 2) (2, 4)
+'''
 # U, Sigma, Vt의 내적을 수행하며, 다시 원본 행렬 복원
 a_ = np.dot(np.dot(U_,Sigma_), Vt_)
 print(np.round(a_, 3))
+'''
+[[-0.212 -0.285 -0.574 -0.44 ]    → 아까 의존성 있게 만들어준 a가 그대로 나왔군! 
+ [-0.33   1.184  1.615  0.367]      0에 거의 수렴한 값들은 잘라내버려도 원본에 아주 가깝게 구할 수 있구나~!
+ [-0.542  0.899  1.041 -0.073]
+ [-0.212 -0.285 -0.574 -0.44 ]]
 
+의존성이 낮다면 좀 더 뒤로 가야만 0에 수렴하기 시작함. 그럴 때 차원 축소한다면, 
+어느 정도 설명력이 낮아질 것을 감안하고 차원 축소하는 것! (PCA로 2개 피처로만 보면 데이터의 95%만 설명하던 붓꽃 예제처럼)
+'''
 
 # * Truncated SVD 를 이용한 행렬 분해
 
@@ -142,12 +161,32 @@ print('원본 행렬:\n',matrix)
 U, Sigma, Vt = svd(matrix, full_matrices=False)
 print('\n분해 행렬 차원:',U.shape, Sigma.shape, Vt.shape)
 print('\nSigma값 행렬:', Sigma)
+'''
+원본 행렬:
+ [[0.11133083 0.21076757 0.23296249 0.15194456 0.83017814 0.40791941]
+ [0.5557906  0.74552394 0.24849976 0.9686594  0.95268418 0.48984885]
+ [0.01829731 0.85760612 0.40493829 0.62247394 0.29537149 0.92958852]
+ [0.4056155  0.56730065 0.24575605 0.22573721 0.03827786 0.58098021]
+ [0.82925331 0.77326256 0.94693849 0.73632338 0.67328275 0.74517176]
+ [0.51161442 0.46920965 0.6439515  0.82081228 0.14548493 0.01806415]]
+분해 행렬 차원: (6, 6) (6,) (6, 6)
+Sigma값 행렬: [3.2535007  0.88116505 0.83865238 0.55463089 0.35834824 0.0349925 ]   → 각각 랜덤이라 row벡터끼리의 의존도가 높지 않음. 
+'''
 
 # Truncated SVD로 Sigma 행렬의 특이값을 4개로 하여 Truncated SVD 수행. 
-num_components = 5
+num_components = 4
 U_tr, Sigma_tr, Vt_tr = svds(matrix, k=num_components)
 print('\nTruncated SVD 분해 행렬 차원:',U_tr.shape, Sigma_tr.shape, Vt_tr.shape)
 print('\nTruncated SVD Sigma값 행렬:', Sigma_tr)
+'''
+num_components = 4
+Truncated SVD 분해 행렬 차원: (6, 4) (4,) (4, 6)
+Truncated SVD Sigma값 행렬: [0.55463089 0.83865238 0.88116505 3.2535007 ]
+
+num_components = 5
+Truncated SVD 분해 행렬 차원: (6, 5) (5,) (5, 6)
+Truncated SVD Sigma값 행렬: [0.35834824 0.55463089 0.83865238 0.88116505 3.2535007 ]
+'''
 matrix_tr = np.dot(np.dot(U_tr,np.diag(Sigma_tr)), Vt_tr)  # output of TruncatedSVD
 
 print('\nTruncated SVD로 분해 후 복원 행렬:\n', matrix_tr)
