@@ -180,10 +180,25 @@ print('\nTruncated SVD 분해 행렬 차원:',U_tr.shape, Sigma_tr.shape, Vt_tr.
 print('\nTruncated SVD Sigma값 행렬:', Sigma_tr)
 '''
 num_components = 4
+Truncated SVD로 분해 후 복원 행렬:
+ [[0.19222941 0.21792946 0.15951023 0.14084013 0.81641405 0.42533093]
+ [0.44874275 0.72204422 0.34594106 0.99148577 0.96866325 0.4754868 ]
+ [0.12656662 0.88860729 0.30625735 0.59517439 0.28036734 0.93961948]
+ [0.23989012 0.51026588 0.39697353 0.27308905 0.05971563 0.57156395]
+ [0.83806144 0.78847467 0.93868685 0.72673231 0.6740867  0.73812389]
+ [0.59726589 0.47953891 0.56613544 0.80746028 0.13135039 0.03479656]]
 Truncated SVD 분해 행렬 차원: (6, 4) (4,) (4, 6)
 Truncated SVD Sigma값 행렬: [0.55463089 0.83865238 0.88116505 3.2535007 ]
+    # svds() 인수로 num_components 넣어주면 sigma값 거꾸로 정렬되네? 개수 정해주면 맨 뒤부터 거꾸로 오나보넹...
 
 num_components = 5
+Truncated SVD로 분해 후 복원 행렬:      → 확실히 num_components = 4 보다 원본을 더 비슷하게 설명함. 
+ [[0.11368271 0.19721195 0.23106956 0.15961551 0.82758207 0.41695496]
+ [0.55500167 0.75007112 0.24913473 0.96608621 0.95355502 0.48681791]
+ [0.01789183 0.85994318 0.40526464 0.62115143 0.29581906 0.92803075]
+ [0.40782587 0.55456069 0.24397702 0.23294659 0.035838   0.58947208]
+ [0.82711496 0.78558742 0.94865955 0.7293489  0.67564311 0.73695659]
+ [0.5136488  0.45748403 0.64231412 0.82744766 0.14323933 0.0258799 ]]
 Truncated SVD 분해 행렬 차원: (6, 5) (5,) (5, 6)
 Truncated SVD Sigma값 행렬: [0.35834824 0.55463089 0.83865238 0.88116505 3.2535007 ]
 '''
@@ -225,7 +240,7 @@ scaler = StandardScaler()
 iris_scaled = scaler.fit_transform(iris_ftrs)
 
 # 스케일링된 데이터를 기반으로 TruncatedSVD 변환 수행 
-tsvd = TruncatedSVD(n_components=2)
+tsvd = TruncatedSVD(n_components=2) # 결국 PCA, LDA처럼 SVD 차원축소도 TruncatedSVD 이 함수 써주기만 하면 됨.  
 tsvd.fit(iris_scaled)
 iris_tsvd = tsvd.transform(iris_scaled)
 
@@ -240,7 +255,7 @@ ax1.scatter(x=iris_tsvd[:,0], y= iris_tsvd[:,1], c= iris.target)
 ax2.scatter(x=iris_pca[:,0], y= iris_pca[:,1], c= iris.target)
 ax1.set_title('Truncated SVD Transformed')
 ax2.set_title('PCA Transformed')
-
+'''별 차이 없군!'''
 
 # ## 6-4 NMF
 

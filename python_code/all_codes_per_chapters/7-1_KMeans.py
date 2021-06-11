@@ -25,7 +25,7 @@ irisDF.head(3)
 # In[12]:
 
 
-kmeans = KMeans(n_clusters=3, init='k-means++', max_iter=300,random_state=0)
+kmeans = KMeans(n_clusters=3, init='k-means++', max_iter=300,random_state=0) # 3개의 군집으로 묶겠다. 
 kmeans.fit(irisDF)
 
 
@@ -34,8 +34,8 @@ kmeans.fit(irisDF)
 # In[15]:
 
 
-print(kmeans.labels_)
-print(kmeans.predict(irisDF))
+print(kmeans.labels_) # 3개의 군집에 레이블 0, 1, 2 부여
+print(kmeans.predict(irisDF)) # 위랑 똑같은 code
 
 
 # In[16]:
@@ -47,10 +47,21 @@ irisDF['cluster']=kmeans.labels_
 # In[17]:
 
 
-irisDF['target'] = iris.target
+irisDF['target'] = iris.target # 실제 결정값 => 내가 군집화로 묶은 'cluster'데이터와 정해진 레이블값이 다름. ex_0, 1, 2 vs 1, 0, 2
 iris_result = irisDF.groupby(['target','cluster'])['sepal_length'].count()
+    # groupby(by='컬럼명') : 엑셀에서 '정렬'같은 느낌. '컬럼명'의 유니크한 값을 기준으로 묶어서 dataframe 만듦. dataframe groupby는 agg()를 써야 처리하기 쉽다.
+    # 우선 'target'에 들어 있는 유니크한 레이블값 0, 1, 2로 묶고, 각 묶음 안에서 'cluster'의 유니크한 레이블값 0, 1, 2로 또 묶음. 
+    # ['sepal_length'].count()에서 sepal_length는 별 의미 없음. 그냥 몇 개씩 묶였는지 데이터 개수를 확인하고 싶을 뿐. 
 print(iris_result)
-
+'''
+target  cluster
+0       1          50  → target이 0인 setosa는 군집화가 완벽하다. 
+1       0          48  → target이 1인 versicolor도 군집화가 꽤 잘 되었다. 
+        2           2
+2       0          14  → target이 2인 virginica는 망했다...^^ 
+        2          36
+Name: sepal_length, dtype: int64
+'''
 
 # In[19]:
 
@@ -76,8 +87,8 @@ irisDF.head(3)
 # In[22]:
 
 
-plt.scatter(x=irisDF.loc[:, 'pca_x'], y=irisDF.loc[:, 'pca_y'], c=irisDF['cluster']) 
-
+plt.scatter(x=irisDF.loc[:, 'pca_x'], y=irisDF.loc[:, 'pca_y'], c=irisDF['cluster']) # c : 색깔 구분
+# 원래의 target값이 뭐가 됐든 이 이미지만 봤을 땐, 상당히 합리적으로 군집화가 되었다. 
 
 # In[21]:
 
