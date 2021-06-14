@@ -20,7 +20,7 @@ get_ipython().run_line_magic('matplotlib', 'inline')
 iris = load_iris()
 feature_names = ['sepal_length','sepal_width','petal_length','petal_width']
 irisDF = pd.DataFrame(data=iris.data, columns=feature_names)
-kmeans = KMeans(n_clusters=3, init='k-means++', max_iter=300,random_state=0).fit(irisDF)
+kmeans = KMeans(n_clusters=3, init='k-means++', max_iter=300,random_state=0).fit(irisDF) # 3개로 군집화
 
 irisDF['cluster'] = kmeans.labels_
 
@@ -31,7 +31,8 @@ irisDF.head(3)
 
 
 # iris 의 모든 개별 데이터에 실루엣 계수값을 구함. 
-score_samples = silhouette_samples(iris.data, irisDF['cluster'])
+score_samples = silhouette_samples(iris.data, irisDF['cluster']) # 전체 데이터 150개의 모든 s(i) 구함
+                                                                 # s(i)구하려면 피처데이터iris.data, 데이터i가 어느 cluster에 속해 있는지irisDF['cluster'] 필요. 
 print('silhouette_samples( ) return 값의 shape' , score_samples.shape)
 
 # irisDF에 실루엣 계수 컬럼 추가
@@ -50,19 +51,27 @@ irisDF.head(20)
 # 모든 데이터의 평균 실루엣 계수값을 구함. 
 average_score = silhouette_score(iris.data, irisDF['cluster'])
 print('붓꽃 데이터셋 Silhouette Analysis Score:{0:.3f}'.format(average_score))
+'''
+붓꽃 데이터셋 Silhouette Analysis Score:0.553     → 전체 실루엣 계수의 평균값
+'''
+
+# In[ ]:
+
+
+irisDF['silhouette_coeff'].hist() # 실루엣계수 값 분포 히스토그램
 
 
 # In[ ]:
 
 
-irisDF['silhouette_coeff'].hist()
-
-
-# In[ ]:
-
-
-irisDF.groupby('cluster')['silhouette_coeff'].mean()
-
+irisDF.groupby('cluster')['silhouette_coeff'].mean() # 'cluster'의 유니크한 값별로 (군집별로) 묶어서 각 실루엣 계수의 평균값
+'''
+cluster
+0    0.417320
+1    0.798140
+2    0.451105
+Name: silhouette_coeff, dtype: float64
+'''
 
 # ### 클러스터별 평균 실루엣 계수의 시각화를 통한 클러스터 개수 최적화 방법
 
