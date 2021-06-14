@@ -10,7 +10,7 @@ from sklearn.preprocessing import scale
 from sklearn.datasets import load_iris
 from sklearn.cluster import KMeans
 # 실루엣 분석 metric 값을 구하기 위한 API 추가
-from sklearn.metrics import silhouette_samples, silhouette_score
+from sklearn.metrics import silhouette_samples, silhouette_score # 2가지 함수를 import
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -79,7 +79,9 @@ Name: silhouette_coeff, dtype: float64
 
 
 ### 여러개의 클러스터링 갯수를 List로 입력 받아 각각의 실루엣 계수를 면적으로 시각화한 함수 작성
+# 그래프 이쁘게 그리려고 함수 좀 길게 써진 것임. 
 def visualize_silhouette(cluster_lists, X_features): 
+                        # [2, 3, 4, 5], X
     
     from sklearn.datasets import make_blobs
     from sklearn.cluster import KMeans
@@ -93,20 +95,23 @@ def visualize_silhouette(cluster_lists, X_features):
     n_cols = len(cluster_lists)
     
     # plt.subplots()으로 리스트에 기재된 클러스터링 수만큼의 sub figures를 가지는 axs 생성 
-    fig, axs = plt.subplots(figsize=(4*n_cols, 4), nrows=1, ncols=n_cols)
+    fig, axs = plt.subplots(figsize=(4*n_cols, 4), nrows=1, ncols=n_cols) # (1, 4) 크기로 subplots 그리겠다. 
     
     # 리스트에 기재된 클러스터링 갯수들을 차례로 iteration 수행하면서 실루엣 개수 시각화
     for ind, n_cluster in enumerate(cluster_lists):
+        # ind: 0,1,2,3    n_cluster: 2,3,4,5
         
         # KMeans 클러스터링 수행하고, 실루엣 스코어와 개별 데이터의 실루엣 값 계산. 
-        clusterer = KMeans(n_clusters = n_cluster, max_iter=500, random_state=0)
-        cluster_labels = clusterer.fit_predict(X_features)
+        clusterer = KMeans(n_clusters = n_cluster, max_iter=500, random_state=0) # k-평균 군집화할 객체
+        cluster_labels = clusterer.fit_predict(X_features) # 객체 clusterer로 X_features 군집화 해줌. 각 데이터 별 어떤 군집에 해당되는지 레이블값 담김.
         
-        sil_avg = silhouette_score(X_features, cluster_labels)
-        sil_values = silhouette_samples(X_features, cluster_labels)
+        sil_avg = silhouette_score(X_features, cluster_labels) # 전체 실루엣 계수의 평균
+        sil_values = silhouette_samples(X_features, cluster_labels) # 전체 실루엣 계수
         
+        # plot 설정값들
         y_lower = 10
-        axs[ind].set_title('Number of Cluster : '+ str(n_cluster)+'\n'                           'Silhouette Score :' + str(round(sil_avg,3)) )
+        axs[ind].set_title('Number of Cluster : '+ str(n_cluster)+'\n'
+                           'Silhouette Score :' + str(round(sil_avg,3)) )
         axs[ind].set_xlabel("The silhouette coefficient values")
         axs[ind].set_ylabel("Cluster label")
         axs[ind].set_xlim([-0.1, 1])
@@ -115,30 +120,46 @@ def visualize_silhouette(cluster_lists, X_features):
         axs[ind].set_xticks([0, 0.2, 0.4, 0.6, 0.8, 1])
         
         # 클러스터링 갯수별로 fill_betweenx( )형태의 막대 그래프 표현. 
-        for i in range(n_cluster):
-            ith_cluster_sil_values = sil_values[cluster_labels==i]
-            ith_cluster_sil_values.sort()
+        for i in range(n_cluster): # 2, 3, 4, 5바퀴씩 돌 것 → i = 0,1  ,  0,1,2  ,  0,1,2,3  ,  0,1,2,3,4
+            ith_cluster_sil_values = sil_values[cluster_labels==i] # 군집이 i인 애들의 실루엣 계수만 모아서
+            ith_cluster_sil_values.sort() # 실루엣 계수 정렬
             
             size_cluster_i = ith_cluster_sil_values.shape[0]
             y_upper = y_lower + size_cluster_i
             
             color = cm.nipy_spectral(float(i) / n_cluster)
-            axs[ind].fill_betweenx(np.arange(y_lower, y_upper), 0, ith_cluster_sil_values,                                 facecolor=color, edgecolor=color, alpha=0.7)
+            axs[ind].fill_betweenx(np.arange(y_lower, y_upper), 0, ith_cluster_sil_values,
+                                   facecolor=color, edgecolor=color, alpha=0.7)
             axs[ind].text(-0.05, y_lower + 0.5 * size_cluster_i, str(i))
             y_lower = y_upper + 10
             
         axs[ind].axvline(x=sil_avg, color="red", linestyle="--")
+    '''
+    전체 실루엣 계수의 평균값 sil_avg 은 n_cluster = 2 일 때 가장 높다. 
+    
+    BUT !!!
+    전체 실루엣 계수의 평균값 sil_avg 과 개별 군집의 실루엣 계수의 평균값 의 차이가 작아야 한다. 
+    n_cluster = 2 그래프를 보면, 
+    1번 군집은 대체로 sil_avg 보다 커서 좋지만, 그에 따라 반대로 2번 군집은 일부를 제외하고 대체로 sil_avg 보다 낮음. 
+    
+    OTHERWISE !!!
+    n_cluster = 4 그래프를 보면, 
+    개별 군집의 평균 실루엣 계수 값이 비교적 균일하므로, n_cluster = 2 일 때보다 sil_avg 가 작지만 조금 더 이상적이다. 
+    
+    전체 실루엣 계수의 평균값보다 더 중요한 건, 꽤 높은 값의 s(i)들이 고르게 분포되어야 한다는 것이다. 
+    '''
 
 
 # In[15]:
 
 
 # make_blobs 을 통해 clustering 을 위한 4개의 클러스터 중심의 500개 2차원 데이터 셋 생성  
-from sklearn.datasets import make_blobs
-X, y = make_blobs(n_samples=500, n_features=2, centers=4, cluster_std=1,                   center_box=(-10.0, 10.0), shuffle=True, random_state=1)  
+from sklearn.datasets import make_blobs # 테스트 위해서 임의로 샘플 만들기 위한 함수 (군집화된 데이터 샘플 만드는 데 특화됨. )
+X, y = make_blobs(n_samples=500, n_features=2, centers=4, cluster_std=1, # 총 4개의 군집으로 이루어진 (500, 2) 데이터 샘플을 만듦. 
+                  center_box=(-10.0, 10.0), shuffle=True, random_state=1)  
 
 # cluster 개수를 2개, 3개, 4개, 5개 일때의 클러스터별 실루엣 계수 평균값을 시각화 
-visualize_silhouette([ 2, 3, 4, 5], X)
+visualize_silhouette([ 2, 3, 4, 5], X) # → 이 데이터를 몇 개의 cluster로 묶는 게 나은지 살펴보기 위함. 
 
 
 # In[16]:
