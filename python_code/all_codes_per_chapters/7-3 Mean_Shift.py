@@ -17,7 +17,7 @@ get_ipython().run_line_magic('matplotlib', 'inline')
 sns.set(color_codes=True)
 
 np.random.seed(0)
-x = np.random.normal(0, 1, size=30)
+x = np.random.normal(0, 1, size=30) # 평균 0, 표준편차 1인 정규분포를 가지는 랜덤값. 
 print(x)
 sns.distplot(x);
 
@@ -48,14 +48,14 @@ sns.distplot(x, hist=False, rug=True);
 from scipy import stats
 
 #x = np.random.normal(0, 1, size=30)
-bandwidth = 1.06 * x.std() * x.size ** (-1 / 5.)
+bandwidth = 1.06 * x.std() * x.size ** (-1 / 5.) # 이해하려 하지 말고, 어찌 됐건 이런 bandwidth를 가지게 했음. 
 support = np.linspace(-4, 4, 200)
 
 kernels = []
 for x_i in x:
-    kernel = stats.norm(x_i, bandwidth).pdf(support)
+    kernel = stats.norm(x_i, bandwidth).pdf(support) # 각 데이터 포인트가 가지고 있는 커널 함수
     kernels.append(kernel)
-    plt.plot(support, kernel, color="r")
+    plt.plot(support, kernel, color="r") # 전체 데이터에 대한 커널 함수 red색깔로 그림. 
 
 sns.rugplot(x, color=".2", linewidth=3);
 
@@ -83,8 +83,8 @@ sns.kdeplot(x, shade=True);
 
 
 sns.kdeplot(x)
-sns.kdeplot(x, bw=.2, label="bw: 0.2")
-sns.kdeplot(x, bw=2, label="bw: 2")
+sns.kdeplot(x, bw=.2, label="bw: 0.2") # bandwidth가 작으면 뾰족, 봉우리 여러개
+sns.kdeplot(x, bw=2, label="bw: 2") # bandwidth가 크면 완만,  봉우리 한개
 plt.legend();
 
 
@@ -105,6 +105,7 @@ X, y = make_blobs(n_samples=200, n_features=2, centers=3,
 meanshift= MeanShift(bandwidth=0.9)
 cluster_labels = meanshift.fit_predict(X)
 print('cluster labels 유형:', np.unique(cluster_labels))
+'''cluster labels 유형: [0 1 2 3 4 5 6 7]'''
 
 
 # **커널함수의 bandwidth크기를 1로 약간 증가 후에 Mean Shift 군집화 재 수행**

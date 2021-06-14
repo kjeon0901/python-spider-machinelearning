@@ -139,14 +139,7 @@ def visualize_silhouette(cluster_lists, X_features):
     
     BUT !!!
     전체 실루엣 계수의 평균값 sil_avg 과 개별 군집의 실루엣 계수의 평균값 의 차이가 작아야 한다. 
-    n_cluster = 2 그래프를 보면, 
-    1번 군집은 대체로 sil_avg 보다 커서 좋지만, 그에 따라 반대로 2번 군집은 일부를 제외하고 대체로 sil_avg 보다 낮음. 
-    
-    OTHERWISE !!!
-    n_cluster = 4 그래프를 보면, 
-    개별 군집의 평균 실루엣 계수 값이 비교적 균일하므로, n_cluster = 2 일 때보다 sil_avg 가 작지만 조금 더 이상적이다. 
-    
-    전체 실루엣 계수의 평균값보다 더 중요한 건, 꽤 높은 값의 s(i)들이 고르게 분포되어야 한다는 것이다. 
+
     '''
 
 
@@ -221,6 +214,14 @@ for n_clusters in range_n_clusters:
     silhouette_avg = silhouette_score(X, cluster_labels)
     print("For n_clusters =", n_clusters,
           "The average silhouette_score is :", silhouette_avg)
+    '''
+    Automatically created module for IPython interactive environment
+    For n_clusters = 2 The average silhouette_score is : 0.7049787496083262
+    For n_clusters = 3 The average silhouette_score is : 0.5882004012129721
+    For n_clusters = 4 The average silhouette_score is : 0.6505186632729437
+    For n_clusters = 5 The average silhouette_score is : 0.56376469026194
+    For n_clusters = 6 The average silhouette_score is : 0.4504666294372765
+    '''
 
     # Compute the silhouette scores for each sample
     sample_silhouette_values = silhouette_samples(X, cluster_labels)
@@ -281,6 +282,16 @@ for n_clusters in range_n_clusters:
                  fontsize=14, fontweight='bold')
 
 plt.show()
+'''
+    n_cluster = 2 그래프를 보면, 
+    1번 군집은 대체로 sil_avg 보다 커서 좋지만, 그에 따라 반대로 2번 군집은 일부를 제외하고 대체로 sil_avg 보다 낮음. 
+    
+    OTHERWISE !!!
+    n_cluster = 4 그래프를 보면, 
+    개별 군집의 평균 실루엣 계수 값이 비교적 균일하므로, n_cluster = 2 일 때보다 sil_avg 가 작지만 조금 더 이상적이다. 
+    
+    전체 실루엣 계수의 평균값보다 더 중요한 건, 꽤 높은 값의 s(i)들이 고르게 분포되어야 한다는 것이다. 
+'''
 
 
 # In[ ]:
