@@ -99,13 +99,17 @@ import numpy as np
 from sklearn.datasets import make_blobs
 from sklearn.cluster import MeanShift
 
-X, y = make_blobs(n_samples=200, n_features=2, centers=3, 
-                  cluster_std=0.8, random_state=0)
+X, y = make_blobs(n_samples=200, n_features=2, centers=3, # 군집화를 평가하기 위해 군집 중심점 3개 가지는 샘플 만들기
+                  cluster_std=0.8, random_state=0)        # cluster_std : 표준편차
+plt.scatter(X[:,0], X[:,1])
 
-meanshift= MeanShift(bandwidth=0.9)
-cluster_labels = meanshift.fit_predict(X)
-print('cluster labels 유형:', np.unique(cluster_labels))
-'''cluster labels 유형: [0 1 2 3 4 5 6 7]'''
+meanshift= MeanShift(bandwidth=0.9) # 평균이동(bandwidth=0.9로 하기)을 위한 객체 만들어서
+cluster_labels = meanshift.fit_predict(X) # 위에서 만든 피처데이터에 적용
+print('cluster labels 유형:', np.unique(cluster_labels)) # cluster_labels의 유니크한 값 출력
+'''
+cluster labels 유형: [0 1 2 3 4 5 6 7]
+=> bandwidth=0.9 로 줬더니, 군집 중심점이 8개나 생겼구나. => 너무많아ㅠ.ㅠ => bandwidth값 키워야겠군!
+'''
 
 
 # **커널함수의 bandwidth크기를 1로 약간 증가 후에 Mean Shift 군집화 재 수행**
@@ -116,6 +120,10 @@ print('cluster labels 유형:', np.unique(cluster_labels))
 meanshift= MeanShift(bandwidth=1)
 cluster_labels = meanshift.fit_predict(X)
 print('cluster labels 유형:', np.unique(cluster_labels))
+'''
+cluster labels 유형: [0 1 2]
+=> bandwidth=1 로 주는 게 아까보다 훨씬 better!
+'''
 
 
 # **최적의 bandwidth값을 estimate_bandwidth()로 계산 한 뒤에 다시 군집화 수행**
@@ -127,6 +135,7 @@ from sklearn.cluster import estimate_bandwidth
 
 bandwidth = estimate_bandwidth(X,quantile=0.25)
 print('bandwidth 값:', round(bandwidth,3))
+'''bandwidth 값: 1.689'''
 
 
 # In[14]:
@@ -143,6 +152,7 @@ best_bandwidth = estimate_bandwidth(X, quantile=0.25)
 meanshift= MeanShift(best_bandwidth)
 cluster_labels = meanshift.fit_predict(X)
 print('cluster labels 유형:',np.unique(cluster_labels))    
+'''cluster labels 유형: [0 1 2]'''
 
 
 # In[15]:
@@ -176,7 +186,14 @@ plt.show()
 
 
 print(clusterDF.groupby('target')['meanshift_label'].value_counts())
-
+'''
+target  meanshift_label
+0       0                  67
+1       2                  67
+2       1                  65
+        2                   1
+Name: meanshift_label, dtype: int64
+'''
 
 # In[ ]:
 

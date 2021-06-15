@@ -139,7 +139,14 @@ def visualize_silhouette(cluster_lists, X_features):
     
     BUT !!!
     전체 실루엣 계수의 평균값 sil_avg 과 개별 군집의 실루엣 계수의 평균값 의 차이가 작아야 한다. 
-
+    n_cluster = 2 그래프를 보면, 
+    1번 군집은 대체로 sil_avg 보다 커서 좋지만, 그에 따라 반대로 2번 군집은 일부를 제외하고 대체로 sil_avg 보다 낮음. 
+    
+    OTHERWISE !!!
+    n_cluster = 4 그래프를 보면, 
+    개별 군집의 평균 실루엣 계수 값이 비교적 균일하므로, n_cluster = 2 일 때보다 sil_avg 가 작지만 조금 더 이상적이다. 
+    
+    전체 실루엣 계수의 평균값보다 더 중요한 건, 꽤 높은 값의 s(i)들이 고르게 분포되어야 한다는 것이다.
     '''
 
 
@@ -162,6 +169,9 @@ from sklearn.datasets import load_iris
 
 iris=load_iris()
 visualize_silhouette([ 2, 3, 4,5 ], iris.data)
+'''
+붓꽃데이터에서도 실루엣계수 각각 살펴봤는데, 얘는 2개로 군집화할 때가 제일 좋을 듯 하다!
+'''
 
 
 # In[13]:
@@ -283,14 +293,7 @@ for n_clusters in range_n_clusters:
 
 plt.show()
 '''
-    n_cluster = 2 그래프를 보면, 
-    1번 군집은 대체로 sil_avg 보다 커서 좋지만, 그에 따라 반대로 2번 군집은 일부를 제외하고 대체로 sil_avg 보다 낮음. 
-    
-    OTHERWISE !!!
-    n_cluster = 4 그래프를 보면, 
-    개별 군집의 평균 실루엣 계수 값이 비교적 균일하므로, n_cluster = 2 일 때보다 sil_avg 가 작지만 조금 더 이상적이다. 
-    
-    전체 실루엣 계수의 평균값보다 더 중요한 건, 꽤 높은 값의 s(i)들이 고르게 분포되어야 한다는 것이다. 
+실제로 군집화된 데이터를 scatter로 살펴보니, 아까 생각한 것처럼 n_cluster = 4 로 두는 게 맞는 것 같다.  
 '''
 
 
