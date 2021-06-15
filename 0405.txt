@@ -9459,11 +9459,21 @@ K-평균 알고리즘
           └2. KDE 값 높은, 즉 밀도 높은 곳으로 모든 데이터 이동 (원본x)
 	(1,2 반복)
 	3. 정해진 횟수만큼 반복 끝나고, 데이터들이 모여 있는 point로 중심점 설정
-- 장점	> bandwidth(=h) 정해주면 군집의 개수 알아서 정해줌 
-		→ K-평균 알고리즘 단점 해결!
+- 장점	> bandwidth(=h) 정해주면 군집의 개수 알아서 정해줌 (K-평균 알고리즘 단점)
+	> 이상치의 영향력 小 (K-평균에서는 중심점이 이상치 영향 더 많이 받음)
+- 단점	> 수행 시간 오래 걸림
+	> bandwidth에 따른 군집도 영향력 너무 큼
+		→ 분석 업무보다는 컴퓨터 비전 영역에서 多
 - 파라미터 > bandwidth : 대역폭 h값, K(커널함수)를 얼마나 완만하게 할 것인가
 		bandwidth가 너무 작다(h=1.0) - 너무 뾰족 - 군집 중심점 多, 과적합
 		bandwidth가 너무 크다(h=10.) - 너무 완만 - 군집 중심점 少, 과소적합
+
+GMM(Gaussian Mixture Model) 알고리즘
+- 최대우도법
+
+
+최대우도법
+
 
 ============================================================
 
@@ -10096,7 +10106,116 @@ plt.legend();
 # 
 # make_blobs()를 이용하여 2개의 feature와 3개의 군집 중심점을 가지는 임의의 데이터 200개를 생성하고 MeanShift를 이용하여 군집화 수행
 
+# In[11]:
 
+
+import numpy as np
+from sklearn.datasets import make_blobs
+from sklearn.cluster import MeanShift
+
+X, y = make_blobs(n_samples=200, n_features=2, centers=3, # 군집화를 평가하기 위해 군집 중심점 3개 가지는 샘플 만들기
+                  cluster_std=0.8, random_state=0)        # cluster_std : 표준편차
+plt.scatter(X[:,0], X[:,1])
+
+meanshift= MeanShift(bandwidth=0.9) # 평균이동(bandwidth=0.9로 하기)을 위한 객체 만들어서
+cluster_labels = meanshift.fit_predict(X) # 위에서 만든 피처데이터에 적용
+print('cluster labels 유형:', np.unique(cluster_labels)) # cluster_labels의 유니크한 값 출력
+'''
+cluster labels 유형: [0 1 2 3 4 5 6 7]
+=> bandwidth=0.9 로 줬더니, 군집 중심점이 8개나 생겼구나. => 너무많아ㅠ.ㅠ => bandwidth값 키워야겠군!
+'''
+
+
+# **커널함수의 bandwidth크기를 1로 약간 증가 후에 Mean Shift 군집화 재 수행**
+
+# In[12]:
+
+
+meanshift= MeanShift(bandwidth=1)
+cluster_labels = meanshift.fit_predict(X)
+print('cluster labels 유형:', np.unique(cluster_labels))
+'''
+cluster labels 유형: [0 1 2]
+=> bandwidth=1 로 주는 게 아까보다 훨씬 better!
+'''
+
+
+# **최적의 bandwidth값을 estimate_bandwidth()로 계산 한 뒤에 다시 군집화 수행**
+
+# In[13]:
+
+
+from sklearn.cluster import estimate_bandwidth
+
+bandwidth = estimate_bandwidth(X,quantile=0.25) # 최적의 bandwidth 구하는 함수
+print('bandwidth 값:', round(bandwidth,3))
+'''
+bandwidth 값: 1.689
+
+estimate_bandwidth()로 최적의 bandwidth 구할 수 있으면 애초에 bandwidth까지 알아서 구해주면 안 되나?
+=> 그렇게 하지 않는 이유     1. quantile 정해줄 때 있음 (전체 데이터 中 이만큼만으로 bandwidth 구하겠다. quantile 클수록 bandwidth 큼)
+                            2. 군집화 多 쓰는 영상처리, 이미지처리에서는 bandwidth 여러개 사용할 때 있음. 
+'''
+
+
+# In[14]:
+
+
+import pandas as pd
+
+clusterDF = pd.DataFrame(data=X, columns=['ftr1', 'ftr2'])
+clusterDF['target'] = y
+
+# estimate_bandwidth()로 최적의 bandwidth 계산
+best_bandwidth = estimate_bandwidth(X, quantile=0.25)
+
+meanshift= MeanShift(best_bandwidth)
+cluster_labels = meanshift.fit_predict(X)
+print('cluster labels 유형:',np.unique(cluster_labels))    
+'''cluster labels 유형: [0 1 2]'''
+
+
+# In[15]:
+
+
+import matplotlib.pyplot as plt
+get_ipython().run_line_magic('matplotlib', 'inline')
+
+clusterDF['meanshift_label']  = cluster_labels # 군집화된 레이블값 [0, 1, 2]
+centers = meanshift.cluster_centers_ # 군집 중심점 좌표
+unique_labels = np.unique(cluster_labels) # 군집화된 레이블값 0, 1, 2
+markers=['o', 's', '^', 'x', '*']
+
+for label in unique_labels:
+    label_cluster = clusterDF[clusterDF['meanshift_label']==label] # 군집화한 label이 각각 0, 1, 2인 것만
+    center_x_y = centers[label] # 0, 1, 2번째 중심점
+    # 군집별로 다른 marker로 scatter plot 적용
+    plt.scatter(x=label_cluster['ftr1'], y=label_cluster['ftr2'], edgecolor='k', 
+                marker=markers[label] ) # 각 레이블별로 0, 1, 2번째 marker로 좌표 찍음
+    
+    # 군집별 중심 시각화
+    plt.scatter(x=center_x_y[0], y=center_x_y[1], s=200, color='white',
+                edgecolor='k', alpha=0.9, marker=markers[label])
+    plt.scatter(x=center_x_y[0], y=center_x_y[1], s=70, color='k', edgecolor='k', 
+                marker='$%d$' % label) # '$%d$' % label : label값이 %d 안에 들어감
+    
+plt.show()
+
+
+# In[16]:
+
+
+print(clusterDF.groupby('target')['meanshift_label'].value_counts())
+'''
+target  meanshift_label
+0       0                  67
+1       2                  67
+2       1                  65
+        2                   1
+Name: meanshift_label, dtype: int64
+
+이 정도면 ... 너무 완벽하게 군집화 했다! ^-^
+'''
 
 ■■■■■■■■■■■■■0616 수업中 새로 알게된것■■■■■■■■■■■■■
 ■■■■■■■■■■■■■0617 수업中 새로 알게된것■■■■■■■■■■■■■

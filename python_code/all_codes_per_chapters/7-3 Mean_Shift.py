@@ -133,9 +133,15 @@ cluster labels 유형: [0 1 2]
 
 from sklearn.cluster import estimate_bandwidth
 
-bandwidth = estimate_bandwidth(X,quantile=0.25)
+bandwidth = estimate_bandwidth(X,quantile=0.25) # 최적의 bandwidth 구하는 함수
 print('bandwidth 값:', round(bandwidth,3))
-'''bandwidth 값: 1.689'''
+'''
+bandwidth 값: 1.689
+
+estimate_bandwidth()로 최적의 bandwidth 구할 수 있으면 애초에 bandwidth까지 알아서 구해주면 안 되나?
+=> 그렇게 하지 않는 이유     1. quantile 정해줄 때 있음 (전체 데이터 中 이만큼만으로 bandwidth 구하겠다. quantile 클수록 bandwidth 큼)
+                            2. 군집화 多 쓰는 영상처리, 이미지처리에서는 bandwidth 여러개 사용할 때 있음. 
+'''
 
 
 # In[14]:
@@ -161,23 +167,23 @@ print('cluster labels 유형:',np.unique(cluster_labels))
 import matplotlib.pyplot as plt
 get_ipython().run_line_magic('matplotlib', 'inline')
 
-clusterDF['meanshift_label']  = cluster_labels
-centers = meanshift.cluster_centers_
-unique_labels = np.unique(cluster_labels)
+clusterDF['meanshift_label']  = cluster_labels # 군집화된 레이블값 [0, 1, 2]
+centers = meanshift.cluster_centers_ # 군집 중심점 좌표
+unique_labels = np.unique(cluster_labels) # 군집화된 레이블값 0, 1, 2
 markers=['o', 's', '^', 'x', '*']
 
 for label in unique_labels:
-    label_cluster = clusterDF[clusterDF['meanshift_label']==label]
-    center_x_y = centers[label]
+    label_cluster = clusterDF[clusterDF['meanshift_label']==label] # 군집화한 label이 각각 0, 1, 2인 것만
+    center_x_y = centers[label] # 0, 1, 2번째 중심점
     # 군집별로 다른 marker로 scatter plot 적용
     plt.scatter(x=label_cluster['ftr1'], y=label_cluster['ftr2'], edgecolor='k', 
-                marker=markers[label] )
+                marker=markers[label] ) # 각 레이블별로 0, 1, 2번째 marker로 좌표 찍음
     
     # 군집별 중심 시각화
     plt.scatter(x=center_x_y[0], y=center_x_y[1], s=200, color='white',
                 edgecolor='k', alpha=0.9, marker=markers[label])
     plt.scatter(x=center_x_y[0], y=center_x_y[1], s=70, color='k', edgecolor='k', 
-                marker='$%d$' % label)
+                marker='$%d$' % label) # '$%d$' % label : label값이 %d 안에 들어감
     
 plt.show()
 
@@ -193,6 +199,8 @@ target  meanshift_label
 2       1                  65
         2                   1
 Name: meanshift_label, dtype: int64
+
+이 정도면 ... 너무 완벽하게 군집화 했다! ^-^
 '''
 
 # In[ ]:
