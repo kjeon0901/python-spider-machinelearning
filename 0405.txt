@@ -9502,8 +9502,9 @@ DBSCAN(밀도 기반 군집화) 알고리즘♣
 - 파라미터 > eps : 입실론 반경
 	  > min_samples : 입실론 안에 포함돼야 할 최소 데이터 개수 (본인 포함)
 
-============================================================
+■■■■■■■■■■■■■0615 수업中 새로 알게된것■■■■■■■■■■■■■
 
+##################### K-평균 알고리즘 #####################
 # ### K-Means를 이용한 붓꽃(Iris) 데이터 셋 Clustering
 
 # In[11]:
@@ -9717,9 +9718,7 @@ for label in unique_labels: # 군집(cluster)별로 for문 수행
 
 plt.show()
 
-
 # In[28]:
-
 
 kmeans.cluster_centers_
 ''' 최종 중심점 찍힌 좌표
@@ -9728,9 +9727,7 @@ array([[ 0.990103  ,  4.44666506],
        [ 1.95763312,  0.81041752]])
 '''
 
-
 # In[30]:
-
 
 print(clusterDF.groupby('target')['kmeans_label'].value_counts())
 '''
@@ -9742,7 +9739,11 @@ target  kmeans_label
         2                1
 Name: kmeans_label, dtype: int64
 
-=============================================================
+
+
+
+
+##################### 군집 평가 - 실루엣 분석 #####################
 
 # ### 붓꽃(Iris) 데이터 셋을 이용한 클러스터 평가
 
@@ -10039,7 +10040,10 @@ plt.show()
 실제로 군집화된 데이터를 scatter로 살펴보니, 아까 생각한 것처럼 n_cluster = 4 로 두는 게 맞는 것 같다.  
 '''
 
-■■■■■■■■■■■■■0615 수업中 새로 알게된것■■■■■■■■■■■■■
+
+
+
+##################### KDE의 이해 _for 평균 이동 알고리즘 #####################
 
 # ### KDE(Kernel Density Estimation)의 이해
 
@@ -10127,7 +10131,11 @@ sns.kdeplot(x, bw=.2, label="bw: 0.2") # bandwidth가 작으면 뾰족, 봉우�
 sns.kdeplot(x, bw=2, label="bw: 2") # bandwidth가 크면 완만,  봉우리 한개
 plt.legend();
 
-===========================================================
+
+
+
+
+##################### 평균 이동 알고리즘 #####################
 
 # ### 사이킷런을 이용한 Mean Shift 
 # 
@@ -10244,7 +10252,10 @@ Name: meanshift_label, dtype: int64
 이 정도면 ... 너무 완벽하게 군집화 했다! ^-^
 '''
 
-============================================================
+
+
+
+##################### GMM 알고리즘 #####################
 
 # ### GMM 을 이용한 붓꽃 데이터 셋 클러스터링
 
@@ -10469,8 +10480,69 @@ target  gmm_label
 Name: gmm_label, dtype: int64
 '''
 
+
+
+
+##################### DBSCAN 알고리즘 #####################
+
+# ### DBSCAN 적용하기 – 붓꽃 데이터 셋
+
+# In[5]:
+
+
+from sklearn.datasets import load_iris
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+get_ipython().run_line_magic('matplotlib', 'inline')
+
+iris = load_iris()
+feature_names = ['sepal_length','sepal_width','petal_length','petal_width']
+
+# 보다 편리한 데이타 Handling을 위해 DataFrame으로 변환
+irisDF = pd.DataFrame(data=iris.data, columns=feature_names)
+irisDF['target'] = iris.target
+irisDF.head()
+
+
+# **eps 0.6 min_samples=8 로 DBSCAN 군집화 적용**
+
+# In[6]:
+
+
+from sklearn.cluster import DBSCAN
+
+dbscan = DBSCAN(eps=0.6, min_samples=8, metric='euclidean')
+dbscan_labels = dbscan.fit_predict(iris.data)
+
+irisDF['dbscan_cluster'] = dbscan_labels
+
+iris_result = irisDF.groupby(['target'])['dbscan_cluster'].value_counts()
+print(iris_result)
+'''
+target  dbscan_cluster
+0        0                49
+        -1                 1    → dbscan_cluster = -1 : 어떤 cluster에도 속해 있지 않은 Noise Point !
+1        1                46
+        -1                 4
+2        1                42
+        -1                 8
+Name: dbscan_cluster, dtype: int64
+
+즉, Noise를 제외하고, cluster가 2개로 군집화 된 것임! ★★★
+'''
+
+
+
+
+
+
+
+
+
 ■■■■■■■■■■■■■0616 수업中 새로 알게된것■■■■■■■■■■■■■
 
-
+##################### 군집화 실습 - 고객 세그먼테이션 #####################
 
 ■■■■■■■■■■■■■0617 수업中 새로 알게된것■■■■■■■■■■■■■
