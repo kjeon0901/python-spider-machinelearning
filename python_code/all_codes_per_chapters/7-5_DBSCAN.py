@@ -90,11 +90,11 @@ def visualize_cluster_plot(clusterobj, dataframe, label_name, iscenter=True):
 
 
 from sklearn.decomposition import PCA
-# 2차원으로 시각화하기 위해 PCA n_componets=2로 피처 데이터 세트 변환
+# 2차원으로 시각화하기 위해 PCA n_componets=2로 피처 데이터 세트 변환 : 차원 축소
 pca = PCA(n_components=2, random_state=0)
 pca_transformed = pca.fit_transform(iris.data)
 # visualize_cluster_2d( ) 함수는 ftr1, ftr2 컬럼을 좌표에 표현하므로 PCA 변환값을 해당 컬럼으로 생성
-irisDF['ftr1'] = pca_transformed[:,0]
+irisDF['ftr1'] = pca_transformed[:,0] # 새로운 축으로 차원 축소했으니까, 그 축 2가지를 각각 x축, y축으로 좌표평면에 plot 그림
 irisDF['ftr2'] = pca_transformed[:,1]
 
 visualize_cluster_plot(dbscan, irisDF, 'dbscan_cluster', iscenter=False)
@@ -107,8 +107,19 @@ visualize_cluster_plot(dbscan, irisDF, 'dbscan_cluster', iscenter=False)
 
 from sklearn.cluster import DBSCAN
 
-dbscan = DBSCAN(eps=0.8, min_samples=8, metric='euclidean')
+dbscan = DBSCAN(eps=0.8, min_samples=8, metric='euclidean') # eps값 커짐 => noise 줄어들음. 
 dbscan_labels = dbscan.fit_predict(iris.data)
+'''
+아까 코드 ↓
+dbscan = DBSCAN(eps=0.6, min_samples=8, metric='euclidean')
+dbscan_labels = dbscan.fit_predict(iris.data)
+
+min_samples 동일할 때   eps 커짐 => 기존의 noise는 core를 포함하게 되어 noise → border. 즉, noise ▽▽
+                           작아짐 => 반대로 noise △△
+eps 동일할 때   min_samples 커짐 => 기존의 core는 이제 core가 아니게 되어, core, border → border, noise. 즉 noise △△
+                           작아짐 => 반대로 noise ▽▽
+
+'''
 
 irisDF['dbscan_cluster'] = dbscan_labels
 irisDF['target'] = iris.target
@@ -124,7 +135,7 @@ visualize_cluster_plot(dbscan, irisDF, 'dbscan_cluster', iscenter=False)
 # In[10]:
 
 
-dbscan = DBSCAN(eps=0.6, min_samples=16, metric='euclidean')
+dbscan = DBSCAN(eps=0.6, min_samples=16, metric='euclidean') # min_samples 커짐 => noise 늘어남.
 dbscan_labels = dbscan.fit_predict(iris.data)
 
 irisDF['dbscan_cluster'] = dbscan_labels
@@ -142,7 +153,8 @@ visualize_cluster_plot(dbscan, irisDF, 'dbscan_cluster', iscenter=False)
 
 from sklearn.datasets import make_circles
 
-X, y = make_circles(n_samples=1000, shuffle=True, noise=0.05, random_state=0, factor=0.5)
+X, y = make_circles(n_samples=1000, shuffle=True, noise=0.05, random_state=0, factor=0.5) # make_circles() : 내부 원과 외부 원 형태의 2차원 데이터 세트
+                  # 샘플 개수                      noise 데이터세트의 비율      외부 원 scale = 1일 때의 내부 원 scale. 
 clusterDF = pd.DataFrame(data=X, columns=['ftr1', 'ftr2'])
 clusterDF['target'] = y
 
