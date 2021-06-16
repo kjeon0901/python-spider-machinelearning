@@ -36,7 +36,18 @@ irisDF['dbscan_cluster'] = dbscan_labels
 
 iris_result = irisDF.groupby(['target'])['dbscan_cluster'].value_counts()
 print(iris_result)
+'''
+target  dbscan_cluster
+0        0                49
+        -1                 1    → dbscan_cluster = -1 : 어떤 cluster에도 속해 있지 않은 Noise Point !
+1        1                46
+        -1                 4
+2        1                42
+        -1                 8
+Name: dbscan_cluster, dtype: int64
 
+즉, Noise를 제외하고, cluster가 2개로 군집화 된 것임! ★★★
+'''
 
 # In[7]:
 
