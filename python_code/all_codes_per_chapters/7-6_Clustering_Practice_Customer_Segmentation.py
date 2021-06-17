@@ -215,8 +215,29 @@ import datetime as dt
 
 cust_df['Recency'] = dt.datetime(2011,12,10) - cust_df['Recency'] # 가장 최근 : 가장 값이 작다. 
     # dt.datetime(2011,12,10) - Timestamp('2011-12-09 12:49:00') =>   0 days 12:49:00 나옴. 그치만 하루 더 더해줘야 함. 
-    # datatime 끼리의 연산도 가능하다! ★ dt.datetime의 강력함 ★
-cust_df['Recency'] = cust_df['Recency'].apply(lambda x: x.days+1) # 최종적으로, 오늘로부터 며칠 전인지. 
+'''
+[datetime64]
+- cust_df['Recency']의 dtype = cust_df['InvoiceDate']의 dtype = datetime64
+- 사실 string과 똑같다. 그 값 그대로 머신러닝에 돌릴 수 X !!
+        → 지금처럼 x.days 등등만 빼오든, 인코딩을 하든, 유의미한 숫자값으로 바꿔줘야 함!!
+- datatime 끼리의 연산도 가능하다! ★ dt.datetime의 강력함 ★
+        → 결과 : timedelta64 라는 새로운 dtype 나옴. 
+'''
+cust_df.info()
+'''
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 3920 entries, 0 to 3919
+Data columns (total 4 columns):
+ #   Column      Non-Null Count  Dtype          
+---  ------      --------------  -----          
+ 0   CustomerID  3920 non-null   int64          
+ 1   Recency     3920 non-null   timedelta64[ns]
+ 2   Frequency   3920 non-null   int64          
+ 3   Monetary    3920 non-null   float64        
+dtypes: float64(1), int64(2), timedelta64[ns](1)
+memory usage: 122.6 KB
+'''
+cust_df['Recency'] = cust_df['Recency'].apply(lambda x: x.days+1) # Ex) 2days 14hour → 3days로 올림. deltatime 에서 days부분만 뽑아서 1 더해서 리턴
 print('cust_df 로우와 컬럼 건수는 ',cust_df.shape)
 cust_df.head(3)
 
@@ -237,13 +258,32 @@ ax2.hist(cust_df['Frequency'])
 
 ax3.set_title('Monetary Histogram')
 ax3.hist(cust_df['Monetary'])
-
+'''
+어떻게 볼 순 있겠지만, 그래프의 왜곡이 너무 커서 분석 불가능. skewness값(비대칭도) too big..
+'''
 
 # In[13]:
 
 
 cust_df[['Recency','Frequency','Monetary']].describe()
+'''
+           Recency    Frequency       Monetary
+count  3920.000000  3920.000000    3920.000000
+mean     92.742092    90.388010    1864.385601
+std      99.533485   217.808385    7482.817477
+min       1.000000     1.000000       3.750000
+25%      18.000000    17.000000     300.280000
+50%      51.000000    41.000000     652.280000
+75%     143.000000    99.250000    1576.585000
+max     374.000000  7847.000000  259657.300000
 
+Recency     평균 92가 50%인 51보다 꽤 큼. BAD
+Frequency   평균 90가 50%인 41보다 훨씬 크고 75%인 99에 더 가까움. BAAAD
+Monetary    평균 1864가 50%인 652보다 훨씬 크고 75%인 1576보다도 큼. BAAAAAD
+
+특히 왜곡이 심한 Frequency, Monetary는 Max값을 포함한 상위 몇 개의 데이터가 극단적으로 커서 평균값이 올라가 버림......
+전처리 해줘야겠군!
+'''
 
 # **K-Means로 군집화 후에 실루엣 계수 평가**
 
@@ -255,14 +295,14 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score, silhouette_samples
 
 X_features = cust_df[['Recency','Frequency','Monetary']].values
-X_features_scaled = StandardScaler().fit_transform(X_features)
+X_features_scaled = StandardScaler().fit_transform(X_features) # 정규화
 
-kmeans = KMeans(n_clusters=3, random_state=0)
+kmeans = KMeans(n_clusters=3, random_state=0) # K-평균으로 3개의 군집으로 군집화하기 위한 객체 
 labels = kmeans.fit_predict(X_features_scaled)
 cust_df['cluster_label'] = labels
 
-print('실루엣 스코어는 : {0:.3f}'.format(silhouette_score(X_features_scaled,labels)))
-
+print('실루엣 스코어는 : {0:.3f}'.format(silhouette_score(X_features_scaled,labels))) # s(i)의 전체 평균
+'''실루엣 스코어는 : 0.592'''
 
 # **K-Means 군집화 후에 실루엣 계수 및 군집을 시각화**
 
@@ -297,7 +337,8 @@ def visualize_silhouette(cluster_lists, X_features):
         sil_values = silhouette_samples(X_features, cluster_labels)
         
         y_lower = 10
-        axs[ind].set_title('Number of Cluster : '+ str(n_cluster)+'\n'                           'Silhouette Score :' + str(round(sil_avg,3)) )
+        axs[ind].set_title('Number of Cluster : '+ str(n_cluster)+'\n'
+                           'Silhouette Score :' + str(round(sil_avg,3)) )
         axs[ind].set_xlabel("The silhouette coefficient values")
         axs[ind].set_ylabel("Cluster label")
         axs[ind].set_xlim([-0.1, 1])
@@ -314,7 +355,8 @@ def visualize_silhouette(cluster_lists, X_features):
             y_upper = y_lower + size_cluster_i
             
             color = cm.nipy_spectral(float(i) / n_cluster)
-            axs[ind].fill_betweenx(np.arange(y_lower, y_upper), 0, ith_cluster_sil_values,                                 facecolor=color, edgecolor=color, alpha=0.7)
+            axs[ind].fill_betweenx(np.arange(y_lower, y_upper), 0, ith_cluster_sil_values,
+                                   facecolor=color, edgecolor=color, alpha=0.7)
             axs[ind].text(-0.05, y_lower + 0.5 * size_cluster_i, str(i))
             y_lower = y_upper + 10
             
@@ -359,7 +401,8 @@ def visualize_kmeans_plot_multi(cluster_lists, X_features):
                 cluster_legend = 'Noise'
             else :
                 cluster_legend = 'Cluster '+str(label)           
-            axs[ind].scatter(x=label_df['PCA1'], y=label_df['PCA2'], s=70,                        edgecolor='k', marker=markers[label], label=cluster_legend)
+            axs[ind].scatter(x=label_df['PCA1'], y=label_df['PCA2'], s=70,
+                             edgecolor='k', marker=markers[label], label=cluster_legend)
 
         axs[ind].set_title('Number of Cluster : '+ str(n_cluster))    
         axs[ind].legend(loc='upper right')
@@ -370,9 +413,18 @@ def visualize_kmeans_plot_multi(cluster_lists, X_features):
 # In[17]:
 
 
-visualize_silhouette([2,3,4,5],X_features_scaled)
-visualize_kmeans_plot_multi([2,3,4,5],X_features_scaled)
+visualize_silhouette([2,3,4,5],X_features_scaled) # 2, 3, 4, 5개의 군집으로 K-평균 군집화해서 fill_betweenx( ) 그려봄
+visualize_kmeans_plot_multi([2,3,4,5],X_features_scaled) # 2, 3, 4, 5개의 군집으로 K-평균 군집화해서 scatter( ) 그려봄
+'''
+군집이 2개일 경우 : 두 군집이 너무 뭉뚱그려져서 군집화된 느낌 (잘모르겟돠ㅜ 암튼 그렇대)
+그래서 군집 개수 늘려 보니, 3개 이상부터는 전부 2개의 군집만 잘 나뉘고 나머지 군집은 데이터 개수도 적으면서 실루엣 계수까지 작음. 
+                                : 데이터 개수 적으면 a(i) 하나하나의 영향력 너무 커지는데, 걔네들이 극단적인 데이터이므로. 
 
+=>  이처럼 거의 outlier에 가까울 정도로 지나치게 왜곡된 데이터 세트는
+    K-평균과 같은 '거리 기반 군집화 알고리즘'에서 당연히 나쁜 퍼포먼스 보임. 
+    
+=>  log1p( ) 변환  :  데이터 세트의 왜곡 ↓↓↓ 해보자!
+'''
 
 # **로그 변환 후 재 시각화**
 
