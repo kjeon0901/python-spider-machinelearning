@@ -65,7 +65,7 @@ max     80995.000000   38970.000000   18287.000000
 retail_df = retail_df[retail_df['Quantity'] > 0]
 retail_df = retail_df[retail_df['UnitPrice'] > 0]
 retail_df = retail_df[retail_df['CustomerID'].notnull()]
-print(retail_df.shape) '''(397884, 8)'''
+print(retail_df.shape) # (397884, 8)
 retail_df.isnull().sum() # column별 null값이 몇 개인지
 '''
 InvoiceNo      0
@@ -152,8 +152,10 @@ Name: sale_amount, dtype: float64
 
 # In[8]:
 
+retail_df.groupby(['InvoiceNo','StockCode']).count() 
+    # count() : null이 아닌 모든 데이터 개수. 이렇게만 하면 모든 컬럼 전부 count()해줘서 같은 값 (주로 1)이 계속 들어갈 테니까, 그냥 컬럼 하나 골라서 걔만 보여주는 것. 
 retail_df.groupby(['InvoiceNo','StockCode'])['InvoiceNo'].count() 
-    # count() : null이 아닌 것의 개수. ['InvoiceNo'].count()에서 'InvoiceNo'를 넣든, 'Quantity'를 넣든... 뭘 넣든 상관x
+    # ['InvoiceNo'].count()에서 'InvoiceNo'를 넣든, 'Quantity'를 넣든... Null값 없는 아무 컬럼 뭘 넣든 상관x
     # quentity가 여러개인 게 아니라, 재주문도 아니라, 장바구니에 굳이 여러 번 담아서 산 횟수는 2 이상으로 세어줌. 
 '''
 InvoiceNo  StockCode    InvoiceNo
