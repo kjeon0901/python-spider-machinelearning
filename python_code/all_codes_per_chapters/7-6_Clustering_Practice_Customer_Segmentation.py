@@ -441,6 +441,16 @@ cust_df['Recency_log'] = np.log1p(cust_df['Recency'])
 cust_df['Frequency_log'] = np.log1p(cust_df['Frequency'])
 cust_df['Monetary_log'] = np.log1p(cust_df['Monetary'])
 
+# Recency, Frequency, Monetary 값의 분포도 다시 확인**
+fig, (ax1,ax2,ax3) = plt.subplots(figsize=(12,4), nrows=1, ncols=3)
+ax1.set_title('Recency Histogram')
+ax1.hist(cust_df['Recency_log'])
+ax2.set_title('Frequency Histogram')
+ax2.hist(cust_df['Frequency_log'])
+ax3.set_title('Monetary Histogram')
+ax3.hist(cust_df['Monetary_log'])
+'''왜곡 줄었다!'''
+
 # Log Transformation 데이터에 StandardScaler 적용
 X_features = cust_df[['Recency_log','Frequency_log','Monetary_log']].values
 X_features_scaled = StandardScaler().fit_transform(X_features)
@@ -450,14 +460,14 @@ labels = kmeans.fit_predict(X_features_scaled)
 cust_df['cluster_label'] = labels
 
 print('실루엣 스코어는 : {0:.3f}'.format(silhouette_score(X_features_scaled,labels)))
-
+'''실루엣 스코어는 : 0.303  => 전반적으로 실루엣 계수가 줄었지만, 그렇다고 하더라도 좋아진 것이라고 봐야 함!'''
 
 # In[19]:
 
 
 visualize_silhouette([2,3,4,5],X_features_scaled)
 visualize_kmeans_plot_multi([2,3,4,5],X_features_scaled)
-
+'''뭐에 쓰일 진 모르지만, 아무튼 이 예제 코드에서는 이런 식으로 고객을 군집화해서 나누어보았다~!'''
 
 # In[ ]:
 
