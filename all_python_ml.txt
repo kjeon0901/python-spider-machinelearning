@@ -10903,8 +10903,29 @@ import datetime as dt
 
 cust_df['Recency'] = dt.datetime(2011,12,10) - cust_df['Recency'] # 가장 최근 : 가장 값이 작다. 
     # dt.datetime(2011,12,10) - Timestamp('2011-12-09 12:49:00') =>   0 days 12:49:00 나옴. 그치만 하루 더 더해줘야 함. 
-    # datatime 끼리의 연산도 가능하다! ★ dt.datetime의 강력함 ★
-cust_df['Recency'] = cust_df['Recency'].apply(lambda x: x.days+1) # 최종적으로, 오늘로부터 며칠 전인지. 
+'''
+[datetime64]
+- cust_df['Recency']의 dtype = cust_df['InvoiceDate']의 dtype = datetime64
+- 사실 string과 똑같다. 그 값 그대로 머신러닝에 돌릴 수 X !!
+        → 지금처럼 x.days 등등만 빼오든, 인코딩을 하든, 유의미한 숫자값으로 바꿔줘야 함!!
+- datatime 끼리의 연산도 가능하다! ★ dt.datetime의 강력함 ★
+        → 결과 : timedelta64 라는 새로운 dtype 나옴. 
+'''
+cust_df.info()
+'''
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 3920 entries, 0 to 3919
+Data columns (total 4 columns):
+ #   Column      Non-Null Count  Dtype          
+---  ------      --------------  -----          
+ 0   CustomerID  3920 non-null   int64          
+ 1   Recency     3920 non-null   timedelta64[ns]
+ 2   Frequency   3920 non-null   int64          
+ 3   Monetary    3920 non-null   float64        
+dtypes: float64(1), int64(2), timedelta64[ns](1)
+memory usage: 122.6 KB
+'''
+cust_df['Recency'] = cust_df['Recency'].apply(lambda x: x.days+1) # Ex) 2days 14hour → 3days로 올림. deltatime 에서 days부분만 뽑아서 1 더해서 리턴
 print('cust_df 로우와 컬럼 건수는 ',cust_df.shape)
 cust_df.head(3)
 
@@ -10915,11 +10936,222 @@ cust_df.head(3)
 
 # In[12]:
 
+fig, (ax1,ax2,ax3) = plt.subplots(figsize=(12,4), nrows=1, ncols=3)
+ax1.set_title('Recency Histogram')
+ax1.hist(cust_df['Recency'])
+
+ax2.set_title('Frequency Histogram')
+ax2.hist(cust_df['Frequency'])
+
+ax3.set_title('Monetary Histogram')
+ax3.hist(cust_df['Monetary'])
+'''
+어떻게 볼 순 있겠지만, 그래프의 왜곡이 너무 커서 분석 불가능. skewness값(비대칭도) too big..
+'''
+
+# In[13]:
 
 
+cust_df[['Recency','Frequency','Monetary']].describe()
+'''
+           Recency    Frequency       Monetary
+count  3920.000000  3920.000000    3920.000000
+mean     92.742092    90.388010    1864.385601
+std      99.533485   217.808385    7482.817477
+min       1.000000     1.000000       3.750000
+25%      18.000000    17.000000     300.280000
+50%      51.000000    41.000000     652.280000
+75%     143.000000    99.250000    1576.585000
+max     374.000000  7847.000000  259657.300000
+
+Recency     평균 92가 50%인 51보다 꽤 큼. BAD
+Frequency   평균 90가 50%인 41보다 훨씬 크고 75%인 99에 더 가까움. BAAAD
+Monetary    평균 1864가 50%인 652보다 훨씬 크고 75%인 1576보다도 큼. BAAAAAD
+
+특히 왜곡이 심한 Frequency, Monetary는 Max값을 포함한 상위 몇 개의 데이터가 극단적으로 커서 평균값이 올라가 버림......
+전처리 해줘야겠군!
+'''
+
+# **K-Means로 군집화 후에 실루엣 계수 평가**
+
+# In[14]:
 
 
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score, silhouette_samples
+
+X_features = cust_df[['Recency','Frequency','Monetary']].values
+X_features_scaled = StandardScaler().fit_transform(X_features) # 정규화
+
+kmeans = KMeans(n_clusters=3, random_state=0) # K-평균으로 3개의 군집으로 군집화하기 위한 객체 
+labels = kmeans.fit_predict(X_features_scaled)
+cust_df['cluster_label'] = labels
+
+print('실루엣 스코어는 : {0:.3f}'.format(silhouette_score(X_features_scaled,labels))) # s(i)의 전체 평균
+'''실루엣 스코어는 : 0.592'''
+
+# **K-Means 군집화 후에 실루엣 계수 및 군집을 시각화**
+
+# In[15]:
 
 
+### 여러개의 클러스터링 갯수를 List로 입력 받아 각각의 실루엣 계수를 면적으로 시각화한 함수 작성  
+def visualize_silhouette(cluster_lists, X_features): 
+    
+    from sklearn.datasets import make_blobs
+    from sklearn.cluster import KMeans
+    from sklearn.metrics import silhouette_samples, silhouette_score
 
-■■■■■■■■■■■■■0617 수업中 새로 알게된것■■■■■■■■■■■■■
+    import matplotlib.pyplot as plt
+    import matplotlib.cm as cm
+    import math
+    
+    # 입력값으로 클러스터링 갯수들을 리스트로 받아서, 각 갯수별로 클러스터링을 적용하고 실루엣 개수를 구함
+    n_cols = len(cluster_lists)
+    
+    # plt.subplots()으로 리스트에 기재된 클러스터링 만큼의 sub figures를 가지는 axs 생성 
+    fig, axs = plt.subplots(figsize=(4*n_cols, 4), nrows=1, ncols=n_cols)
+    
+    # 리스트에 기재된 클러스터링 갯수들을 차례로 iteration 수행하면서 실루엣 개수 시각화
+    for ind, n_cluster in enumerate(cluster_lists):
+        
+        # KMeans 클러스터링 수행하고, 실루엣 스코어와 개별 데이터의 실루엣 값 계산. 
+        clusterer = KMeans(n_clusters = n_cluster, max_iter=500, random_state=0)
+        cluster_labels = clusterer.fit_predict(X_features)
+        
+        sil_avg = silhouette_score(X_features, cluster_labels)
+        sil_values = silhouette_samples(X_features, cluster_labels)
+        
+        y_lower = 10
+        axs[ind].set_title('Number of Cluster : '+ str(n_cluster)+'\n'
+                           'Silhouette Score :' + str(round(sil_avg,3)) )
+        axs[ind].set_xlabel("The silhouette coefficient values")
+        axs[ind].set_ylabel("Cluster label")
+        axs[ind].set_xlim([-0.1, 1])
+        axs[ind].set_ylim([0, len(X_features) + (n_cluster + 1) * 10])
+        axs[ind].set_yticks([])  # Clear the yaxis labels / ticks
+        axs[ind].set_xticks([0, 0.2, 0.4, 0.6, 0.8, 1])
+        
+        # 클러스터링 갯수별로 fill_betweenx( )형태의 막대 그래프 표현. 
+        for i in range(n_cluster):
+            ith_cluster_sil_values = sil_values[cluster_labels==i]
+            ith_cluster_sil_values.sort()
+            
+            size_cluster_i = ith_cluster_sil_values.shape[0]
+            y_upper = y_lower + size_cluster_i
+            
+            color = cm.nipy_spectral(float(i) / n_cluster)
+            axs[ind].fill_betweenx(np.arange(y_lower, y_upper), 0, ith_cluster_sil_values,
+                                   facecolor=color, edgecolor=color, alpha=0.7)
+            axs[ind].text(-0.05, y_lower + 0.5 * size_cluster_i, str(i))
+            y_lower = y_upper + 10
+            
+        axs[ind].axvline(x=sil_avg, color="red", linestyle="--")
+
+
+# In[16]:
+
+
+### 여러개의 클러스터링 갯수를 List로 입력 받아 각각의 클러스터링 결과를 시각화 
+def visualize_kmeans_plot_multi(cluster_lists, X_features):
+    
+    from sklearn.cluster import KMeans
+    from sklearn.decomposition import PCA
+    import pandas as pd
+    import numpy as np
+    
+    # plt.subplots()으로 리스트에 기재된 클러스터링 만큼의 sub figures를 가지는 axs 생성 
+    n_cols = len(cluster_lists)
+    fig, axs = plt.subplots(figsize=(4*n_cols, 4), nrows=1, ncols=n_cols)
+    
+    # 입력 데이터의 FEATURE가 여러개일 경우 2차원 데이터 시각화가 어려우므로 PCA 변환하여 2차원 시각화
+    pca = PCA(n_components=2)
+    pca_transformed = pca.fit_transform(X_features)
+    dataframe = pd.DataFrame(pca_transformed, columns=['PCA1','PCA2'])
+    
+     # 리스트에 기재된 클러스터링 갯수들을 차례로 iteration 수행하면서 KMeans 클러스터링 수행하고 시각화
+    for ind, n_cluster in enumerate(cluster_lists):
+        
+        # KMeans 클러스터링으로 클러스터링 결과를 dataframe에 저장. 
+        clusterer = KMeans(n_clusters = n_cluster, max_iter=500, random_state=0)
+        cluster_labels = clusterer.fit_predict(pca_transformed)
+        dataframe['cluster']=cluster_labels
+        
+        unique_labels = np.unique(clusterer.labels_)
+        markers=['o', 's', '^', 'x', '*']
+       
+        # 클러스터링 결과값 별로 scatter plot 으로 시각화
+        for label in unique_labels:
+            label_df = dataframe[dataframe['cluster']==label]
+            if label == -1:
+                cluster_legend = 'Noise'
+            else :
+                cluster_legend = 'Cluster '+str(label)           
+            axs[ind].scatter(x=label_df['PCA1'], y=label_df['PCA2'], s=70,
+                             edgecolor='k', marker=markers[label], label=cluster_legend)
+
+        axs[ind].set_title('Number of Cluster : '+ str(n_cluster))    
+        axs[ind].legend(loc='upper right')
+    
+    plt.show()
+
+
+# In[17]:
+
+
+visualize_silhouette([2,3,4,5],X_features_scaled) # 2, 3, 4, 5개의 군집으로 K-평균 군집화해서 fill_betweenx( ) 그려봄
+visualize_kmeans_plot_multi([2,3,4,5],X_features_scaled) # 2, 3, 4, 5개의 군집으로 K-평균 군집화해서 scatter( ) 그려봄
+'''
+군집이 2개일 경우 : 두 군집이 너무 뭉뚱그려져서 군집화된 느낌 (잘모르겟돠ㅜ 암튼 그렇대)
+그래서 군집 개수 늘려 보니, 3개 이상부터는 전부 2개의 군집만 잘 나뉘고 나머지 군집은 데이터 개수도 적으면서 실루엣 계수까지 작음. 
+                                : 데이터 개수 적으면 a(i) 하나하나의 영향력 너무 커지는데, 걔네들이 극단적인 데이터이므로. 
+
+=>  이처럼 거의 outlier에 가까울 정도로 지나치게 왜곡된 데이터 세트는
+    K-평균과 같은 '거리 기반 군집화 알고리즘'에서 당연히 나쁜 퍼포먼스 보임. 
+    
+=>  log1p( ) 변환  :  데이터 세트의 왜곡 ↓↓↓ 해보자!
+'''
+
+# **로그 변환 후 재 시각화**
+
+# In[18]:
+
+
+### Log 변환을 통해 데이터 변환
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score, silhouette_samples
+
+# Recency, Frequecny, Monetary 컬럼에 np.log1p() 로 Log Transformation
+cust_df['Recency_log'] = np.log1p(cust_df['Recency'])
+cust_df['Frequency_log'] = np.log1p(cust_df['Frequency'])
+cust_df['Monetary_log'] = np.log1p(cust_df['Monetary'])
+
+# Recency, Frequency, Monetary 값의 분포도 다시 확인**
+fig, (ax1,ax2,ax3) = plt.subplots(figsize=(12,4), nrows=1, ncols=3)
+ax1.set_title('Recency Histogram')
+ax1.hist(cust_df['Recency_log'])
+ax2.set_title('Frequency Histogram')
+ax2.hist(cust_df['Frequency_log'])
+ax3.set_title('Monetary Histogram')
+ax3.hist(cust_df['Monetary_log'])
+'''왜곡 줄었다!'''
+
+# Log Transformation 데이터에 StandardScaler 적용
+X_features = cust_df[['Recency_log','Frequency_log','Monetary_log']].values
+X_features_scaled = StandardScaler().fit_transform(X_features)
+
+kmeans = KMeans(n_clusters=3, random_state=0)
+labels = kmeans.fit_predict(X_features_scaled)
+cust_df['cluster_label'] = labels
+
+print('실루엣 스코어는 : {0:.3f}'.format(silhouette_score(X_features_scaled,labels)))
+'''실루엣 스코어는 : 0.303  => 전반적으로 실루엣 계수가 줄었지만, 그렇다고 하더라도 좋아진 것이라고 봐야 함!'''
+
+# In[19]:
+
+
+visualize_silhouette([2,3,4,5],X_features_scaled)
+visualize_kmeans_plot_multi([2,3,4,5],X_features_scaled)
+'''뭐에 쓰일 진 모르지만, 아무튼 이 예제 코드에서는 이런 식으로 고객을 군집화해서 나누어보았다~!'''
